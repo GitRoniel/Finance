@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel Financeiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @font-face{
+    font-family:'Geist';
+    font-style:normal;
+    font-weight:100 900;
+    font-display:swap;
+    src:url(https://cdn.jsdelivr.net/fontsource/fonts/geist:vf@latest/latin-wght-normal.woff2) format('woff2-variations');
+  }
+  :root{
+    --bg:#0a0a0a;
+    --bg-glow: radial-gradient(circle at 16% -8%, rgba(148,255,71,0.10), transparent 50%);
+    --surface:#141414;
+    --surface-2:#1c1c1e;
+    --surface-hover:#222224;
+    --border:#272727;
+    --border-soft:#1f1f1f;
+    --text:#fafafa;
+    --text-dim:#a1a1aa;
+    --text-faint:#71717a;
+    --lime:#94ff47;
+    --lime-deep:#5fce1f;
+    --lime-dim:#3a5c22;
+    --lime-soft: rgba(148,255,71,0.12);
+    --lime-soft-2: rgba(148,255,71,0.06);
+    --red:#fb4f4f;
+    --red-soft: rgba(251,79,79,0.13);
+    --amber:#ffb454;
+    --amber-soft: rgba(255,180,84,0.13);
+    --blue:#5b9fff;
+    --blue-soft: rgba(91,159,255,0.13);
+    --radius:18px;
+    --radius-sm:12px;
+    --radius-xs:8px;
+    --font-display:'Geist','Inter',sans-serif;
+    --font-body:'Geist','Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg-glow), var(--bg);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font-family:inherit;}
+  ::selection{background:var(--lime-soft);}
+  a{color:var(--lime);}
+
+  .wrap{max-width:1240px;margin:0 auto;padding:28px 24px 80px;}
+
+  /* ---------- header ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-dot{width:30px;height:30px;border-radius:9px;background:var(--lime);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .brand-dot svg{width:16px;height:16px;color:#0a0a0a;}
+  .brand-mark{font-family:var(--font-display);font-weight:700;font-size:19px;letter-spacing:-0.01em;color:var(--text);}
+  .brand-mark span{color:var(--text-faint);font-weight:500;}
+  .status-line{display:flex;align-items:center;gap:9px;color:var(--text-faint);font-size:12.5px;margin-top:3px;margin-left:40px;}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 0 var(--lime-soft);animation:pulse 2.2s infinite;}
+  .status-dot.err{background:var(--red);animation:none;}
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(148,255,71,0.5);}
+    70%{box-shadow:0 0 0 6px rgba(148,255,71,0);}
+    100%{box-shadow:0 0 0 0 rgba(148,255,71,0);}
+  }
+  .refresh-btn{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);
+    padding:9px 15px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s, border-color .15s;}
+  .refresh-btn:hover{background:var(--surface-hover);border-color:var(--lime-dim);}
+  .refresh-btn:focus-visible, button:focus-visible, [tabindex]:focus-visible{outline:2px solid var(--lime);outline-offset:2px;}
+  .refresh-btn svg{width:14px;height:14px;}
+  .refresh-btn.spinning svg{animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:22px;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{flex:0 0 auto;background:transparent;border:1px solid transparent;color:var(--text-dim);
+    padding:9px 16px;border-radius:999px;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+  .tab-btn:hover{color:var(--text);background:var(--surface);}
+  .tab-btn.active{background:var(--lime-soft);color:var(--lime);border-color:var(--lime-dim);font-weight:600;}
+
+  .panel{display:none;animation:fade .25s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- grid / cards ---------- */
+  .grid{display:grid;gap:14px;}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:1.1fr 1fr;}
+  .grid-2-even{grid-template-columns:1fr 1fr;}
+  @media (max-width:880px){.grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:1fr;} .grid-2{grid-template-columns:1fr;} .grid-2-even{grid-template-columns:1fr;}}
+  @media (max-width:520px){.grid-4{grid-template-columns:1fr;}}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+  .card-title{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint);font-weight:600;margin:0 0 10px;}
+  .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;}
+  .card-head h3{font-family:var(--font-display);font-size:15px;margin:0;font-weight:600;}
+  .card-head-sub{font-size:12px;color:var(--text-faint);}
+
+  .stat-value{font-family:var(--font-display);font-size:27px;font-weight:700;letter-spacing:-0.01em;}
+  .stat-delta{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;margin-top:8px;font-weight:600;}
+  .stat-delta.up{color:var(--red);}
+  .stat-delta.down{color:var(--lime);}
+  .stat-delta.flat{color:var(--text-faint);}
+  .stat-sub{font-size:12px;color:var(--text-faint);margin-top:6px;}
+
+  /* ---------- list rows ---------- */
+  .row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft);}
+  .row:last-child{border-bottom:none;}
+  .avatar{width:34px;height:34px;border-radius:10px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--lime);flex:0 0 auto;}
+  .row-main{flex:1;min-width:0;}
+  .row-title{font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row-sub{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+  .row-value{font-family:var(--font-display);font-weight:600;font-size:14px;text-align:right;flex:0 0 auto;}
+  .row-value.neg{color:var(--red);}
+  .row-value.pos{color:var(--lime);}
+
+  .badge{display:inline-block;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em;}
+  .badge.ok{background:var(--lime-soft);color:var(--lime);}
+  .badge.warn{background:var(--red-soft);color:var(--red);}
+  .badge.info{background:var(--blue-soft);color:var(--blue);}
+  .badge.amber{background:var(--amber-soft);color:var(--amber);}
+  .badge.muted{background:var(--surface-2);color:var(--text-faint);}
+
+  .bar-track{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;margin-top:8px;}
+  .bar-fill{height:100%;border-radius:99px;background:var(--lime);transition:width .4s ease;}
+  .bar-fill.warn{background:var(--red);}
+  .bar-fill.amber{background:var(--amber);}
+
+  /* ---------- insight cards ---------- */
+  .insight{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--border-soft);align-items:flex-start;}
+  .insight:last-child{border-bottom:none;}
+  .insight-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:14px;}
+  .insight-icon.up{background:var(--red-soft);color:var(--red);}
+  .insight-icon.down{background:var(--lime-soft);color:var(--lime);}
+  .insight-icon.info{background:var(--blue-soft);color:var(--blue);}
+  .insight-icon.warn{background:var(--amber-soft);color:var(--amber);}
+  .insight-text{font-size:13px;line-height:1.5;color:var(--text);}
+  .insight-text b{font-weight:600;color:var(--text);}
+  .insight-sub{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+
+  /* ---------- table ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);
+    padding:0 10px 10px;border-bottom:1px solid var(--border);font-weight:600;}
+  tbody td{padding:11px 10px;border-bottom:1px solid var(--border-soft);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-hover);}
+  .cell-num{text-align:right;font-family:var(--font-display);font-weight:600;}
+  .filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .filters input, .filters select{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);
+    padding:9px 12px;font-size:13px;font-family:inherit;}
+  .filters input{flex:1;min-width:160px;}
+  .filters input:focus, .filters select:focus{outline:2px solid var(--lime);outline-offset:1px;}
+
+  /* ---------- empty / error states ---------- */
+  .empty{text-align:center;padding:46px 20px;color:var(--text-dim);}
+  .empty .icon{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--text-faint);display:flex;align-items:center;
+    justify-content:center;margin:0 auto 14px;font-family:var(--font-display);color:var(--text-faint);font-size:16px;}
+  .empty .title{font-weight:600;color:var(--text);margin-bottom:6px;font-size:14px;}
+  .empty .sub{font-size:12.5px;color:var(--text-faint);max-width:360px;margin:0 auto;}
+
+  .error-banner{background:var(--red-soft);border:1px solid rgba(251,79,79,0.3);color:var(--red);
+    border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;margin-bottom:18px;}
+
+  /* ---------- setup screen ---------- */
+  .setup{max-width:620px;margin:60px auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:36px;}
+  .setup h1{font-family:var(--font-display);font-size:22px;margin:0 0 6px;}
+  .setup p{color:var(--text-dim);font-size:14px;line-height:1.6;}
+  .setup ol{color:var(--text-dim);font-size:13.5px;line-height:1.8;padding-left:20px;}
+  .setup code{background:var(--surface-2);padding:2px 7px;border-radius:6px;color:var(--lime);font-size:12.5px;}
+  .setup .pill-note{display:inline-block;margin-top:18px;background:var(--lime-soft);color:var(--lime);font-size:12.5px;
+    padding:8px 14px;border-radius:var(--radius-sm);}
+
+  /* ---------- progress ring (metas) ---------- */
+  .goal-card{display:flex;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--border-soft);}
+  .goal-card:last-child{border-bottom:none;}
+  .goal-ring{flex:0 0 auto;width:56px;height:56px;position:relative;}
+  .goal-ring svg{width:56px;height:56px;transform:rotate(-90deg);}
+  .goal-ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:12px;font-weight:700;}
+  .goal-main{flex:1;min-width:0;}
+  .goal-title{font-size:14px;font-weight:600;}
+  .goal-sub{font-size:12px;color:var(--text-faint);margin-top:3px;}
+  .goal-values{text-align:right;flex:0 0 auto;}
+  .goal-current{font-family:var(--font-display);font-weight:700;font-size:14px;}
+  .goal-target{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+
+  /* ---------- mini chart bars (cashflow) ---------- */
+  .chart-wrap{padding-top:6px;}
+  .chart-bars{display:flex;align-items:flex-end;gap:8px;height:160px;}
+  .chart-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;}
+  .chart-bar-pair{display:flex;align-items:flex-end;gap:3px;height:100%;width:100%;justify-content:center;}
+  .chart-bar{width:9px;border-radius:4px 4px 0 0;transition:height .4s ease;}
+  .chart-bar.in{background:var(--lime);}
+  .chart-bar.out{background:var(--red);opacity:0.85;}
+  .chart-label{font-size:10.5px;color:var(--text-faint);margin-top:6px;text-transform:capitalize;}
+  .chart-legend{display:flex;gap:16px;margin-bottom:14px;font-size:12px;color:var(--text-dim);}
+  .chart-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend-dot{width:8px;height:8px;border-radius:3px;display:inline-block;}
+  .legend-dot.in{background:var(--lime);}
+  .legend-dot.out{background:var(--red);}
+
+  /* ---------- networth chart (line) ---------- */
+  .line-chart{width:100%;height:180px;}
+  .net-tooltip-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-faint);margin-top:6px;}
+
+  footer{text-align:center;color:var(--text-faint);font-size:11.5px;margin-top:40px;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="wrap" id="app" hidden>
+  <div class="topbar">
+    <div>
+      <div class="brand">
+        <div class="brand-dot">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z" opacity="0"/><path d="M4 13h3l2-5 3 9 2-6 2 3h4" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="brand-mark">painel<span>financeiro</span></span>
+      </div>
+      <div class="status-line">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">carregando dados da planilha…</span>
+      </div>
+    </div>
+    <button class="refresh-btn" id="syncBtn" style="margin-right:8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+      Sincronizar bancos
+    </button>
+    <button class="refresh-btn" id="refreshBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>
+      Atualizar
+    </button>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs">
+    <button class="tab-btn active" data-tab="geral" role="tab" aria-selected="true">Visão geral</button>
+    <button class="tab-btn" data-tab="projecoes" role="tab" aria-selected="false">Projeções</button>
+    <button class="tab-btn" data-tab="patrimonio" role="tab" aria-selected="false">Patrimônio</button>
+    <button class="tab-btn" data-tab="transacoes" role="tab" aria-selected="false">Transações</button>
+    <button class="tab-btn" data-tab="metas" role="tab" aria-selected="false">Metas</button>
+    <button class="tab-btn" data-tab="parcelamentos" role="tab" aria-selected="false">Parcelamentos</button>
+    <button class="tab-btn" data-tab="assinaturas" role="tab" aria-selected="false">Assinaturas</button>
+    <button class="tab-btn" data-tab="categorias" role="tab" aria-selected="false">Categorias</button>
+    <button class="tab-btn" data-tab="cartoes" role="tab" aria-selected="false">Cartões</button>
+    <button class="tab-btn" data-tab="investimentos" role="tab" aria-selected="false">Investimentos</button>
+  </div>
+
+  <div id="errorArea"></div>
+
+  <!-- VISÃO GERAL -->
+  <section class="panel active" id="panel-geral">
+    <div class="grid grid-4" style="margin-bottom:14px;">
+      <div class="card">
+        <p class="card-title">Patrimônio líquido</p>
+        <div class="stat-value" id="statPatrimonio">R$ 0,00</div>
+        <p class="stat-sub" id="statPatrimonioSub">contas − faturas de cartão</p>
+      </div>
+      <div class="card">
+        <p class="card-title" id="statGastoLabel">Gasto no mês</p>
+        <div class="stat-value" id="statGasto">R$ 0,00</div>
+        <p class="stat-sub" id="statGastoSub">&nbsp;</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Vs. mês anterior</p>
+        <div class="stat-value" id="statVariacao">0%</div>
+        <p class="stat-delta flat" id="statVariacaoTag">sem dados suficientes</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Maior gasto do mês</p>
+        <div class="stat-value" id="statMaiorGasto">—</div>
+        <p class="stat-sub" id="statMaiorGastoSub">&nbsp;</p>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><h3>Fluxo de caixa (últimos 6 meses)</h3></div>
+        <div class="chart-legend"><span><span class="legend-dot in"></span>Entradas</span><span><span class="legend-dot out"></span>Saídas</span></div>
+        <div id="cashflowChart"><canvas id="cashflowCanvas" height="220"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Insights automáticos</h3></div>
+        <div id="listInsights"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><h3>Contas</h3></div>
+        <div id="listContasResumo"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Faturas em aberto</h3></div>
+        <div id="listCartoesResumo"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-head"><h3>Maiores categorias de gasto (mês)</h3></div>
+        <div id="listTopCategorias"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Compromissos do mês</h3></div>
+        <div id="listCompromissos"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PATRIMÔNIO -->
+  <section class="panel" id="panel-patrimonio">
+    <div class="grid grid-3" style="margin-bottom:14px;">
+      <div class="card">
+        <p class="card-title">Em contas</p>
+        <div class="stat-value" id="statPatContas">R$ 0,00</div>
+        <p class="stat-sub" id="statPatContasSub">&nbsp;</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Em faturas de cartão</p>
+        <div class="stat-value" id="statPatFaturas">R$ 0,00</div>
+        <p class="stat-sub" id="statPatFaturasSub">&nbsp;</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Patrimônio líquido</p>
+        <div class="stat-value" id="statPatLiquido">R$ 0,00</div>
+        <p class="stat-sub">contas − faturas em aberto</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-head"><h3>Evolução do patrimônio (12 meses)</h3></div>
+      <div id="networthChart"><canvas id="networthCanvas" height="220"></canvas></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-head"><h3>Saldo por conta</h3></div>
+        <div id="listPatContas"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Fatura por cartão</h3></div>
+        <div id="listPatCartoes"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJEÇÕES -->
+  <section class="panel" id="panel-projecoes">
+    <div class="grid grid-3" style="margin-bottom:14px;">
+      <div class="card">
+        <p class="card-title">Comprometido nos próximos 30 dias</p>
+        <div class="stat-value" id="statProjComprometido">R$ 0,00</div>
+        <p class="stat-sub" id="statProjComprometidoSub">&nbsp;</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Saldo projetado fim do mês</p>
+        <div class="stat-value" id="statProjSaldoFim">R$ 0,00</div>
+        <p class="stat-sub" id="statProjSaldoFimSub">&nbsp;</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Média de gasto variável</p>
+        <div class="stat-value" id="statProjMediaVariavel">R$ 0,00</div>
+        <p class="stat-sub">média móvel · últimos 3 meses fechados</p>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-head"><h3>Projeção de saldo · próximos 6 meses</h3></div>
+      <div id="projecaoChart"><canvas id="projecaoCanvas" height="220"></canvas></div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-head"><h3>Composição do próximo mês</h3></div>
+        <div id="listProjComposicao"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Faturas de cartão em formação</h3></div>
+        <div id="listProjFaturas"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRANSAÇÕES -->
+  <section class="panel" id="panel-transacoes">
+    <div class="card">
+      <div class="filters">
+        <input type="text" id="filtroBusca" placeholder="Buscar por descrição…">
+        <select id="filtroCategoria"><option value="">Todas as categorias</option></select>
+        <select id="filtroTipo">
+          <option value="">Entradas e saídas</option>
+          <option value="Entrada">Só entradas</option>
+          <option value="Saída">Só saídas</option>
+        </select>
+        <select id="filtroOrigem">
+          <option value="">Cartão e conta</option>
+          <option value="cartao">Só cartão</option>
+          <option value="conta">Só conta corrente</option>
+        </select>
+      </div>
+      <div id="tabelaTransacoes"></div>
+    </div>
+  </section>
+
+  <!-- METAS -->
+  <section class="panel" id="panel-metas">
+    <div class="grid grid-3" style="margin-bottom:14px;">
+      <div class="card">
+        <p class="card-title">Metas ativas</p>
+        <div class="stat-value" id="statMetasAtivas">0</div>
+        <p class="stat-sub" id="statMetasAtivasSub">&nbsp;</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Total já guardado</p>
+        <div class="stat-value" id="statMetasGuardado">R$ 0,00</div>
+        <p class="stat-sub" id="statMetasGuardadoSub">&nbsp;</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Falta guardar</p>
+        <div class="stat-value" id="statMetasFalta">R$ 0,00</div>
+        <p class="stat-sub">para concluir todas as metas ativas</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Suas metas</h3></div>
+      <div id="listMetas"></div>
+    </div>
+  </section>
+
+  <!-- PARCELAMENTOS -->
+  <section class="panel" id="panel-parcelamentos">
+    <div class="card">
+      <div class="card-head"><h3>Compras parceladas</h3></div>
+      <div id="listParcelamentos"></div>
+    </div>
+  </section>
+
+  <!-- ASSINATURAS -->
+  <section class="panel" id="panel-assinaturas">
+    <div class="grid grid-2">
+      <div class="card" style="grid-column:1/-1;">
+        <p class="card-title">Comprometido por mês em assinaturas</p>
+        <div class="stat-value" id="statAssinaturasMes">R$ 0,00</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <div class="card-head"><h3>Assinaturas ativas</h3></div>
+      <div id="listAssinaturas"></div>
+    </div>
+  </section>
+
+  <!-- CATEGORIAS -->
+  <section class="panel" id="panel-categorias">
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-head"><h3>Despesas por categoria (mês atual)</h3></div>
+        <div id="listCategoriasDespesa"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Receitas por categoria (mês atual)</h3></div>
+        <div id="listCategoriasReceita"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARTÕES -->
+  <section class="panel" id="panel-cartoes">
+    <div class="card">
+      <div class="card-head"><h3>Seus cartões</h3></div>
+      <div id="listCartoes"></div>
+    </div>
+  </section>
+
+  <!-- INVESTIMENTOS -->
+  <section class="panel" id="panel-investimentos">
+    <div class="grid grid-3" style="margin-bottom:14px;">
+      <div class="card">
+        <p class="card-title">Total investido</p>
+        <div class="stat-value" id="statInvAplicado">R$ 0,00</div>
+        <p class="stat-sub">valor originalmente aplicado</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Saldo atual</p>
+        <div class="stat-value" id="statInvAtual">R$ 0,00</div>
+        <p class="stat-sub" id="statInvAtualSub">&nbsp;</p>
+      </div>
+      <div class="card">
+        <p class="card-title">Rendimento até agora</p>
+        <div class="stat-value" id="statInvRendimento">R$ 0,00</div>
+        <p class="stat-sub" id="statInvRendimentoSub">&nbsp;</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Posições por banco</h3></div>
+      <div id="listInvestimentos"></div>
+    </div>
+  </section>
+
+  <footer>Dados lidos diretamente da sua planilha no Google Sheets · atualiza ao recarregar a página</footer>
+</div>
+
+<div id="setupScreen"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ CONFIG ============ */
+  var params = new URLSearchParams(location.search);
+  var SHEET_ID_PLACEHOLDER = "COLE_O_ID_DA_SUA_PLANILHA_AQUI";
+  var SHEET_ID = params.get('sheet') || SHEET_ID_PLACEHOLDER;
+
+  var SHEETS = {
+    contas: "Contas",
+    cartoes: "Cartões",
+    categorias: "Categorias",
+    transacoesCartao: "Transações Cartão",
+    transacoesConta: "Transações Conta",
+    parcelamentos: "Parcelamentos",
+    assinaturas: "Assinaturas",
+    metas: "Metas",
+    investimentos: "Investimentos"
+  };
+
+  var MESES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  var MESES_ABREV = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var state = { contas:[], cartoes:[], categorias:[], transacoes:[], parcelamentos:[], assinaturas:[], metas:[], investimentos:[] };
+
+  /* ============ helpers ============ */
+  function $(sel){ return document.querySelector(sel); }
+  function el(tag, cls, html){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
+  function escapeHtml(s){
+    if(s==null) return "";
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function formatBRL(n){
+    n = Number(n)||0;
+    return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+  }
+  function formatBRLCompact(n){
+    n = Number(n)||0;
+    var sign = n < 0 ? "-" : "";
+    var abs = Math.abs(n);
+    if(abs >= 1000){ return sign + "R$ " + (abs/1000).toFixed(1).replace('.', ',') + "k"; }
+    return sign + "R$ " + abs.toFixed(0);
+  }
+  function formatPct(n){
+    return (n>0?"+":"") + n.toFixed(1).replace('.', ',') + "%";
+  }
+  function sameMonth(d, ref){ return d && d.getFullYear()===ref.getFullYear() && d.getMonth()===ref.getMonth(); }
+  function monthsBetween(d1, d2){
+    if(!d1) return 0;
+    return (d2.getFullYear()-d1.getFullYear())*12 + (d2.getMonth()-d1.getMonth());
+  }
+  function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
+  function initials(name){
+    if(!name) return "?";
+    var parts = name.trim().split(/\s+/);
+    return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+  }
+  function animateNumber(elNode, target, isCurrency){
+    if(!elNode) return;
+    if(reduceMotion){ elNode.textContent = isCurrency ? formatBRL(target) : target; return; }
+    var start = 0, t0 = performance.now(), dur = 650;
+    function step(t){
+      var p = Math.min(1, (t - t0)/dur);
+      var val = start + (target-start) * (1 - Math.pow(1-p, 3));
+      elNode.textContent = isCurrency ? formatBRL(val) : Math.round(val);
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ============ gviz fetch ============ */
+  function parseGvizDate(v){
+    if(v == null) return null;
+    if(typeof v === 'string'){
+      var m = /Date\((\d+),\s*(\d+),\s*(\d+)/.exec(v);
+      if(m) return new Date(+m[1], +m[2], +m[3]);
+    }
+    return null;
+  }
+  function cellVal(row, i){
+    if(!row || !row[i]) return null;
+    return row[i].v;
+  }
+  function numVal(row, i){
+    var v = cellVal(row, i);
+    if(typeof v === 'number') return v;
+    var f = parseFloat(v);
+    return isNaN(f) ? 0 : f;
+  }
+  function dateVal(row, i){ return parseGvizDate(cellVal(row, i)); }
+  function strVal(row, i){ var v = cellVal(row, i); return v==null ? "" : String(v); }
+
+  function fetchSheet(name){
+    var url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+      "/gviz/tq?tqx=out:json&headers=1&sheet=" + encodeURIComponent(name) + "&_=" + Date.now();
+    return fetch(url).then(function(res){
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      return res.text();
+    }).then(function(text){
+      var start = text.indexOf('(');
+      var end = text.lastIndexOf(')');
+      if(start === -1 || end === -1) throw new Error("Resposta inesperada do Google Sheets para a aba \"" + name + "\".");
+      var json = JSON.parse(text.substring(start+1, end));
+      if(!json.table || !json.table.rows) return [];
+      return json.table.rows.map(function(r){ return r.c; });
+    });
+  }
+
+  /* ============ mapping ============ */
+  function mapContas(rows){
+    return rows.map(function(c){
+      return { nome: strVal(c,1), instituicao: strVal(c,2), tipo: strVal(c,3), saldo: numVal(c,4), ativa: strVal(c,5) || "Sim" };
+    }).filter(function(x){ return x.nome; });
+  }
+  function mapCartoes(rows){
+    return rows.map(function(c){
+      return { nome: strVal(c,1), instituicao: strVal(c,2), limite: numVal(c,3), fechamento: numVal(c,4), vencimento: numVal(c,5), ativo: strVal(c,6) || "Sim" };
+    }).filter(function(x){ return x.nome; });
+  }
+  function mapCategorias(rows){
+    return rows.map(function(c){ return { nome: strVal(c,0), tipo: strVal(c,1) }; }).filter(function(x){ return x.nome; });
+  }
+  function mapTransacoes(rows, origem){
+    return rows.map(function(c){
+      return {
+        data: dateVal(c,1), descricao: strVal(c,2), categoria: strVal(c,3),
+        conta: strVal(c,4), cartao: strVal(c,5), tipo: strVal(c,6) || "Saída",
+        valor: numVal(c,7), parcelamentoId: strVal(c,8), obs: strVal(c,9),
+        origem: origem || "conta"
+      };
+    }).filter(function(x){ return x.descricao || x.valor; });
+  }
+  function mapParcelamentos(rows){
+    return rows.map(function(c){
+      var total = numVal(c,4), nParcelas = numVal(c,5) || 1, inicio = dateVal(c,7);
+      return {
+        descricao: strVal(c,1), cartao: strVal(c,2), categoria: strVal(c,3),
+        valorTotal: total, nParcelas: nParcelas, valorParcela: total / (nParcelas || 1), inicio: inicio
+      };
+    }).filter(function(x){ return x.descricao; });
+  }
+  function mapAssinaturas(rows){
+    return rows.map(function(c){
+      return {
+        nome: strVal(c,1), categoria: strVal(c,2), valor: numVal(c,3), frequencia: strVal(c,4) || "Mensal",
+        diaCobranca: numVal(c,5), origem: strVal(c,6), ativa: strVal(c,7) || "Sim"
+      };
+    }).filter(function(x){ return x.nome; });
+  }
+  function mapMetas(rows){
+    return rows.map(function(c){
+      return {
+        nome: strVal(c,1), categoria: strVal(c,2), valorObjetivo: numVal(c,3), valorAtual: numVal(c,4),
+        dataLimite: dateVal(c,5), conta: strVal(c,6), status: strVal(c,7) || "Ativa"
+      };
+    }).filter(function(x){ return x.nome; });
+  }
+  function mapInvestimentos(rows){
+    return rows.map(function(c){
+      return {
+        banco: strVal(c,0), produto: strVal(c,1), tipo: strVal(c,2), taxa: strVal(c,3),
+        valorAplicado: numVal(c,4), valorAtual: numVal(c,5), valorLiquido: numVal(c,6),
+        impostos: numVal(c,7), aplicacaoMaisAntiga: dateVal(c,8), obs: strVal(c,9)
+      };
+    }).filter(function(x){ return x.produto; });
+  }
+
+  /* ============ load ============ */
+  // Cole aqui a URL do seu Web App do Apps Script (Implantar → Nova implantação → App da Web)
+  var WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzVUnPZ1KT6L4iOWaXnMRN4AOj99hLJOSWi16OW_IsrCLkaRUBYDBvcT29xHl-p8ss/exec";
+
+  function sincronizarBancos(){
+    if(WEBAPP_URL.indexOf("COLE_AQUI") !== -1){
+      alert("Configure WEBAPP_URL no código com a URL do seu Web App do Apps Script antes de usar este botão.");
+      return;
+    }
+    var btn = $("#syncBtn");
+    var txt = $("#statusText");
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    txt.textContent = "sincronizando com os bancos… isso pode levar até 1 minuto";
+
+    fetch(WEBAPP_URL)
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        txt.textContent = "sincronização concluída, atualizando painel…";
+        return loadAll();
+      })
+      .catch(function(err){
+        txt.textContent = "falha na sincronização: " + err.message;
+      })
+      .finally(function(){
+        btn.disabled = false;
+        btn.classList.remove('spinning');
+      });
+  }
+
+  function setStatus(mode, msg){
+    var dot = $("#statusDot"), txt = $("#statusText");
+    if(mode === 'ok'){
+      dot.classList.remove('err');
+      txt.textContent = "atualizado às " + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    } else if(mode === 'loading'){
+      dot.classList.remove('err');
+      txt.textContent = "carregando dados da planilha…";
+    } else {
+      dot.classList.add('err');
+      txt.textContent = "não foi possível carregar a planilha";
+    }
+  }
+
+  function showFatalError(message){
+    $("#errorArea").innerHTML =
+      '<div class="error-banner">' + escapeHtml(message) +
+      ' Confira se a planilha está compartilhada como "Qualquer pessoa com o link" (modo Leitor) e se os nomes das abas não foram alterados.</div>';
+  }
+
+  function loadAll(){
+    setStatus('loading');
+    $("#errorArea").innerHTML = "";
+    var btn = $("#refreshBtn");
+    btn.classList.add('spinning');
+    return Promise.all(Object.keys(SHEETS).map(function(key){
+      return fetchSheet(SHEETS[key]).catch(function(err){
+        // Metas, Investimentos e as abas de Transações (criadas no 1º sync) podem não existir ainda — fail soft
+        if(key === 'metas' || key === 'investimentos' || key === 'transacoesCartao' || key === 'transacoesConta') return [];
+        throw err;
+      });
+    }))
+      .then(function(results){
+        var keys = Object.keys(SHEETS);
+        var raw = {};
+        keys.forEach(function(k, i){ raw[k] = results[i]; });
+        state.contas = mapContas(raw.contas);
+        state.cartoes = mapCartoes(raw.cartoes);
+        state.categorias = mapCategorias(raw.categorias);
+        state.transacoes = mapTransacoes(raw.transacoesCartao, "cartao")
+          .concat(mapTransacoes(raw.transacoesConta, "conta"));
+        state.parcelamentos = mapParcelamentos(raw.parcelamentos);
+        state.assinaturas = mapAssinaturas(raw.assinaturas);
+        state.metas = mapMetas(raw.metas);
+        state.investimentos = mapInvestimentos(raw.investimentos);
+        renderAll();
+        setStatus('ok');
+      })
+      .catch(function(err){
+        console.error(err);
+        setStatus('error');
+        showFatalError("Não foi possível ler a planilha.");
+        renderAll();
+      })
+      .finally(function(){ btn.classList.remove('spinning'); });
+  }
+
+  /* ============ shared calculations ============ */
+  function getInvoiceWindow(closingDay, ref){
+    ref = ref || new Date();
+    var y = ref.getFullYear(), m = ref.getMonth(), d = ref.getDate();
+    var start, end;
+    if(d <= closingDay){
+      end = new Date(y, m, closingDay);
+      start = new Date(y, m-1, closingDay+1);
+    } else {
+      end = new Date(y, m+1, closingDay);
+      start = new Date(y, m, closingDay+1);
+    }
+    return {start:start, end:end};
+  }
+  function faturaAtual(card){
+    if(!card.fechamento) return 0;
+    var win = getInvoiceWindow(card.fechamento);
+    return state.transacoes.filter(function(t){
+      return t.cartao === card.nome && t.tipo === "Saída" && t.data && t.data >= win.start && t.data <= win.end;
+    }).reduce(function(s,t){ return s+t.valor; }, 0);
+  }
+  // Janela de compras da fatura que JÁ FECHOU (a anterior à janela em formação)
+  function janelaAnterior(closingDay, janelaAtualStart){
+    var fimAnterior = new Date(janelaAtualStart);
+    fimAnterior.setDate(fimAnterior.getDate() - 1);
+    return getInvoiceWindow(closingDay, fimAnterior);
+  }
+  function vencimentoDaJanela(janela, vencimentoDay, closingDay){
+    var vencimento = new Date(janela.end.getFullYear(), janela.end.getMonth(), vencimentoDay || closingDay);
+    if(vencimento <= janela.end) vencimento.setMonth(vencimento.getMonth() + 1);
+    return vencimento;
+  }
+  // Histórico mês a mês: a fatura em formação + os últimos N ciclos já fechados, com janela, vencimento, valor e status
+  function historicoFaturas(card, nMeses){
+    if(!card.fechamento) return [];
+    var hoje = new Date();
+    var out = [];
+
+    // 1ª linha: a fatura ATUAL, ainda em formação (a que o app do banco chama de "fatura aberta")
+    var janelaAtual = getInvoiceWindow(card.fechamento, hoje);
+    var vencAtual = vencimentoDaJanela(janelaAtual, card.vencimento, card.fechamento);
+    var valorAtual = state.transacoes.filter(function(t){
+      return t.cartao === card.nome && t.tipo === "Saída" && t.data && t.data >= janelaAtual.start && t.data <= janelaAtual.end;
+    }).reduce(function(s,t){ return s+t.valor; }, 0);
+    out.push({ janela: janelaAtual, vencimento: vencAtual, valor: valorAtual, status: "Em formação" });
+
+    // Demais linhas: ciclos já fechados, mais antigos
+    var janela = janelaAnterior(card.fechamento, janelaAtual.start);
+    for(var i=0;i<nMeses-1;i++){
+      var vencimento = vencimentoDaJanela(janela, card.vencimento, card.fechamento);
+      var jaVenceu = hoje > vencimento;
+      var valor = state.transacoes.filter(function(t){
+        return t.cartao === card.nome && t.tipo === "Saída" && t.data && t.data >= janela.start && t.data <= janela.end;
+      }).reduce(function(s,t){ return s+t.valor; }, 0);
+      out.push({ janela: janela, vencimento: vencimento, valor: valor, status: jaVenceu ? "Vencida" : "Aguardando vencimento" });
+      janela = janelaAnterior(card.fechamento, janela.start);
+    }
+    return out;
+  }
+  function totalAssinaturasMes(){
+    return state.assinaturas.filter(function(a){ return a.ativa !== "Não"; })
+      .reduce(function(s,a){ return s + (a.frequencia === "Anual" ? a.valor/12 : a.valor); }, 0);
+  }
+  function parcelamentoStatus(p){
+    var hoje = new Date();
+    var pagas = p.inicio ? clamp(monthsBetween(p.inicio, hoje) + 1, 0, p.nParcelas) : 0;
+    return { pagas: pagas, restantes: p.nParcelas - pagas };
+  }
+  function patrimonioLiquido(){
+    var emContas = state.contas.filter(function(c){ return c.ativa !== "Não"; }).reduce(function(s,c){ return s+c.saldo; }, 0);
+    var emFaturas = state.cartoes.filter(function(c){ return c.ativo !== "Não"; }).reduce(function(s,c){ return s+faturaAtual(c); }, 0);
+    return { emContas: emContas, emFaturas: emFaturas, liquido: emContas - emFaturas };
+  }
+
+  function emptyState(title, sub){
+    return '<div class="empty"><div class="icon">i</div><p class="title">' + escapeHtml(title) +
+      '</p><p class="sub">' + escapeHtml(sub) + '</p></div>';
+  }
+
+  /* ============ render: Visão Geral ============ */
+  function renderGeral(){
+    var hoje = new Date();
+    var mesAnteriorRef = new Date(hoje.getFullYear(), hoje.getMonth()-1, 1);
+
+    var pat = patrimonioLiquido();
+    $("#statPatrimonioSub").textContent = state.contas.length ? (state.contas.length + " conta(s) · " + state.cartoes.length + " cartão(ões)") : "nenhuma conta cadastrada ainda";
+    animateNumber($("#statPatrimonio"), pat.liquido, true);
+
+    var saidasMesAtual = state.transacoes.filter(function(t){ return t.tipo === "Saída" && sameMonth(t.data, hoje); });
+    var saidasMesAnterior = state.transacoes.filter(function(t){ return t.tipo === "Saída" && sameMonth(t.data, mesAnteriorRef); });
+    var gastoAtual = saidasMesAtual.reduce(function(s,t){ return s+t.valor; }, 0);
+    var gastoAnterior = saidasMesAnterior.reduce(function(s,t){ return s+t.valor; }, 0);
+
+    $("#statGastoLabel").textContent = "Gasto em " + MESES[hoje.getMonth()];
+    animateNumber($("#statGasto"), gastoAtual, true);
+    $("#statGastoSub").textContent = saidasMesAtual.length + " lançamento(s) este mês";
+
+    var variTag = $("#statVariacaoTag");
+    if(gastoAnterior > 0){
+      var vari = ((gastoAtual - gastoAnterior) / gastoAnterior) * 100;
+      $("#statVariacao").textContent = formatPct(vari);
+      variTag.className = "stat-delta " + (vari > 0.5 ? "up" : (vari < -0.5 ? "down" : "flat"));
+      variTag.textContent = vari > 0.5 ? "gastando mais que no mês passado" : (vari < -0.5 ? "gastando menos que no mês passado" : "estável em relação ao mês passado");
+    } else {
+      $("#statVariacao").textContent = "—";
+      variTag.className = "stat-delta flat";
+      variTag.textContent = "sem gastos no mês anterior para comparar";
+    }
+
+    if(saidasMesAtual.length){
+      var maior = saidasMesAtual.reduce(function(a,b){ return b.valor > a.valor ? b : a; });
+      $("#statMaiorGasto").textContent = formatBRL(maior.valor);
+      $("#statMaiorGastoSub").textContent = maior.descricao || "sem descrição";
+    } else {
+      $("#statMaiorGasto").textContent = "—";
+      $("#statMaiorGastoSub").textContent = "nenhum gasto este mês";
+    }
+
+    renderCashflowChart();
+    renderInsights(saidasMesAtual, saidasMesAnterior, gastoAtual, gastoAnterior);
+    renderContasResumo();
+    renderCartoesResumo();
+    renderTopCategorias(saidasMesAtual);
+    renderCompromissos();
+  }
+
+  function renderContasResumo(){
+    var box = $("#listContasResumo");
+    if(!state.contas.length){
+      box.innerHTML = emptyState("Nenhuma conta cadastrada", "Preencha a aba Contas da sua planilha para ver os saldos aqui.");
+      return;
+    }
+    box.innerHTML = state.contas.map(function(c){
+      return '<div class="row"><div class="avatar">' + escapeHtml(initials(c.nome)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(c.nome) + '</div>' +
+        '<div class="row-sub">' + escapeHtml(c.instituicao || c.tipo) + '</div></div>' +
+        '<div class="row-value">' + formatBRL(c.saldo) + '</div></div>';
+    }).join("");
+  }
+
+  function renderCartoesResumo(){
+    var box = $("#listCartoesResumo");
+    if(!state.cartoes.length){
+      box.innerHTML = emptyState("Nenhum cartão cadastrado", "Preencha a aba Cartões da sua planilha para acompanhar faturas aqui.");
+      return;
+    }
+    var cartoesAtivos = state.cartoes.filter(function(card){ return card.ativo !== "Não"; });
+    box.innerHTML = cartoesAtivos.map(function(card){
+      var faturaAberta = faturaAtual(card);
+      var pct = card.limite > 0 ? clamp((faturaAberta/card.limite)*100, 0, 100) : 0;
+      var win = getInvoiceWindow(card.fechamento);
+      var vencimento = vencimentoDaJanela(win, card.vencimento, card.fechamento);
+      return '<div class="row"><div class="avatar">' + escapeHtml(initials(card.nome)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(card.nome) + '</div>' +
+        '<div class="row-sub">vence ' + vencimento.toLocaleDateString('pt-BR') + '</div>' +
+        '<div class="bar-track"><div class="bar-fill ' + (pct>85?'warn':'') + '" style="width:' + pct + '%"></div></div></div>' +
+        '<div class="row-value">' + formatBRL(faturaAberta) + '</div></div>';
+    }).join("");
+  }
+
+  function renderTopCategorias(saidasMesAtual){
+    var box = $("#listTopCategorias");
+    var agg = {};
+    saidasMesAtual.forEach(function(t){
+      var k = t.categoria || "Sem categoria";
+      agg[k] = (agg[k]||0) + t.valor;
+    });
+    var entries = Object.keys(agg).map(function(k){ return {nome:k, valor:agg[k]}; }).sort(function(a,b){ return b.valor-a.valor; }).slice(0,5);
+    if(!entries.length){
+      box.innerHTML = emptyState("Sem gastos este mês", "Quando houver lançamentos de saída na planilha, as categorias mais pesadas aparecem aqui.");
+      return;
+    }
+    var max = entries[0].valor;
+    box.innerHTML = entries.map(function(e){
+      var pct = max>0 ? (e.valor/max)*100 : 0;
+      return '<div class="row"><div class="row-main"><div class="row-title">' + escapeHtml(e.nome) + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div></div>' +
+        '<div class="row-value">' + formatBRL(e.valor) + '</div></div>';
+    }).join("");
+  }
+
+  function renderCompromissos(){
+    var box = $("#listCompromissos");
+    var totalAssinaturas = totalAssinaturasMes();
+    var parcelamentosAtivos = state.parcelamentos.filter(parcelamentoStatus).filter(function(p){ return parcelamentoStatus(p).restantes > 0; });
+    var totalParcelas = parcelamentosAtivos.reduce(function(s,p){ return s + p.valorParcela; }, 0);
+    var rows = [];
+    rows.push({nome:"Assinaturas ativas", valor: totalAssinaturas, sub: state.assinaturas.filter(function(a){return a.ativa!=="Não";}).length + " assinatura(s)"});
+    rows.push({nome:"Parcelas em andamento", valor: totalParcelas, sub: parcelamentosAtivos.length + " parcelamento(s)"});
+    box.innerHTML = rows.map(function(r){
+      return '<div class="row"><div class="row-main"><div class="row-title">' + escapeHtml(r.nome) + '</div>' +
+        '<div class="row-sub">' + escapeHtml(r.sub) + '</div></div>' +
+        '<div class="row-value">' + formatBRL(r.valor) + '</div></div>';
+    }).join("");
+  }
+
+  /* ============ render: Fluxo de caixa (6 meses) ============ */
+  function monthKey(d){ return d.getFullYear() + "-" + d.getMonth(); }
+  function lastNMonths(n){
+    var hoje = new Date();
+    var out = [];
+    for(var i=n-1;i>=0;i--){
+      out.push(new Date(hoje.getFullYear(), hoje.getMonth()-i, 1));
+    }
+    return out;
+  }
+  var _charts = {};
+  function destruirChart(key){
+    if(_charts[key]){ _charts[key].destroy(); _charts[key] = null; }
+  }
+  function garantirCanvas(containerId, canvasId){
+    var box = $("#"+containerId);
+    if(!box.querySelector("#"+canvasId)){
+      box.innerHTML = '<canvas id="'+canvasId+'" height="220"></canvas>';
+    }
+    return box.querySelector("#"+canvasId);
+  }
+
+  function renderCashflowChart(){
+    var box = $("#cashflowChart");
+    var months = lastNMonths(6);
+    var data = months.map(function(m){
+      var entradas = state.transacoes.filter(function(t){ return t.tipo==="Entrada" && sameMonth(t.data, m); }).reduce(function(s,t){ return s+t.valor; },0);
+      var saidas = state.transacoes.filter(function(t){ return t.tipo==="Saída" && sameMonth(t.data, m); }).reduce(function(s,t){ return s+t.valor; },0);
+      return { mes: m, entradas: entradas, saidas: saidas };
+    });
+    var hasData = data.some(function(d){ return d.entradas>0 || d.saidas>0; });
+    destruirChart('cashflow');
+    if(!hasData){
+      box.innerHTML = emptyState("Sem lançamentos suficientes", "Quando houver transações em pelo menos um mês, o gráfico de entradas e saídas aparece aqui.");
+      return;
+    }
+    var canvas = garantirCanvas('cashflowChart', 'cashflowCanvas');
+    var lime = getComputedStyle(document.documentElement).getPropertyValue('--lime').trim();
+    var red = getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
+    var textDim = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim();
+    var border = getComputedStyle(document.documentElement).getPropertyValue('--border-soft').trim();
+
+    _charts.cashflow = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: data.map(function(d){ return MESES_ABREV[d.mes.getMonth()]; }),
+        datasets: [
+          { label: 'Entradas', data: data.map(function(d){ return d.entradas; }), backgroundColor: lime, borderRadius: 4, maxBarThickness: 28 },
+          { label: 'Saídas', data: data.map(function(d){ return d.saidas; }), backgroundColor: red, borderRadius: 4, maxBarThickness: 28 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        onClick: function(evt, elements){
+          if(elements.length){
+            document.querySelector('.tab-btn[data-tab="transacoes"]').click();
+          }
+        },
+        plugins: {
+          legend: { labels: { color: textDim, font: { size: 12 } } },
+          tooltip: {
+            backgroundColor: '#1c1c1e', borderColor: border, borderWidth: 1, padding: 10,
+            titleColor: '#fafafa', bodyColor: '#fafafa',
+            callbacks: { label: function(ctx){ return ctx.dataset.label + ': ' + formatBRL(ctx.parsed.y); } }
+          }
+        },
+        scales: {
+          x: { ticks: { color: textDim }, grid: { display: false } },
+          y: { ticks: { color: textDim, callback: function(v){ return formatBRLCompact(v); } }, grid: { color: border } }
+        }
+      }
+    });
+  }
+
+  /* ============ render: Insights automáticos ============ */
+  function renderInsights(saidasMesAtual, saidasMesAnterior, gastoAtual, gastoAnterior){
+    var box = $("#listInsights");
+    var insights = [];
+
+    // 1. Variação geral de gasto
+    if(gastoAnterior > 0){
+      var vari = ((gastoAtual - gastoAnterior) / gastoAnterior) * 100;
+      if(Math.abs(vari) > 5){
+        insights.push({
+          icon: vari>0 ? 'up' : 'down', emoji: vari>0 ? '↑' : '↓',
+          html: 'Você gastou <b>' + formatPct(vari) + '</b> em relação ao mês passado.',
+          sub: formatBRL(gastoAtual) + ' este mês vs ' + formatBRL(gastoAnterior) + ' no anterior'
+        });
+      }
+    }
+
+    // 2. Maior variação por categoria (mês atual vs anterior)
+    function aggByCat(list){
+      var agg = {};
+      list.forEach(function(t){ var k=t.categoria||"Sem categoria"; agg[k]=(agg[k]||0)+t.valor; });
+      return agg;
+    }
+    var catAtual = aggByCat(saidasMesAtual), catAnterior = aggByCat(saidasMesAnterior);
+    var maiorAlta = null;
+    Object.keys(catAtual).forEach(function(k){
+      var diff = catAtual[k] - (catAnterior[k]||0);
+      if(catAnterior[k] > 0 && diff > 0){
+        if(!maiorAlta || diff > maiorAlta.diff) maiorAlta = {categoria:k, diff:diff, atual:catAtual[k], anterior:catAnterior[k]};
+      }
+    });
+    if(maiorAlta){
+      var pctAlta = (maiorAlta.diff / maiorAlta.anterior) * 100;
+      insights.push({
+        icon:'warn', emoji:'!',
+        html: 'Categoria <b>' + escapeHtml(maiorAlta.categoria) + '</b> subiu ' + formatPct(pctAlta) + ' este mês.',
+        sub: formatBRL(maiorAlta.atual) + ' vs ' + formatBRL(maiorAlta.anterior) + ' no mês anterior'
+      });
+    }
+
+    // 3. Categoria que mais caiu (economia)
+    var maiorQueda = null;
+    Object.keys(catAnterior).forEach(function(k){
+      var diff = (catAtual[k]||0) - catAnterior[k];
+      if(catAnterior[k] > 0 && diff < 0){
+        if(!maiorQueda || diff < maiorQueda.diff) maiorQueda = {categoria:k, diff:diff, atual:catAtual[k]||0, anterior:catAnterior[k]};
+      }
+    });
+    if(maiorQueda){
+      var pctQueda = (maiorQueda.diff / maiorQueda.anterior) * 100;
+      insights.push({
+        icon:'down', emoji:'↓',
+        html: 'Você economizou em <b>' + escapeHtml(maiorQueda.categoria) + '</b>, queda de ' + formatPct(Math.abs(pctQueda)).replace('+','-') + '.',
+        sub: formatBRL(maiorQueda.atual) + ' vs ' + formatBRL(maiorQueda.anterior) + ' no mês anterior'
+      });
+    }
+
+    // 4. Possíveis cobranças duplicadas (mesma descrição + valor no mesmo mês)
+    var dupKey = {};
+    saidasMesAtual.forEach(function(t){
+      var k = (t.descricao||"").toLowerCase().trim() + "|" + t.valor;
+      dupKey[k] = (dupKey[k]||0)+1;
+    });
+    var dupFound = Object.keys(dupKey).filter(function(k){ return dupKey[k] > 1 && k.split("|")[0]; })[0];
+    if(dupFound){
+      var parts = dupFound.split("|");
+      insights.push({
+        icon:'info', emoji:'⟲',
+        html: 'Encontrei <b>' + dupKey[dupFound] + ' lançamentos</b> parecidos com "' + escapeHtml(parts[0]) + '" de ' + formatBRL(parseFloat(parts[1])) + '.',
+        sub: 'Vale confirmar se não é uma cobrança duplicada'
+      });
+    }
+
+    // 5. Cartão perto do limite
+    state.cartoes.filter(function(c){ return c.ativo!=="Não"; }).forEach(function(card){
+      var fatura = faturaAtual(card);
+      var pct = card.limite>0 ? (fatura/card.limite)*100 : 0;
+      if(pct >= 80){
+        insights.push({
+          icon:'warn', emoji:'!',
+          html: 'O cartão <b>' + escapeHtml(card.nome) + '</b> está com ' + pct.toFixed(0) + '% do limite usado.',
+          sub: formatBRL(fatura) + ' de ' + formatBRL(card.limite)
+        });
+      }
+    });
+
+    // 6. Maior gasto isolado do mês
+    if(saidasMesAtual.length){
+      var maior = saidasMesAtual.reduce(function(a,b){ return b.valor > a.valor ? b : a; });
+      if(maior.valor > (gastoAtual * 0.25) && gastoAtual > 0){
+        insights.push({
+          icon:'info', emoji:'i',
+          html: '<b>' + escapeHtml(maior.descricao||"Um gasto") + '</b> sozinho representa ' + ((maior.valor/gastoAtual)*100).toFixed(0) + '% do mês.',
+          sub: formatBRL(maior.valor)
+        });
+      }
+    }
+
+    if(!insights.length){
+      box.innerHTML = emptyState("Sem insights por agora", "Conforme você lança mais transações em meses seguidos, padrões e alertas aparecem aqui automaticamente.");
+      return;
+    }
+
+    box.innerHTML = insights.slice(0,6).map(function(i){
+      return '<div class="insight"><div class="insight-icon ' + i.icon + '">' + i.emoji + '</div>' +
+        '<div><div class="insight-text">' + i.html + '</div><div class="insight-sub">' + escapeHtml(i.sub) + '</div></div></div>';
+    }).join("");
+  }
+
+  /* ============ render: Patrimônio ============ */
+  function renderPatrimonio(){
+    var pat = patrimonioLiquido();
+    animateNumber($("#statPatContas"), pat.emContas, true);
+    $("#statPatContasSub").textContent = state.contas.filter(function(c){return c.ativa!=="Não";}).length + " conta(s) ativa(s)";
+    animateNumber($("#statPatFaturas"), pat.emFaturas, true);
+    $("#statPatFaturasSub").textContent = state.cartoes.filter(function(c){return c.ativo!=="Não";}).length + " cartão(ões) ativo(s)";
+    animateNumber($("#statPatLiquido"), pat.liquido, true);
+
+    renderNetworthChart();
+    renderPatContas();
+    renderPatCartoes();
+  }
+
+  function renderPatContas(){
+    var box = $("#listPatContas");
+    if(!state.contas.length){
+      box.innerHTML = emptyState("Nenhuma conta cadastrada", "Preencha a aba Contas da planilha para ver os saldos aqui.");
+      return;
+    }
+    var ativos = state.contas.filter(function(c){ return c.ativa !== "Não"; });
+    var max = Math.max.apply(null, ativos.map(function(c){ return Math.abs(c.saldo); }), 1);
+    box.innerHTML = state.contas.map(function(c){
+      var pct = max>0 ? clamp((Math.abs(c.saldo)/max)*100,0,100) : 0;
+      return '<div class="row"><div class="avatar">' + escapeHtml(initials(c.nome)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(c.nome) +
+        ' <span class="badge ' + (c.ativa==="Não"?"muted":"ok") + '">' + (c.ativa==="Não"?"Inativa":c.tipo||"Ativa") + '</span></div>' +
+        '<div class="row-sub">' + escapeHtml(c.instituicao||"—") + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div></div>' +
+        '<div class="row-value">' + formatBRL(c.saldo) + '</div></div>';
+    }).join("");
+  }
+
+  function renderPatCartoes(){
+    var box = $("#listPatCartoes");
+    if(!state.cartoes.length){
+      box.innerHTML = emptyState("Nenhum cartão cadastrado", "Preencha a aba Cartões da planilha para acompanhar faturas aqui.");
+      return;
+    }
+    box.innerHTML = state.cartoes.map(function(card){
+      var fatura = faturaAtual(card);
+      var pct = card.limite > 0 ? clamp((fatura/card.limite)*100, 0, 100) : 0;
+      return '<div class="row"><div class="avatar">' + escapeHtml(initials(card.nome)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(card.nome) + '</div>' +
+        '<div class="row-sub">' + pct.toFixed(0) + '% do limite usado</div>' +
+        '<div class="bar-track"><div class="bar-fill ' + (pct>85?'warn':'') + '" style="width:' + pct + '%"></div></div></div>' +
+        '<div class="row-value">' + formatBRL(fatura) + '</div></div>';
+    }).join("");
+  }
+
+  /* ============ networth evolution chart (12 months, reconstructed from transactions) ============ */
+  function renderNetworthChart(){
+    var box = $("#networthChart");
+    var months = lastNMonths(12);
+    var pat = patrimonioLiquido();
+
+    var runningBalance = pat.liquido;
+    var monthlyNet = months.map(function(m){
+      var entradas = state.transacoes.filter(function(t){ return t.tipo==="Entrada" && sameMonth(t.data, m); }).reduce(function(s,t){ return s+t.valor; },0);
+      var saidas = state.transacoes.filter(function(t){ return t.tipo==="Saída" && sameMonth(t.data, m); }).reduce(function(s,t){ return s+t.valor; },0);
+      return entradas - saidas;
+    });
+    var series = [];
+    var bal = runningBalance;
+    for(var i=months.length-1;i>=0;i--){
+      series[i] = bal;
+      bal -= monthlyNet[i];
+    }
+
+    destruirChart('networth');
+    var hasAnyTxn = state.transacoes.length > 0;
+    if(!hasAnyTxn){
+      box.innerHTML = emptyState("Sem histórico suficiente", "Conforme você lança transações em vários meses, a curva de evolução do patrimônio aparece aqui.");
+      return;
+    }
+
+    var canvas = garantirCanvas('networthChart', 'networthCanvas');
+    var lastUp = series[series.length-1] >= series[0];
+    var lime = getComputedStyle(document.documentElement).getPropertyValue('--lime').trim();
+    var red = getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
+    var textDim = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim();
+    var border = getComputedStyle(document.documentElement).getPropertyValue('--border-soft').trim();
+    var strokeColor = lastUp ? lime : red;
+
+    var ctx = canvas.getContext('2d');
+    var gradient = ctx.createLinearGradient(0, 0, 0, 220);
+    gradient.addColorStop(0, strokeColor + '40');
+    gradient.addColorStop(1, strokeColor + '00');
+
+    _charts.networth = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: months.map(function(m){ return MESES_ABREV[m.getMonth()]; }),
+        datasets: [{
+          label: 'Patrimônio líquido',
+          data: series,
+          borderColor: strokeColor,
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: strokeColor,
+          borderWidth: 2.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1c1c1e', borderColor: border, borderWidth: 1, padding: 10,
+            titleColor: '#fafafa', bodyColor: '#fafafa',
+            callbacks: { label: function(ctx){ return formatBRL(ctx.parsed.y); } }
+          }
+        },
+        scales: {
+          x: { ticks: { color: textDim }, grid: { display: false } },
+          y: { ticks: { color: textDim, callback: function(v){ return formatBRLCompact(v); } }, grid: { color: border } }
+        }
+      }
+    });
+  }
+
+  /* ============ render: Metas ============ */
+  function renderMetas(){
+    var ativas = state.metas.filter(function(m){ return m.status !== "Concluída" && m.status !== "Pausada"; });
+    var guardado = state.metas.reduce(function(s,m){ return s + m.valorAtual; }, 0);
+    var falta = ativas.reduce(function(s,m){ return s + Math.max(0, m.valorObjetivo - m.valorAtual); }, 0);
+
+    $("#statMetasAtivas").textContent = ativas.length;
+    $("#statMetasAtivasSub").textContent = state.metas.length ? (state.metas.length + " meta(s) no total") : "nenhuma meta cadastrada ainda";
+    animateNumber($("#statMetasGuardado"), guardado, true);
+    $("#statMetasGuardadoSub").textContent = "em todas as metas";
+    animateNumber($("#statMetasFalta"), falta, true);
+
+    var box = $("#listMetas");
+    if(!state.metas.length){
+      box.innerHTML = emptyState("Nenhuma meta cadastrada", "Adicione seus objetivos financeiros na aba Metas da planilha — viagem, reserva de emergência, quitar uma dívida, etc.");
+      return;
+    }
+    var hoje = new Date();
+    box.innerHTML = state.metas.map(function(m){
+      var pct = m.valorObjetivo>0 ? clamp((m.valorAtual/m.valorObjetivo)*100,0,100) : 0;
+      var concluida = m.status === "Concluída" || pct >= 100;
+      var badgeClass = concluida ? "muted" : (m.status === "Pausada" ? "amber" : "ok");
+      var badgeText = concluida ? "Concluída" : (m.status === "Pausada" ? "Pausada" : "Ativa");
+      var prazoTxt = "sem prazo definido";
+      if(m.dataLimite){
+        var meses = monthsBetween(hoje, m.dataLimite);
+        prazoTxt = m.dataLimite.toLocaleDateString('pt-BR') + (meses>0 ? " · faltam " + meses + " mês(es)" : (meses===0 ? " · este mês" : " · prazo vencido"));
+      }
+      var r = 22, circ = 2*Math.PI*r;
+      var dash = circ * (pct/100);
+      return '<div class="goal-card">' +
+        '<div class="goal-ring"><svg viewBox="0 0 56 56">' +
+          '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="5"/>' +
+          '<circle cx="28" cy="28" r="' + r + '" fill="none" stroke="' + (concluida?"var(--lime)":"var(--lime)") + '" stroke-width="5" ' +
+            'stroke-dasharray="' + dash.toFixed(1) + ' ' + circ.toFixed(1) + '" stroke-linecap="round"/>' +
+        '</svg><div class="goal-ring-pct">' + pct.toFixed(0) + '%</div></div>' +
+        '<div class="goal-main"><div class="goal-title">' + escapeHtml(m.nome) + ' <span class="badge ' + badgeClass + '">' + badgeText + '</span></div>' +
+        '<div class="goal-sub">' + escapeHtml(m.categoria||"Geral") + ' · ' + escapeHtml(prazoTxt) + (m.conta ? ' · ' + escapeHtml(m.conta) : '') + '</div></div>' +
+        '<div class="goal-values"><div class="goal-current">' + formatBRL(m.valorAtual) + '</div>' +
+        '<div class="goal-target">de ' + formatBRL(m.valorObjetivo) + '</div></div></div>';
+    }).join("");
+  }
+
+  /* ============ render: Assinaturas ============ */
+  function renderAssinaturas(){
+    animateNumber($("#statAssinaturasMes"), totalAssinaturasMes(), true);
+    var box = $("#listAssinaturas");
+    if(!state.assinaturas.length){
+      box.innerHTML = emptyState("Nenhuma assinatura cadastrada", "Adicione suas cobranças recorrentes na aba Assinaturas da planilha.");
+      return;
+    }
+    box.innerHTML = state.assinaturas.map(function(a){
+      return '<div class="row"><div class="avatar">' + escapeHtml(initials(a.nome)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(a.nome) +
+        ' <span class="badge ' + (a.ativa==="Não"?"muted":"ok") + '">' + (a.ativa==="Não"?"Pausada":"Ativa") + '</span></div>' +
+        '<div class="row-sub">' + escapeHtml(a.categoria||"—") + ' · ' + escapeHtml(a.frequencia) + ' · dia ' + a.diaCobranca + '</div></div>' +
+        '<div class="row-value">' + formatBRL(a.valor) + '</div></div>';
+    }).join("");
+  }
+
+  /* ============ render: Categorias ============ */
+  function renderCategorias(){
+    var hoje = new Date();
+    var doMes = state.transacoes.filter(function(t){ return sameMonth(t.data, hoje); });
+    renderCategoriaLista("#listCategoriasDespesa", doMes.filter(function(t){ return t.tipo==="Saída"; }),
+      "Nenhuma despesa este mês", "Os gastos lançados na planilha aparecem agrupados por categoria aqui.");
+    renderCategoriaLista("#listCategoriasReceita", doMes.filter(function(t){ return t.tipo==="Entrada"; }),
+      "Nenhuma receita este mês", "As entradas lançadas na planilha aparecem agrupadas por categoria aqui.");
+  }
+  function renderCategoriaLista(selector, transacoes, tituloVazio, subVazio){
+    var box = $(selector);
+    var agg = {};
+    transacoes.forEach(function(t){ var k=t.categoria||"Sem categoria"; agg[k]=(agg[k]||0)+t.valor; });
+    var entries = Object.keys(agg).map(function(k){ return {nome:k, valor:agg[k]}; }).sort(function(a,b){ return b.valor-a.valor; });
+    if(!entries.length){ box.innerHTML = emptyState(tituloVazio, subVazio); return; }
+    var max = entries[0].valor;
+    box.innerHTML = entries.map(function(e){
+      var pct = max>0 ? (e.valor/max)*100 : 0;
+      return '<div class="row"><div class="row-main"><div class="row-title">' + escapeHtml(e.nome) + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div></div>' +
+        '<div class="row-value">' + formatBRL(e.valor) + '</div></div>';
+    }).join("");
+  }
+
+  /* ============ render: Cartões ============ */
+  function renderCartoes(){
+    var box = $("#listCartoes");
+    if(!state.cartoes.length){
+      box.innerHTML = emptyState("Nenhum cartão cadastrado", "Adicione seus cartões na aba Cartões da planilha para ver faturas e limites aqui.");
+      return;
+    }
+    var cartoesAtivos = state.cartoes.filter(function(card){ return card.ativo !== "Não"; });
+    box.innerHTML = cartoesAtivos.map(function(card, idx){
+      var fatura = faturaAtual(card);
+      var pct = card.limite>0 ? clamp((fatura/card.limite)*100,0,100) : 0;
+      var canvasId = 'cardChart' + idx;
+
+      var historicoHtml = historicoFaturas(card, 4).map(function(h){
+        var corBadge = h.status === "Vencida" ? "muted" : (h.status === "Em formação" ? "info" : "ok");
+        return '<div class="row" style="padding-left:48px;">' +
+          '<div class="row-main"><div class="row-title" style="font-size:13px;">' +
+            MESES_ABREV[h.janela.start.getMonth()] + '/' + h.janela.start.getFullYear() + ' – ' + MESES_ABREV[h.janela.end.getMonth()] + '/' + h.janela.end.getFullYear() +
+            ' <span class="badge ' + corBadge + '">' + h.status + '</span></div>' +
+            '<div class="row-sub">vence ' + h.vencimento.toLocaleDateString('pt-BR') + '</div></div>' +
+          '<div class="row-value">' + formatBRL(h.valor) + '</div></div>';
+      }).join("");
+
+      return '<div class="row" style="flex-direction:column;align-items:stretch;">' +
+        '<div style="display:flex;align-items:center;gap:12px;width:100%;">' +
+        '<div class="avatar">' + escapeHtml(initials(card.nome)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(card.nome) +
+        ' <span class="badge ' + (card.ativo==="Não"?"muted":"ok") + '">' + (card.ativo==="Não"?"Inativo":"Ativo") + '</span></div>' +
+        '<div class="row-sub">' + escapeHtml(card.instituicao) + ' · fecha dia ' + card.fechamento + ', vence dia ' + card.vencimento + '</div>' +
+        '<div class="bar-track"><div class="bar-fill ' + (pct>85?'warn':'') + '" style="width:' + pct + '%"></div></div>' +
+        '<div class="row-sub">' + formatBRL(fatura) + ' de ' + formatBRL(card.limite) + ' do limite (fatura em formação)</div></div>' +
+        '</div>' +
+        '<div style="margin:14px 0 4px;"><canvas id="' + canvasId + '" height="90"></canvas></div>' +
+        historicoHtml +
+        '</div>';
+    }).join("");
+
+    if(_charts.cartoesCards){ _charts.cartoesCards.forEach(function(c){ if(c) c.destroy(); }); }
+    _charts.cartoesCards = [];
+    cartoesAtivos.forEach(function(card, idx){
+      var historicoAsc = historicoFaturas(card, 4).slice().reverse();
+      var canvas = document.getElementById('cardChart' + idx);
+      if(!canvas) return;
+      var lime = getComputedStyle(document.documentElement).getPropertyValue('--lime').trim();
+      var blue = getComputedStyle(document.documentElement).getPropertyValue('--blue').trim();
+      var textDim = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim();
+      var border = getComputedStyle(document.documentElement).getPropertyValue('--border-soft').trim();
+
+      var pointColors = historicoAsc.map(function(h){ return h.status === "Em formação" ? blue : lime; });
+
+      var chart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: historicoAsc.map(function(h){ return MESES_ABREV[h.janela.start.getMonth()]; }),
+          datasets: [{
+            data: historicoAsc.map(function(h){ return h.valor; }),
+            borderColor: lime,
+            segment: {
+              borderColor: function(ctx){ return ctx.p1DataIndex === historicoAsc.length - 1 ? blue : lime; },
+              borderDash: function(ctx){ return ctx.p1DataIndex === historicoAsc.length - 1 ? [4,4] : undefined; }
+            },
+            pointBackgroundColor: pointColors,
+            pointBorderColor: pointColors,
+            pointRadius: historicoAsc.map(function(h){ return h.status === "Em formação" ? 5 : 4; }),
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.35,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1c1c1e', borderColor: border, borderWidth: 1, padding: 8,
+              titleColor: '#fafafa', bodyColor: '#fafafa',
+              callbacks: { label: function(ctx){ return formatBRL(ctx.parsed.y); } }
+            }
+          },
+          scales: {
+            x: { ticks: { color: textDim, font: { size: 11 } }, grid: { display: false } },
+            y: { display: false }
+          }
+        }
+      });
+      _charts.cartoesCards.push(chart);
+    });
+  }
+
+  /* ============ render: Investimentos ============ */
+  function renderInvestimentos(){
+    var box = $("#listInvestimentos");
+    if(!state.investimentos.length){
+      box.innerHTML = emptyState("Nenhum investimento cadastrado", "Quando o sync trouxer posições de investimento (ou você cadastrar manualmente), elas aparecem aqui.");
+      $("#statInvAplicado").textContent = formatBRL(0);
+      $("#statInvAtual").textContent = formatBRL(0);
+      $("#statInvRendimento").textContent = formatBRL(0);
+      return;
+    }
+
+    var totalAplicado = state.investimentos.reduce(function(s,i){ return s+i.valorAplicado; }, 0);
+    var totalAtual = state.investimentos.reduce(function(s,i){ return s+i.valorAtual; }, 0);
+    var totalRendimento = totalAtual - totalAplicado;
+    var pctRendimento = totalAplicado > 0 ? (totalRendimento/totalAplicado)*100 : 0;
+
+    animateNumber($("#statInvAplicado"), totalAplicado, true);
+    animateNumber($("#statInvAtual"), totalAtual, true);
+    $("#statInvAtualSub").textContent = state.investimentos.length + " posição(ões) ativa(s)";
+    animateNumber($("#statInvRendimento"), totalRendimento, true);
+    $("#statInvRendimentoSub").textContent = formatPct(pctRendimento) + " sobre o valor aplicado";
+
+    box.innerHTML = state.investimentos.map(function(i){
+      var rendimento = i.valorAtual - i.valorAplicado;
+      var pct = i.valorAplicado > 0 ? (rendimento/i.valorAplicado)*100 : 0;
+      return '<div class="row"><div class="avatar">' + escapeHtml(initials(i.banco)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(i.produto) +
+        ' <span class="badge info">' + escapeHtml(i.taxa || i.tipo) + '</span></div>' +
+        '<div class="row-sub">' + escapeHtml(i.banco) + ' · aplicado ' + formatBRL(i.valorAplicado) +
+        ' · líquido hoje ' + formatBRL(i.valorLiquido) + '</div></div>' +
+        '<div class="row-value">' + formatBRL(i.valorAtual) +
+        '<div class="row-sub" style="color:' + (rendimento>=0?'var(--lime)':'var(--red)') + ';">' + formatPct(pct) + '</div></div></div>';
+    }).join("");
+  }
+
+  /* ============ render: Transações ============ */
+  function renderTransacoesFiltros(){
+    var sel = $("#filtroCategoria");
+    var cats = Array.from(new Set(state.transacoes.map(function(t){ return t.categoria; }).filter(Boolean))).sort();
+    sel.innerHTML = '<option value="">Todas as categorias</option>' +
+      cats.map(function(c){ return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join("");
+  }
+
+  function renderTransacoes(){
+    var busca = ($("#filtroBusca").value || "").toLowerCase();
+    var catFiltro = $("#filtroCategoria").value;
+    var tipoFiltro = $("#filtroTipo").value;
+    var origemFiltro = $("#filtroOrigem").value;
+
+    var list = state.transacoes.filter(function(t){
+      if(busca && !(t.descricao||"").toLowerCase().includes(busca)) return false;
+      if(catFiltro && t.categoria !== catFiltro) return false;
+      if(tipoFiltro && t.tipo !== tipoFiltro) return false;
+      if(origemFiltro && t.origem !== origemFiltro) return false;
+      return true;
+    }).sort(function(a,b){ return (b.data||0) - (a.data||0); });
+
+    var box = $("#tabelaTransacoes");
+    if(!list.length){
+      box.innerHTML = emptyState("Nenhuma transação encontrada", "Ajuste os filtros ou adicione lançamentos na aba Transações da planilha.");
+      return;
+    }
+    var rows = list.map(function(t){
+      var dataStr = t.data ? t.data.toLocaleDateString('pt-BR') : "—";
+      var sinal = t.tipo === "Entrada" ? "pos" : "neg";
+      var valorStr = (t.tipo === "Entrada" ? "+ " : "− ") + formatBRL(Math.abs(t.valor));
+      return '<tr><td>' + dataStr + '</td><td>' + escapeHtml(t.descricao) + '</td>' +
+        '<td>' + escapeHtml(t.categoria||"—") + '</td><td>' + escapeHtml(t.conta || t.cartao || "—") + '</td>' +
+        '<td class="cell-num ' + sinal + '">' + valorStr + '</td></tr>';
+    }).join("");
+    box.innerHTML = '<table><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Origem</th><th style="text-align:right;">Valor</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  /* ============ render: Parcelamentos ============ */
+  function renderParcelamentos(){
+    var box = $("#listParcelamentos");
+    if(!state.parcelamentos.length){
+      box.innerHTML = emptyState("Nenhum parcelamento cadastrado", "Adicione suas compras parceladas na aba Parcelamentos da planilha.");
+      return;
+    }
+    box.innerHTML = state.parcelamentos.map(function(p){
+      var st = parcelamentoStatus(p);
+      var pct = p.nParcelas>0 ? clamp((st.pagas/p.nParcelas)*100,0,100) : 0;
+      var concluido = st.restantes <= 0;
+      return '<div class="row"><div class="avatar">' + escapeHtml(initials(p.descricao)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(p.descricao) +
+        ' <span class="badge ' + (concluido?'muted':'ok') + '">' + (concluido?'Concluído':'Ativo') + '</span></div>' +
+        '<div class="row-sub">' + escapeHtml(p.cartao||"—") + ' · parcela ' + st.pagas + '/' + p.nParcelas + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div></div>' +
+        '<div class="row-value">' + formatBRL(p.valorParcela) + '<div class="row-sub">total ' + formatBRL(p.valorTotal) + '</div></div></div>';
+    }).join("");
+  }
+
+  /* ============ Projeções ============ */
+  function nextNMonths(n){
+    var hoje = new Date();
+    var out = [];
+    for(var i=0;i<n;i++){
+      out.push(new Date(hoje.getFullYear(), hoje.getMonth()+i, 1));
+    }
+    return out;
+  }
+
+  // Fixos conhecidos que caem num mês de referência: assinaturas ativas + parcelas em andamento que cobrem aquele mês
+  function fixosDoMes(mesRef){
+    var totalAssin = state.assinaturas.filter(function(a){ return a.ativa !== "Não"; })
+      .reduce(function(s,a){ return s + (a.frequencia === "Anual" ? a.valor/12 : a.valor); }, 0);
+
+    var parcelasDoMes = state.parcelamentos.filter(function(p){
+      if(!p.inicio) return false;
+      var offset = monthsBetween(p.inicio, mesRef);
+      return offset >= 0 && offset < p.nParcelas;
+    });
+    var totalParcelas = parcelasDoMes.reduce(function(s,p){ return s + p.valorParcela; }, 0);
+
+    return { assinaturas: totalAssin, parcelas: totalParcelas, itensParcelas: parcelasDoMes };
+  }
+
+  // Média móvel dos gastos variáveis: saídas que NÃO são assinatura nem parcela, nos últimos 3 meses já fechados
+  function mediaGastoVariavel(){
+    var meses = lastNMonths(3);
+    var nomesAssin = state.assinaturas.map(function(a){ return (a.nome||"").toLowerCase(); });
+    var totais = meses.map(function(m){
+      return state.transacoes.filter(function(t){
+        if(t.tipo !== "Saída" || !sameMonth(t.data, m)) return false;
+        if(t.parcelamentoId) return false; // já é parcela, não é variável
+        if(nomesAssin.indexOf((t.descricao||"").toLowerCase()) !== -1) return false;
+        return true;
+      }).reduce(function(s,t){ return s+t.valor; }, 0);
+    });
+    var mesesComDado = totais.filter(function(v){ return v > 0; });
+    if(!mesesComDado.length) return 0;
+    return mesesComDado.reduce(function(s,v){ return s+v; },0) / mesesComDado.length;
+  }
+
+  // Fatura de cartão prevista para PAGAMENTO em mesRef, usando fechamento/vencimento de cada cartão
+  function faturasPrevistasNoMes(mesRef){
+    return state.cartoes.filter(function(c){ return c.ativo !== "Não" && c.vencimento; }).map(function(c){
+      var vencimentoNoMes = new Date(mesRef.getFullYear(), mesRef.getMonth(), c.vencimento);
+      var win = getInvoiceWindow(c.fechamento, new Date(vencimentoNoMes.getFullYear(), vencimentoNoMes.getMonth(), 1));
+      var valor = state.transacoes.filter(function(t){
+        return t.cartao === c.nome && t.tipo === "Saída" && t.data && t.data >= win.start && t.data <= win.end;
+      }).reduce(function(s,t){ return s+t.valor; }, 0);
+      return { cartao: c.nome, valor: valor, vencimento: vencimentoNoMes, janela: win };
+    }).filter(function(f){ return f.valor > 0; });
+  }
+
+  function saldoAtualTotal(){
+    return state.contas.filter(function(c){ return c.ativa !== "Não"; }).reduce(function(s,c){ return s+c.saldo; }, 0);
+  }
+
+  function projetarMeses(n){
+    var media = mediaGastoVariavel();
+    var saldo = saldoAtualTotal();
+    var hoje = new Date();
+    return nextNMonths(n).map(function(mes, idx){
+      var fixos = fixosDoMes(mes);
+      var faturas = faturasPrevistasNoMes(mes).reduce(function(s,f){ return s+f.valor; }, 0);
+      var saidaPrevista = fixos.assinaturas + fixos.parcelas + faturas + media;
+      if(idx > 0) saldo -= saidaPrevista; // mês atual já está refletido no saldo das contas
+      return {
+        mes: mes, fixos: fixos, faturas: faturas, variavel: media,
+        saidaPrevista: saidaPrevista, saldoProjetado: idx === 0 ? saldo : saldo
+      };
+    });
+  }
+
+  function renderProjecoes(){
+    var proj = projetarMeses(6);
+    var mesAtual = proj[0];
+
+    var comprometido = mesAtual.fixos.assinaturas + mesAtual.fixos.parcelas + mesAtual.faturas;
+    $("#statProjComprometido").textContent = formatBRL(comprometido);
+    animateNumber($("#statProjComprometido"), comprometido, true);
+    $("#statProjComprometidoSub").textContent = mesAtual.fixos.itensParcelas.length + " parcela(s) + assinaturas + faturas previstas";
+
+    animateNumber($("#statProjSaldoFim"), mesAtual.saldoProjetado, true);
+    $("#statProjSaldoFimSub").textContent = mesAtual.saldoProjetado < 0 ? "saldo pode ficar negativo" : "considerando saídas previstas deste mês";
+
+    animateNumber($("#statProjMediaVariavel"), mesAtual.variavel, true);
+
+    renderProjecaoChart(proj);
+    renderProjComposicao(mesAtual);
+    renderProjFaturas();
+  }
+
+  function renderProjecaoChart(proj){
+    var box = $("#projecaoChart");
+    destruirChart('projecao');
+    var canvas = garantirCanvas('projecaoChart', 'projecaoCanvas');
+    var lime = getComputedStyle(document.documentElement).getPropertyValue('--lime').trim();
+    var red = getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
+    var textDim = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim();
+    var border = getComputedStyle(document.documentElement).getPropertyValue('--border-soft').trim();
+
+    _charts.projecao = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: proj.map(function(p){ return MESES_ABREV[p.mes.getMonth()]; }),
+        datasets: [{
+          label: 'Saldo projetado',
+          data: proj.map(function(p){ return p.saldoProjetado; }),
+          backgroundColor: proj.map(function(p){ return p.saldoProjetado < 0 ? red : lime; }),
+          borderRadius: 4,
+          maxBarThickness: 36
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1c1c1e', borderColor: border, borderWidth: 1, padding: 10,
+            titleColor: '#fafafa', bodyColor: '#fafafa',
+            callbacks: { label: function(ctx){ return formatBRL(ctx.parsed.y); } }
+          }
+        },
+        scales: {
+          x: { ticks: { color: textDim }, grid: { display: false } },
+          y: { ticks: { color: textDim, callback: function(v){ return formatBRLCompact(v); } }, grid: { color: border } }
+        }
+      }
+    });
+  }
+
+  function renderProjComposicao(mesAtual){
+    var box = $("#listProjComposicao");
+    var rows = [
+      {nome:"Assinaturas", valor: mesAtual.fixos.assinaturas, sub: "recorrente mensal"},
+      {nome:"Parcelas em andamento", valor: mesAtual.fixos.parcelas, sub: mesAtual.fixos.itensParcelas.length + " parcelamento(s) ativos"},
+      {nome:"Faturas de cartão previstas", valor: mesAtual.faturas, sub: "com base no fechamento/vencimento"},
+      {nome:"Gastos variáveis (estimado)", valor: mesAtual.variavel, sub: "média móvel 3 meses"}
+    ];
+    var max = Math.max.apply(null, rows.map(function(r){ return r.valor; }), 1);
+    box.innerHTML = rows.map(function(r){
+      var pct = max>0 ? (r.valor/max)*100 : 0;
+      return '<div class="row"><div class="row-main"><div class="row-title">' + escapeHtml(r.nome) + '</div>' +
+        '<div class="row-sub">' + escapeHtml(r.sub) + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div></div>' +
+        '<div class="row-value">' + formatBRL(r.valor) + '</div></div>';
+    }).join("");
+  }
+
+  function renderProjFaturas(){
+    var box = $("#listProjFaturas");
+    var faturas = faturasPrevistasNoMes(new Date());
+    if(!faturas.length){
+      box.innerHTML = emptyState("Sem fatura em formação", "Quando houver gastos no cartão dentro do ciclo atual, a fatura prevista aparece aqui.");
+      return;
+    }
+    box.innerHTML = faturas.map(function(f){
+      return '<div class="row"><div class="avatar">' + escapeHtml(initials(f.cartao)) + '</div>' +
+        '<div class="row-main"><div class="row-title">' + escapeHtml(f.cartao) + '</div>' +
+        '<div class="row-sub">vence ' + f.vencimento.toLocaleDateString('pt-BR') + '</div></div>' +
+        '<div class="row-value">' + formatBRL(f.valor) + '</div></div>';
+    }).join("");
+  }
+
+
+  function renderAll(){
+    renderGeral();
+    renderProjecoes();
+    renderPatrimonio();
+    renderTransacoesFiltros();
+    renderTransacoes();
+    renderMetas();
+    renderParcelamentos();
+    renderAssinaturas();
+    renderCategorias();
+    renderCartoes();
+    renderInvestimentos();
+  }
+
+  /* ============ tabs ============ */
+  function setupTabs(){
+    document.querySelectorAll(".tab-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.remove("active"); b.setAttribute("aria-selected","false"); });
+        btn.classList.add("active"); btn.setAttribute("aria-selected","true");
+        document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });
+        document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+      });
+    });
+  }
+
+  /* ============ setup screen (no sheet id) ============ */
+  function renderSetupScreen(){
+    document.getElementById("setupScreen").innerHTML =
+      '<div class="setup">' +
+      '<h1>Conecte sua planilha</h1>' +
+      '<p>Este painel lê os dados direto da sua planilha do Google Sheets. Para ligar os dois, escolha uma opção:</p>' +
+      '<ol>' +
+      '<li>Abra a planilha modelo no Google Sheets, preencha suas contas, cartões, transações etc.</li>' +
+      '<li>Compartilhe a planilha como <code>Qualquer pessoa com o link</code> → papel <code>Leitor</code>.</li>' +
+      '<li>Copie o ID da planilha (o trecho da URL entre <code>/d/</code> e <code>/edit</code>).</li>' +
+      '<li>Acesse este painel adicionando <code>?sheet=SEU_ID</code> ao final do link — ou edite a constante ' +
+      '<code>SHEET_ID</code> no topo do arquivo e publique de novo.</li>' +
+      '</ol>' +
+      '<span class="pill-note">Exemplo: suaurl.vercel.app/?sheet=1AbCdEfG...</span>' +
+      '</div>';
+  }
+
+  /* ============ boot ============ */
+  function boot(){
+    if(SHEET_ID === SHEET_ID_PLACEHOLDER){
+      renderSetupScreen();
+      return;
+    }
+    document.getElementById("app").hidden = false;
+    setupTabs();
+    $("#refreshBtn").addEventListener("click", loadAll);
+    $("#syncBtn").addEventListener("click", sincronizarBancos);
+    ["filtroBusca","filtroCategoria","filtroTipo","filtroOrigem"].forEach(function(id){
+      document.getElementById(id).addEventListener("input", renderTransacoes);
+      document.getElementById(id).addEventListener("change", renderTransacoes);
+    });
+    loadAll();
+    setInterval(loadAll, 5 * 60 * 1000);
+  }
+
+  document.addEventListener("DOMContentLoaded", boot);
+})();
+</script>
+
+</body>
+</html>
