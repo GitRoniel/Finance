@@ -351,6 +351,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .inv-hero .big{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin:6px 0 4px;}
 .inv-hero .delta{font-size:13px;font-weight:600;color:var(--lime-deep);}
 .inv-row{display:flex;align-items:center;gap:12px;padding:14px 15px;}
+.inv-row.inv-manual{cursor:pointer;}
+.inv-row.inv-manual:active{background:var(--track-bg);}
+.inv-tag{font-size:10px;font-weight:600;color:var(--lime-deep);background:rgba(131,214,38,0.16);padding:2px 7px;border-radius:7px;margin-left:5px;vertical-align:middle;text-transform:uppercase;letter-spacing:0.02em;}
+.inv-edit-chev{color:var(--text-faint);font-size:16px;flex:0 0 auto;padding-left:2px;}
+.btn-danger{flex:1;padding:12px;border-radius:13px;border:1px solid rgba(226,59,59,0.35);background:rgba(226,59,59,0.10);
+  color:var(--red);font-size:15px;font-weight:600;font-family:var(--font-display);cursor:pointer;}
+.btn-danger:active{transform:scale(0.98);}
 .inv-row:not(:last-child){border-bottom:1px solid var(--glass-border);}
 .inv-ic{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff;font-weight:700;font-size:12px;font-family:var(--font-display);}
 .inv-main{flex:1;min-width:0;}
@@ -383,7 +390,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .rec-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;}
 .rec-dot.in{background:var(--lime);}
 .rec-dot.out{background:var(--red);}
-.rec-main{flex:1;min-width:0;}
+.rec-main{flex:1;min-width:0;cursor:pointer;}
+.rec-val{cursor:pointer;}
 .rec-name{font-size:15px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .rec-check-lbl{font-size:11px;color:var(--text-faint);font-weight:500;margin-top:1px;transition:color .2s;}
 .rec-val{font-size:17px;font-weight:700;font-family:var(--font-display);flex:0 0 auto;transition:opacity .3s;}
@@ -489,6 +497,38 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .inv-hero-sub{margin:2px 0 4px;}
 .inv-liq-badge{display:inline-block;font-size:13px;font-weight:600;padding:3px 10px;border-radius:8px;background:rgba(180,244,74,0.13);color:var(--lime-deep);border:1px solid rgba(180,244,74,0.22);}
 
+/* cadastro de investimento */
+.inv-add-btn{background:var(--lime);color:#0c1f00;font-weight:600;font-size:14px;font-family:var(--font-display);
+  border:none;border-radius:13px;padding:11px 18px;cursor:pointer;}
+.inv-add-btn:active{transform:scale(0.97);}
+.modal-ov{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .22s;padding:0 0 env(safe-area-inset-bottom,0);}
+.modal-ov.show{opacity:1;}
+.modal{width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0));
+  transform:translateY(20px);transition:transform .26s cubic-bezier(0.16,1,0.3,1);max-height:88vh;overflow-y:auto;}
+.modal-ov.show .modal{transform:none;}
+@media(min-width:560px){ .modal-ov{align-items:center;} .modal{border-radius:24px;} }
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.modal-title{font-size:18px;font-weight:600;font-family:var(--font-display);}
+.modal-x{width:30px;height:30px;border-radius:50%;background:var(--track-bg);display:flex;align-items:center;justify-content:center;
+  color:var(--text-dim);cursor:pointer;font-size:13px;}
+.modal-body{display:flex;flex-direction:column;gap:11px;}
+.fld{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0;}
+.fld>span{font-size:12px;color:var(--text-faint);font-weight:500;padding-left:2px;}
+.fld input{width:100%;padding:11px 13px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass-bg);
+  color:var(--text);font-size:15px;font-family:var(--font);outline:none;transition:border-color .2s;}
+.fld input:focus{border-color:var(--lime);}
+.fld-row{display:flex;gap:10px;}
+.modal-msg{font-size:13px;min-height:18px;font-weight:500;}
+.modal-msg.err{color:var(--red);}
+.modal-msg.ok{color:var(--lime-deep);}
+.modal-foot{display:flex;gap:10px;margin-top:16px;}
+.btn-ghost{flex:1;padding:12px;border-radius:13px;border:1px solid var(--glass-border);background:transparent;
+  color:var(--text-dim);font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;}
+.btn-primary{flex:2;padding:12px;border-radius:13px;border:none;background:var(--lime);color:#0c1f00;
+  font-size:15px;font-weight:600;font-family:var(--font-display);cursor:pointer;}
+.btn-primary:disabled{opacity:.6;}
+.btn-ghost:active,.btn-primary:active{transform:scale(0.98);}
 </style>
 </head>
 <body>
@@ -1401,20 +1441,23 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* ===== TELA 4: INVESTIMENTOS ===== */
   function renderInvestimentos(){
     var invs=state.investimentos;
-    if(!invs.length) return '<div class="empty"><div class="ei">📈</div><div class="et">Nenhum investimento cadastrado na planilha.</div></div>';
+    if(!invs.length) return '<div class="empty"><div class="ei">📈</div><div class="et">Nenhum investimento cadastrado na planilha.</div>'+
+      '<button class="inv-add-btn" id="invAddBtn" style="margin-top:16px">+ Cadastrar investimento</button></div>';
     var totalAtual=invs.reduce(function(s,i){return s+(i.valorAtual||0);},0);
     var totalLiquido=invs.reduce(function(s,i){return s+(i.valorLiquido||0);},0);
     var totalAplicado=invs.reduce(function(s,i){return s+(i.valorAplicado||0);},0);
     // Lucro = valor líquido (saque hoje) − valor aplicado
     var rend=totalLiquido-totalAplicado;
     var pctRend=totalAplicado>0?(rend/totalAplicado*100):0;
-    var lista=invs.map(function(inv){
+    var lista=invs.map(function(inv,idx){
       var info=bancoDe(inv.banco);
       // Lucro individual = valor líquido − valor aplicado
       var rendInv=(inv.valorLiquido||0)-(inv.valorAplicado||0);
-      return '<div class="inv-row"><div class="inv-ic" style="background:'+info.cor1+'">'+initials(inv.banco)+'</div>'+
-        '<div class="inv-main"><div class="inv-name">'+escapeHtml(sentenceCase(inv.produto))+'</div><div class="inv-tipo">'+escapeHtml(inv.banco)+(inv.tipo?' · '+escapeHtml(sentenceCase(inv.tipo)):'')+'</div></div>'+
-        '<div class="inv-val"><div class="v">'+formatBRL(inv.valorAtual)+'</div><div class="r inv-liq-label">'+(rendInv>=0?'+':'')+formatBRL(rendInv)+' líq.</div></div></div>';
+      var ehManual=String(inv.obs||'').toLowerCase().indexOf('manual')!==-1;
+      return '<div class="inv-row'+(ehManual?' inv-manual':'')+'" data-idx="'+idx+'"><div class="inv-ic" style="background:'+info.cor1+'">'+initials(inv.banco)+'</div>'+
+        '<div class="inv-main"><div class="inv-name">'+escapeHtml(sentenceCase(inv.produto))+(ehManual?' <span class="inv-tag">manual</span>':'')+'</div><div class="inv-tipo">'+escapeHtml(inv.banco)+(inv.tipo?' · '+escapeHtml(sentenceCase(inv.tipo)):'')+'</div></div>'+
+        '<div class="inv-val"><div class="v">'+formatBRL(inv.valorAtual)+'</div><div class="r inv-liq-label">'+(rendInv>=0?'+':'')+formatBRL(rendInv)+' líq.</div></div>'+
+        (ehManual?'<div class="inv-edit-chev">›</div>':'')+'</div>';
     }).join("");
     return '<div class="glass inv-hero"><div class="k">Valor bruto atual</div><div class="big">'+formatBRL(totalAtual)+'</div>'+
       '<div class="inv-hero-sub"><span class="inv-liq-badge">Líquido: '+formatBRL(totalLiquido)+'</span></div>'+
@@ -1424,8 +1467,120 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="divider"></div>'+
         '<div class="blk"><div class="bk">Lucro líquido (saque hoje)</div><div class="bv '+(rend<0?'neg':'pos')+'">'+(rend>=0?'+':'')+formatBRL(rend)+'</div></div>'+
       '</div></div>'+
-      '<div class="section-head"><h2>Meus investimentos</h2><span class="cnt">'+invs.length+'</span></div>'+
+      '<div class="section-head"><h2>Meus investimentos</h2><span class="link" id="invAddBtn">+ Cadastrar</span></div>'+
       '<div class="glass tx-list">'+lista+'</div>';
+  }
+
+  // Modal de cadastro/edição de investimento. Se "inv" vier, abre em modo edição (com Excluir).
+  function abrirFormInvestimento(inv){
+    var editando=!!inv;
+    var ov=document.createElement('div');
+    ov.className='modal-ov';
+    function g(v){ return (v===undefined||v===null)?'':v; }
+    var dataIso='';
+    if(editando && inv.aplicacaoMaisAntiga instanceof Date && !isNaN(inv.aplicacaoMaisAntiga)){
+      var d=inv.aplicacaoMaisAntiga;
+      dataIso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    ov.innerHTML='<div class="modal glass">'+
+      '<div class="modal-head"><div class="modal-title">'+(editando?'Editar investimento':'Novo investimento')+'</div><div class="modal-x" id="invClose">✕</div></div>'+
+      '<div class="modal-body">'+
+        '<label class="fld"><span>Banco</span><input id="fBanco" type="text" placeholder="Ex: Nubank" autocomplete="off" value="'+escapeHtml(g(editando?inv.banco:''))+'"></label>'+
+        '<label class="fld"><span>Produto</span><input id="fProduto" type="text" placeholder="Ex: CDB Liquidez Diária" autocomplete="off" value="'+escapeHtml(g(editando?inv.produto:''))+'"></label>'+
+        '<div class="fld-row">'+
+          '<label class="fld"><span>Tipo</span><input id="fTipo" type="text" placeholder="CDB, Tesouro…" autocomplete="off" value="'+escapeHtml(g(editando?inv.tipo:''))+'"></label>'+
+          '<label class="fld"><span>Taxa</span><input id="fTaxa" type="text" placeholder="100% CDI" autocomplete="off" value="'+escapeHtml(g(editando?inv.taxa:''))+'"></label>'+
+        '</div>'+
+        '<div class="fld-row">'+
+          '<label class="fld"><span>Valor aplicado</span><input id="fAplicado" type="text" inputmode="decimal" placeholder="0,00" value="'+(editando&&inv.valorAplicado?String(inv.valorAplicado).replace('.',','):'')+'"></label>'+
+          '<label class="fld"><span>Valor atual</span><input id="fAtual" type="text" inputmode="decimal" placeholder="igual ao aplicado" value="'+(editando&&inv.valorAtual?String(inv.valorAtual).replace('.',','):'')+'"></label>'+
+        '</div>'+
+        '<div class="fld-row">'+
+          '<label class="fld"><span>Impostos prov.</span><input id="fImpostos" type="text" inputmode="decimal" placeholder="0,00" value="'+(editando&&inv.impostos?String(inv.impostos).replace('.',','):'')+'"></label>'+
+          '<label class="fld"><span>Data aplicação</span><input id="fData" type="date" value="'+dataIso+'"></label>'+
+        '</div>'+
+        '<div class="modal-msg" id="invMsg"></div>'+
+      '</div>'+
+      '<div class="modal-foot">'+
+        (editando?'<button class="btn-danger" id="invDelete">Excluir</button>':'<button class="btn-ghost" id="invCancel">Cancelar</button>')+
+        '<button class="btn-primary" id="invSave">'+(editando?'Salvar':'Cadastrar')+'</button>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+
+    function fechar(){ ov.classList.remove('show'); setTimeout(function(){ ov.remove(); },220); }
+    function val(sel){ var el=ov.querySelector(sel); return el?el.value.trim():''; }
+    ov.addEventListener('click',function(e){ if(e.target===ov) fechar(); });
+    ov.querySelector('#invClose').addEventListener('click',fechar);
+    var cancelBtn=ov.querySelector('#invCancel'); if(cancelBtn) cancelBtn.addEventListener('click',fechar);
+
+    ov.querySelector('#invSave').addEventListener('click',function(){
+      var btn=this;
+      var dados={
+        acao: editando?'editarInvestimento':'cadastrarInvestimento',
+        banco:val('#fBanco'), produto:val('#fProduto'), tipo:val('#fTipo'), taxa:val('#fTaxa'),
+        aplicado:val('#fAplicado'), atual:val('#fAtual'), impostos:val('#fImpostos'), data:val('#fData')
+      };
+      if(editando){
+        // identidade original pra localizar a linha certa mesmo que banco/produto/taxa mudem
+        dados.origBanco=g(inv.banco); dados.origProduto=g(inv.produto); dados.origTaxa=g(inv.taxa);
+      }
+      var msg=ov.querySelector('#invMsg');
+      if(!dados.banco && !dados.produto){ msg.textContent='Informe ao menos o banco ou o produto.'; msg.className='modal-msg err'; return; }
+      btn.disabled=true; btn.textContent=editando?'Salvando…':'Enviando…'; msg.textContent=''; msg.className='modal-msg';
+      enviarInvestimento(dados).then(function(resp){
+        if(resp && resp.ok){
+          msg.textContent=(editando?'Salvo':'Cadastrado')+'! Atualizando…'; msg.className='modal-msg ok';
+          setTimeout(function(){ fechar(); loadAll(); },700);
+        } else {
+          msg.textContent='Erro: '+((resp&&resp.erro)||'falha desconhecida'); msg.className='modal-msg err';
+          btn.disabled=false; btn.textContent=editando?'Salvar':'Cadastrar';
+        }
+      }).catch(function(err){
+        msg.textContent='Enviado. Atualizando…'; msg.className='modal-msg ok';
+        setTimeout(function(){ fechar(); loadAll(); },1200);
+      });
+    });
+
+    var delBtn=ov.querySelector('#invDelete');
+    if(delBtn){
+      delBtn.addEventListener('click',function(){
+        var btn=this; var msg=ov.querySelector('#invMsg');
+        if(delBtn.getAttribute('data-confirm')!=='1'){
+          delBtn.setAttribute('data-confirm','1'); delBtn.textContent='Confirmar exclusão?'; return;
+        }
+        var dados={ acao:'excluirInvestimento', banco:g(inv.banco), produto:g(inv.produto), taxa:g(inv.taxa) };
+        btn.disabled=true; btn.textContent='Excluindo…';
+        enviarInvestimento(dados).then(function(resp){
+          if(resp && resp.ok){ msg.textContent='Excluído! Atualizando…'; msg.className='modal-msg ok'; setTimeout(function(){ fechar(); loadAll(); },700); }
+          else { msg.textContent='Erro: '+((resp&&resp.erro)||'falha'); msg.className='modal-msg err'; btn.disabled=false; btn.textContent='Excluir'; btn.removeAttribute('data-confirm'); }
+        }).catch(function(){ msg.textContent='Enviado. Atualizando…'; msg.className='modal-msg ok'; setTimeout(function(){ fechar(); loadAll(); },1200); });
+      });
+    }
+  }
+
+  // Envia o cadastro pro Apps Script. Usa text/plain pra evitar preflight CORS (o GAS lê o body cru).
+  function enviarInvestimento(dados){
+    if(!GAS_EXEC_URL) return Promise.reject(new Error('URL do Apps Script não configurada.'));
+    return fetch(GAS_EXEC_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(dados),
+      redirect:'follow'
+    }).then(function(r){ return r.json().catch(function(){ return {ok:true}; }); });
+  }
+
+  function wireInvestimentos(){
+    var btn=document.getElementById('invAddBtn');
+    if(btn) btn.addEventListener('click',function(){ abrirFormInvestimento(); });
+    document.querySelectorAll('.inv-row.inv-manual').forEach(function(row){
+      row.addEventListener('click',function(){
+        var idx=Number(row.getAttribute('data-idx'));
+        var inv=state.investimentos[idx];
+        if(inv) abrirFormInvestimento(inv);
+      });
+    });
   }
 
   /* ===== TELA 5: PREVISÕES ===== */
@@ -1547,6 +1702,65 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var url = GAS_EXEC_URL+'?action=delPrevisao&idx='+idx;
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
+  function editarRecorrenteSheet(idx, origNome, item, callback){
+    if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
+    var url = GAS_EXEC_URL+'?action=editPrevisao&idx='+idx+'&origNome='+encodeURIComponent(origNome)+
+      '&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor);
+    fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
+  }
+
+  // Modal compacto pra editar um item recorrente (nome/tipo/valor) já existente, com excluir.
+  function abrirFormPrevisao(idx){
+    var recs=lerRecorrentes(); var r=recs[idx];
+    if(!r) return;
+    var ov=document.createElement('div');
+    ov.className='modal-ov';
+    ov.innerHTML='<div class="modal glass">'+
+      '<div class="modal-head"><div class="modal-title">Editar recorrente</div><div class="modal-x" id="pvClose">✕</div></div>'+
+      '<div class="modal-body">'+
+        '<label class="fld"><span>Nome</span><input id="pvNome" type="text" maxlength="30" value="'+escapeHtml(r.nome)+'"></label>'+
+        '<div class="fld-row">'+
+          '<label class="fld"><span>Valor</span><input id="pvValor" type="number" inputmode="decimal" value="'+r.valor+'"></label>'+
+          '<label class="fld"><span>Tipo</span><select id="pvTipo"><option value="in"'+(r.tipo==='in'?' selected':'')+'>✅ Entrada</option><option value="out"'+(r.tipo==='out'?' selected':'')+'>🔴 Saída</option></select></label>'+
+        '</div>'+
+        '<div class="modal-msg" id="pvMsg"></div>'+
+      '</div>'+
+      '<div class="modal-foot"><button class="btn-danger" id="pvDelete">Excluir</button><button class="btn-primary" id="pvSave">Salvar</button></div>'+
+    '</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+    function fechar(){ ov.classList.remove('show'); setTimeout(function(){ ov.remove(); },220); }
+    ov.addEventListener('click',function(e){ if(e.target===ov) fechar(); });
+    ov.querySelector('#pvClose').addEventListener('click',fechar);
+
+    ov.querySelector('#pvSave').addEventListener('click',function(){
+      var btn=this, msg=ov.querySelector('#pvMsg');
+      var nome=(ov.querySelector('#pvNome').value||'').trim();
+      var valor=parseFloat(ov.querySelector('#pvValor').value);
+      var tipo=ov.querySelector('#pvTipo').value;
+      if(!nome||isNaN(valor)||valor<=0){ msg.textContent='Preencha nome e valor corretamente.'; msg.className='modal-msg err'; return; }
+      var novo={nome:nome,valor:valor,tipo:tipo};
+      btn.disabled=true; btn.textContent='Salvando…';
+      var recsAtual=lerRecorrentes(); var origNome=recsAtual[idx]?recsAtual[idx].nome:r.nome;
+      recsAtual[idx]=novo; salvarRecorrentes(recsAtual);
+      editarRecorrenteSheet(idx, origNome, novo, function(){});
+      fechar(); irPara(4);
+    });
+    ov.querySelector('#pvDelete').addEventListener('click',function(){
+      var btn=this;
+      if(btn.getAttribute('data-confirm')!=='1'){ btn.setAttribute('data-confirm','1'); btn.textContent='Confirmar exclusão?'; return; }
+      deletarRecorrenteSheet(idx, function(){});
+      var m=lerMarcacoes(); var newM={};
+      var recsAtual=lerRecorrentes();
+      recsAtual.forEach(function(_,j){
+        if(j<idx && m[String(j)]) newM[String(j)]=true;
+        if(j>idx && m[String(j)]) newM[String(j-1)]=true;
+      });
+      salvarMarcacoes(newM);
+      recsAtual.splice(idx,1); salvarRecorrentes(recsAtual);
+      fechar(); irPara(4);
+    });
+  }
 
   function renderPrevisoes(){
     var recs     = lerRecorrentes();
@@ -1569,11 +1783,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var clsFeito = feito ? ' rec-feito'+(r.tipo==='out'?' rec-feito-out':'') : '';
       return '<div class="rec-item'+clsFeito+'" id="rec-item-'+i+'">'+
         '<div class="rec-dot '+r.tipo+'"></div>'+
-        '<div class="rec-main">'+
+        '<div class="rec-main" data-edit="'+i+'">'+
           '<div class="rec-name">'+escapeHtml(r.nome)+'</div>'+
           '<div class="rec-check-lbl">'+(feito ? lblFeito : lblPend)+'</div>'+
         '</div>'+
-        '<div class="rec-val '+r.tipo+'">'+(r.tipo==='in'?'+':'-')+formatBRL(r.valor)+'</div>'+
+        '<div class="rec-val '+r.tipo+'" data-edit="'+i+'">'+(r.tipo==='in'?'+':'-')+formatBRL(r.valor)+'</div>'+
         // Toggle deslizante — fica no canto direito
         '<label class="rec-toggle'+(feito?' checked':'')+(r.tipo==='out'?' out-toggle':'')+'" title="Marcar como '+lblFeito+'">'+
           '<input type="checkbox" data-check="'+i+'"'+(feito?' checked':'')+' style="display:none">'+
@@ -1651,6 +1865,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         toggleMarcacao(Number(inp.getAttribute('data-check')));
       });
     });
+    // Abrir edição (clique no nome ou no valor do item)
+    document.querySelectorAll('[data-edit]').forEach(function(el){
+      el.addEventListener('click', function(){ abrirFormPrevisao(Number(el.getAttribute('data-edit'))); });
+    });
     // Deletar item
     document.querySelectorAll('[data-del]').forEach(function(d){
       d.addEventListener('click', function(){
@@ -1692,7 +1910,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     {id:'visao',  titulo:'Visão Geral',  render:renderVisaoGeral, wire:wireFaturasClicaveis},
     {id:'cartoes',titulo:'Cartões',       render:renderCartoes,    wire:wireCartoes},
     {id:'parc',   titulo:'Parcelas',      render:renderParcelas,   wire:wireParcelas},
-    {id:'invest', titulo:'Investimentos', render:renderInvestimentos, wire:null},
+    {id:'invest', titulo:'Investimentos', render:renderInvestimentos, wire:wireInvestimentos},
     {id:'prev',   titulo:'Previsões',     render:renderPrevisoes,  wire:wirePrevisoes},
     {id:'conta',  titulo:'Conta Corrente',render:renderContaCorrente, wire:wireContaCorrente},
     {id:'gastos', titulo:'Gastos do mês', render:renderGastos,      wire:wireGastos}
