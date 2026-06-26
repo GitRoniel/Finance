@@ -172,6 +172,16 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .barstack{display:flex;gap:4px;}
 .barstack span{height:8px;border-radius:4px;}
 .ring{width:40px;height:40px;}
+.gastos-cat{padding:14px 16px;border-radius:var(--radius-sm);margin-bottom:11px;cursor:pointer;}
+.gastos-cat .chev{position:absolute;top:13px;right:14px;color:var(--text-faint);font-size:15px;z-index:4;}
+.gc-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;padding-right:18px;}
+.gc-total{font-size:20px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;}
+.gc-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+.gc-row .cat-ic{width:30px;height:30px;border-radius:9px;}
+.gc-row .cat-ic svg{width:15px;height:15px;}
+.gc-name{flex:1;font-size:14px;color:var(--text-dim);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gc-val{font-size:14px;font-weight:600;font-family:var(--font-display);}
+.gc-empty{font-size:13px;color:var(--text-faint);padding:6px 0;}
 .invest-tile{flex-direction:row!important;align-items:center;gap:12px;min-height:auto!important;padding:14px 16px!important;}
 .invest-tile .invest-tile-main{flex:1;min-width:0;}
 .invest-tile .tv{margin-top:0;}
@@ -191,17 +201,17 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .fval{font-size:20px;font-weight:700;flex:0 0 auto;font-family:var(--font-display);letter-spacing:-0.02em;}
 .fchev{color:var(--text-faint);font-size:16px;flex:0 0 auto;}
 /* resumo dos cartões */
-.cards-resumo{display:flex;align-items:stretch;padding:14px 10px;border-radius:var(--radius-sm);margin-bottom:11px;}
+.cards-resumo{display:flex;align-items:stretch;padding:13px 8px;border-radius:var(--radius-sm);margin-bottom:11px;position:sticky;top:58px;z-index:30;}
 .cr-blk{flex:1;text-align:center;display:flex;flex-direction:column;gap:3px;min-width:0;}
 .cr-blk .bk{font-size:12px;color:var(--text-faint);font-weight:500;}
-.cr-blk .bv{font-size:17px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cr-blk .bv{font-size:15px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cr-blk .bv.neg{color:var(--red);}
 .cr-blk .bv.pos{color:var(--lime-deep);}
 .cr-div{width:1px;background:var(--glass-border);margin:1px 4px;}
 /* carrossel cartões */
 .carousel{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 10px;margin:0 -4px;scrollbar-width:none;}
 .carousel::-webkit-scrollbar{display:none;}
-.ccard{flex:0 0 86%;scroll-snap-align:center;border-radius:18px;padding:16px 18px;min-height:148px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+.ccard{flex:0 0 85%;scroll-snap-align:center;border-radius:18px;padding:15px 17px;min-height:128px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
 .cc-top{display:flex;align-items:flex-start;justify-content:space-between;}
 .cc-bank{display:flex;align-items:center;gap:10px;}
 .cc-logo{width:33px;height:33px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.18);}
@@ -212,8 +222,8 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .cc-chip{width:28px;height:21px;border-radius:5px;background:linear-gradient(135deg,rgba(255,255,255,0.5),rgba(255,255,255,0.2));}
 .cc-mid{margin-top:auto;}
 .cc-label{font-size:13px;opacity:.75;font-weight:500;letter-spacing:0;}
-.cc-fatura{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;}
-.cc-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px;}
+.cc-fatura{font-size:24px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:1px;}
+.cc-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:7px;}
 .cc-foot .it .k{font-size:13px;opacity:.7;font-weight:500;letter-spacing:0;}
 .cc-foot .it .v{font-size:13px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
 .cc-glow{position:absolute;right:-30px;bottom:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.22),transparent 70%);pointer-events:none;}
@@ -226,6 +236,8 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .panel-head .pt{font-size:16px;color:var(--text-dim);font-weight:400;}
 .panel-head .pic{width:30px;height:30px;border-radius:9px;background:var(--track-bg);display:flex;align-items:center;justify-content:center;color:var(--text-dim);}
 .panel .big{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;}
+@keyframes popIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.panel .big.anim{animation:popIn .3s cubic-bezier(0.16,1,0.3,1);}
 /* Onda do resumo mês a mês: linha suave (SVG) + bolinhas em DIVs HTML (não no SVG — assim elas
    nunca ficam "ovais" por causa do preserveAspectRatio=none, que estica o SVG só na horizontal)
    + caixas de valor. Mês selecionado em destaque (cor de acento); ciclo em aberto = bolinha vazada. */
@@ -234,30 +246,49 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .fwave-dots{position:absolute;left:0;top:20px;width:100%;height:40px;pointer-events:none;}
 .fw-dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--text-faint);
   border:2px solid var(--bg);transform:translate(-50%,-50%);box-sizing:content-box;}
-.fw-dot.sel{background:var(--lime);}
+.fw-dot.sel{background:var(--blue);}
 .fw-dot.vazado{background:var(--bg);border-width:2.3px;border-color:var(--text-faint);width:9px;height:9px;}
-.fw-dot.vazado.sel{border-color:var(--lime);}
+.fw-dot.vazado.sel{border-color:var(--blue);}
 .fwave-row{display:flex;gap:7px;position:relative;z-index:1;}
 .fw-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;}
 .fw-col:active{transform:scale(0.96);}
-.fw-lbl{font-size:11.5px;line-height:14px;color:var(--text-faint);font-weight:600;text-transform:lowercase;}
+.fw-lbl{font-size:11.5px;line-height:14px;color:var(--text-faint);font-weight:600;text-transform:capitalize;}
 .fw-dotzone{height:40px;width:100%;}
-.fw-box{width:100%;min-height:58px;border-radius:16px;background:var(--track-bg);display:flex;align-items:center;
+.fw-box{width:100%;min-height:54px;border-radius:16px;background:var(--track-bg);display:flex;align-items:center;
   justify-content:center;font-size:12.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;
   line-height:1.15;padding:8px 5px;border:1.5px solid transparent;text-align:center;color:var(--text-dim);
-  transition:border-color .2s,background .2s;}
-.fw-col.sel .fw-box{border-color:var(--lime);border-width:2px;background:var(--glass-bg);color:var(--lime-deep);}
+  transition:border-color .25s,background .25s,transform .25s,font-size .25s,min-height .25s;}
+.fw-col.sel .fw-box{border-color:var(--blue);border-width:2px;background:rgba(77,163,255,0.14);color:var(--blue);min-height:62px;font-size:14px;transform:scale(1.03);}
 /* transações */
 .tx-list{border-radius:var(--radius-sm);overflow:hidden;}
-.tx{display:flex;align-items:center;gap:12px;padding:12px 15px;}
+.tx{display:flex;align-items:center;gap:10px;padding:9px 14px;}
 .tx:not(:last-child){border-bottom:1px solid var(--glass-border);}
 .tx-ic{width:38px;height:38px;border-radius:12px;background:var(--track-bg);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px;color:var(--text-dim);}
+.cat-ic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.cat-ic svg{width:18px;height:18px;}
 .tx-main{flex:1;min-width:0;}
 .tx-desc{font-size:16px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tx-meta{font-size:10.5px;color:var(--text-faint);margin-top:2px;font-weight:500;}
 .tx-val{font-size:17px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;flex:0 0 auto;}
 .tx-val.in{color:var(--lime-deep);}
 .tx-parcela{display:inline-block;background:var(--track-bg);color:var(--text-faint);font-size:9.5px;padding:1px 6px;border-radius:6px;margin-left:6px;}
+
+/* conta corrente */
+.cc-hero{padding:16px 16px;border-radius:var(--radius-sm);}
+.cc-hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.cc-hero-k{font-size:13px;color:var(--text-faint);font-weight:500;}
+.cc-hero-v{font-size:22px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;}
+.cc-filter{max-width:150px;padding:8px 10px;border-radius:11px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:12.5px;font-family:var(--font);outline:none;}
+.cc-list{border-radius:var(--radius-sm);overflow:hidden;}
+.cctx{display:flex;align-items:center;gap:9px;padding:8px 12px;}
+.cctx:not(:last-child){border-bottom:1px solid var(--glass-border);}
+.cctx .cat-ic{width:30px;height:30px;border-radius:9px;}
+.cctx .cat-ic svg{width:14px;height:14px;}
+.cctx-main{flex:1;min-width:0;}
+.cctx-desc{font-size:14px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cctx-meta{font-size:11px;color:var(--text-faint);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cctx-val{font-size:15px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;flex:0 0 auto;}
+.cctx-val.in{color:var(--lime-deep);}
 
 /* sub-abas (parcelas/assinaturas) */
 .subtabs{display:flex;gap:6px;background:var(--track-bg);padding:4px;border-radius:14px;margin-bottom:14px;}
@@ -267,21 +298,21 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .subpane{display:none;}
 .subpane.active{display:block;animation:fadeUp .35s ease both;}
 /* item de parcelamento */
-.pcard{padding:15px 16px;border-radius:var(--radius-sm);margin-bottom:10px;}
-.pcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
-.pcard-name{font-size:16px;font-weight:400;font-family:var(--font-display);}
-.pcard-card{font-size:13px;color:var(--text-faint);margin-top:1px;}
+.pcard{padding:11px 14px;border-radius:var(--radius-sm);margin-bottom:7px;}
+.pcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;}
+.pcard-name{font-size:16px;font-weight:400;font-family:var(--font-display);line-height:1.25;}
+.pcard-card{font-size:13px;color:var(--text-faint);margin-top:0;}
 .pcard-val{font-size:20px;font-weight:700;font-family:var(--font-display);text-align:right;}
 .pcard-val .sub{font-size:13px;color:var(--text-faint);font-weight:500;}
-.pprog{height:6px;border-radius:6px;background:var(--track-bg);overflow:hidden;margin-bottom:6px;}
+.pprog{height:5px;border-radius:5px;background:var(--track-bg);overflow:hidden;margin-bottom:4px;}
 .pprog-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));}
 .pcard-meta{display:flex;justify-content:space-between;font-size:13px;color:var(--text-faint);font-weight:500;}
 /* assinatura */
-.acard{display:flex;align-items:center;gap:12px;padding:14px 15px;border-radius:var(--radius-sm);margin-bottom:10px;}
-.aic{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:18px;background:var(--track-bg);}
+.acard{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:7px;}
+.aic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:16px;background:var(--track-bg);}
 .amain{flex:1;min-width:0;}
-.aname{font-size:16px;font-weight:400;font-family:var(--font-display);}
-.afreq{font-size:13px;color:var(--text-faint);margin-top:1px;}
+.aname{font-size:16px;font-weight:400;font-family:var(--font-display);line-height:1.25;}
+.afreq{font-size:13px;color:var(--text-faint);margin-top:0;}
 .aval{font-size:20px;font-weight:700;font-family:var(--font-display);text-align:right;}
 .aval .sub{font-size:13px;color:var(--text-faint);font-weight:500;}
 /* investimentos */
@@ -513,6 +544,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 <nav class="navbar" id="navbar">
   <div class="nav-pill" id="navPill"></div>
   <div class="nav-item active" data-i="0" title="Visão Geral" aria-label="Visão Geral"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/></svg></span><span class="nav-label">Visão Geral</span></div>
+  <div class="nav-item" data-i="5" title="Conta Corrente" aria-label="Conta Corrente"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6"/><path d="M5 10v9M19 10v9M9 10v9M15 10v9"/><path d="M3 21h18"/></svg></span><span class="nav-label">Conta Corrente</span></div>
   <div class="nav-item" data-i="1" title="Cartões" aria-label="Cartões"><span class="nav-ico"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg></span><span class="nav-label">Cartões</span></div>
   <div class="nav-item" data-i="2" title="Parcelas" aria-label="Parcelas"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2.4"/></svg><span class="nav-dot"></span></span><span class="nav-label">Parcelas</span></div>
   <div class="nav-item" data-i="3" title="Investimentos" aria-label="Investimentos"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 4 8-8"/><path d="M21 8v5h-5"/></svg></span><span class="nav-label">Investimentos</span></div>
@@ -787,6 +819,39 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     return '<div class="'+(cls||'fbadge')+'" style="background:'+info.cor1+'">'+inner+'</div>';
   }
 
+  /* ===== ícones por categoria ===== */
+  var CATEGORIA_ICONES = [
+    {kw:['mercado','supermerc','hortifruti','feira'], color:'#ff8a3d', svg:'<circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2.5 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 7H6"/>'},
+    {kw:['restaurant','aliment','ifood','lanch','padaria','food','bar','café','cafe','pizz'], color:'#ff6060', svg:'<path d="M6 2v7a2 2 0 0 0 4 0V2M8 9v13M19 2v18M16 2v8a3 3 0 0 0 3 3"/>'},
+    {kw:['combust','posto','gasolina'], color:'#f0791f', svg:'<path d="M3 22V8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14M3 22h10M16 8h2a2 2 0 0 1 2 2v3a1 1 0 0 0 1 1M5 11h6"/>'},
+    {kw:['transporte','uber','99','taxi','carro','estaciona'], color:'#4da3ff', svg:'<path d="M5 17h14M5 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM19 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM3 17V11l2-5h10l4 5v6"/>'},
+    {kw:['saúde','saude','farmác','farmac','médic','medic','hospital','clínic','clinic'], color:'#ff4d8d', svg:'<path d="M12 21s-7-4.35-9.5-8.5C.7 9 2 5 6 5c2.2 0 3.5 1.3 4 2 .5-.7 1.8-2 4-2 4 0 5.3 4 3.5 7.5C19 16.65 12 21 12 21z"/>'},
+    {kw:['lazer','entreten','cinema','streaming','netflix','jogo','game'], color:'#c44bff', svg:'<path d="M3 8h18M3 8l2-4h3l-2 4M8 8l2-4h3l-2 4M13 8l2-4h3l-2 4"/><rect x="3" y="8" width="18" height="12" rx="2"/>'},
+    {kw:['eletr','celular','smartphone','informátic','informatic','tech'], color:'#00b1ea', svg:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>'},
+    {kw:['vestuário','vestuario','roupa','moda','calçad','calcad'], color:'#ec7000', svg:'<path d="M16 4l4 2-2 4-2-1v11H8V9L6 10 4 6l4-2 2 2h4l2-2z"/>'},
+    {kw:['assinatura','clube'], color:'#7c4dff', svg:'<path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M12 3v18M4 7l8 4 8-4"/>'},
+    {kw:['educa','curso','escola','faculdade','livro'], color:'#5fa015', svg:'<path d="M2 4h7a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2zM22 4h-7a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h8z"/>'},
+    {kw:['casa','moradia','aluguel','condom','energia','luz','água','agua','internet','telefone'], color:'#83d626', svg:'<path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/>'},
+    {kw:['viagem','hotel','passagem','aére','aere'], color:'#2b7fd4', svg:'<path d="M3 12l18-9-7 18-3-7-8-2z"/>'},
+    {kw:['transfer','pix','ted','doc'], color:'#8d8e98', svg:'<path d="M7 7h10M7 7l3-3M7 7l3 3M17 17H7M17 17l-3-3M17 17l-3 3"/>'},
+    {kw:['salári','salari','rendiment','provent'], color:'#83d626', svg:'<path d="M3 17l5-5 4 4 8-8"/><path d="M21 8v5h-5"/>'}
+  ];
+  var CATEGORIA_DEFAULT = {color:'#8d8e98', svg:'<path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>'};
+  function categoriaInfo(categoria){
+    var c=(categoria||'').toLowerCase();
+    for(var i=0;i<CATEGORIA_ICONES.length;i++){
+      var item=CATEGORIA_ICONES[i];
+      for(var j=0;j<item.kw.length;j++){ if(c.indexOf(item.kw[j])!==-1) return item; }
+    }
+    return CATEGORIA_DEFAULT;
+  }
+  function categoriaIconeHtml(categoria, entrada){
+    var info=categoriaInfo(categoria);
+    var cor=entrada?'var(--lime-deep)':info.color;
+    var bg=entrada?'rgba(180,244,74,0.16)':(info.color+'29');
+    return '<div class="cat-ic" style="background:'+bg+';color:'+cor+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+info.svg+'</svg></div>';
+  }
+
   /* ===== agregações ===== */
   function totalFaturasAbertas(){
     return state.cartoes.filter(function(c){return c.ativo!=="Não";}).reduce(function(s,c){return s+faturaAtual(c);},0);
@@ -799,6 +864,16 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     return state.transacoes.filter(function(t){
       return t.tipo==="Saída"&&t.data&&t.data.getMonth()===h.getMonth()&&t.data.getFullYear()===h.getFullYear();
     }).reduce(function(s,t){return s+t.valor;},0);
+  }
+  // Gastos de CARTÃO (não conta) deste mês, agrupados por categoria — usado no card "Gastos por categoria".
+  function gastosPorCategoriaCartao(){
+    var h=new Date(),mapa={};
+    state.transacoes.forEach(function(t){
+      if(t.tipo!=="Saída"||!t.data||!t.cartao||t.data.getMonth()!==h.getMonth()||t.data.getFullYear()!==h.getFullYear())return;
+      var cat=sentenceCase(t.categoria)||"Outros";
+      mapa[cat]=(mapa[cat]||0)+t.valor;
+    });
+    return Object.keys(mapa).map(function(k){return {categoria:k,total:mapa[k]};}).sort(function(a,b){return b.total-a.total;});
   }
   function totalAssinaturas(){
     return state.assinaturas.filter(function(a){return a.ativa!=="Não";})
@@ -852,9 +927,17 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
         '<div class="fval">'+formatBRL(fat)+'</div><div class="fchev">›</div></div>';
     }).join("");
 
+    var gastosCat=gastosPorCategoriaCartao();
+    var gastosCatTop=gastosCat.slice(0,4);
+    var gastosCatHtml=gastosCatTop.length?gastosCatTop.map(function(g){
+      return '<div class="gc-row">'+categoriaIconeHtml(g.categoria,false)+
+        '<div class="gc-name">'+escapeHtml(g.categoria)+'</div>'+
+        '<div class="gc-val">'+formatBRL(g.total)+'</div></div>';
+    }).join(""):'<div class="gc-empty">Nenhum gasto de cartão este mês.</div>';
+
     return ''+
     '<div class="top-cards">'+
-      '<div class="glass tcard" data-go="4"><span class="chev">›</span>'+
+      '<div class="glass tcard" data-go="5"><span class="chev">›</span>'+
         '<div class="logos">'+(logosTopo||'<div class="lg" style="background:#3a3a40"><span class="txt">$</span></div>')+'</div>'+
         '<div class="spacer"></div><div class="ck">Saldo em contas</div>'+
         '<div class="cv">'+formatBRL(saldo)+'</div>'+
@@ -867,17 +950,18 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
         '</div><div class="spacer"></div>'+
         '<div class="cs">após faturas em aberto</div></div>'+
     '</div>'+
+    '<div class="glass gastos-cat" data-go="1"><span class="chev">›</span>'+
+      '<div class="gc-head"><div class="tk">Gastos · este mês</div><div class="gc-total">'+formatBRL(gastos)+'</div></div>'+
+      gastosCatHtml+
+    '</div>'+
     '<div class="bento">'+
-      '<div class="glass tile" data-go="1"><span class="chev">›</span>'+
-        '<div class="barstack"><span style="width:46%;background:var(--orange)"></span><span style="width:30%;background:var(--pink)"></span><span style="width:16%;background:var(--magenta)"></span></div>'+
-        '<div class="spacer"></div><div class="tk">Gastos · este mês</div><div class="tv">'+formatBRL(gastos)+'</div><div class="ts">este mês</div></div>'+
       '<div class="glass tile" data-go="2" data-sub="assin"><span class="chev">›</span>'+
         '<div class="tile-icon" style="background:rgba(124,77,255,0.18);color:#cba6ff"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M12 3v18M4 7l8 4 8-4"/></svg></div>'+
         '<div class="spacer"></div><div class="tk">Assinaturas</div><div class="tv">'+formatBRL(assin)+'</div><div class="ts">por mês</div></div>'+
       '<div class="glass tile" data-go="1"><span class="chev">›</span>'+
         '<svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--track-bg)" stroke-width="3.4"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--lime)" stroke-width="3.4" stroke-dasharray="97" stroke-dashoffset="'+ringOffset+'" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>'+
         '<div class="spacer"></div><div class="tk">Limite disponível</div><div class="tv">'+formatBRL(limDisp)+'</div><div class="ts">de '+formatBRL(limTot)+'</div></div>'+
-      '<div class="glass tile" data-go="2" data-sub="parc"><span class="chev">›</span>'+
+      '<div class="glass tile" data-go="2" data-sub="parc" style="grid-column:1 / -1"><span class="chev">›</span>'+
         '<div class="tile-icon" style="background:rgba(255,138,61,0.18);color:var(--orange)"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></div>'+
         '<div class="spacer"></div><div class="tk">Parcelamentos</div><div class="tv">'+parcAtivos.length+' ativos</div><div class="ts">'+formatBRL(totalParcelasMes())+' / mês</div></div>'+
       (state.investimentos.length?'<div class="glass tile invest-tile" data-go="3" style="grid-column:1 / -1"><span class="chev">›</span>'+
@@ -887,6 +971,55 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     '</div>'+
     '<div class="section-head"><h2>Faturas em aberto</h2><span class="link" data-go="1">Ver cartões</span></div>'+
     '<div class="glass fatura-card">'+(faturasLista||'<div class="empty" style="padding:24px"><div class="et">Nenhum cartão ativo.</div></div>')+'</div>';
+  }
+
+  /* ===== TELA EXTRA: CONTA CORRENTE ===== */
+  var contaFiltro=''; // '' = todas as contas
+  function transacoesContaFiltradas(){
+    return state.transacoes.filter(function(t){
+      return t.origem==='conta' && (!contaFiltro || t.conta===contaFiltro);
+    }).sort(function(a,b){return b.data-a.data;});
+  }
+  function renderContaCorrente(){
+    var contas=state.contas.filter(function(c){return c.ativa!=="Não";});
+    if(!contas.length) return '<div class="empty"><div class="ei">🏦</div><div class="et">Nenhuma conta na planilha.</div></div>';
+    if(contaFiltro && !contas.some(function(c){return c.nome===contaFiltro;})) contaFiltro='';
+    var saldoMostrado = contaFiltro ? (contas.filter(function(c){return c.nome===contaFiltro;}).reduce(function(s,c){return s+(c.saldo||0);},0)) : saldoTotalContas();
+    var opcoes='<option value="">Todas as contas</option>'+contas.map(function(c){
+      return '<option value="'+escapeHtml(c.nome)+'"'+(contaFiltro===c.nome?' selected':'')+'>'+escapeHtml(c.nome)+'</option>';
+    }).join("");
+    return '<div class="glass cc-hero"><div class="cc-hero-top"><div><div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div><div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div></div>'+
+        '<select class="cc-filter" id="ccFiltro">'+opcoes+'</select></div></div>'+
+      '<div class="section-head" style="margin-top:14px"><h2 id="ccTitle">Movimentações</h2><span class="cnt" id="ccCount"></span></div>'+
+      '<div class="glass cc-list" id="ccList"></div>';
+  }
+  function atualizarListaContaCorrente(){
+    var txs=transacoesContaFiltradas();
+    var tc=document.getElementById('ccCount'); if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
+    var tl=document.getElementById('ccList'); if(!tl) return;
+    if(!txs.length){ tl.innerHTML='<div class="empty" style="padding:24px"><div class="et">Nenhuma movimentação encontrada.</div></div>'; return; }
+    tl.innerHTML=txs.map(function(t){
+      var ent=t.tipo==="Entrada",dia=t.data?t.data.getDate():'',mes=t.data?MESES_ABREV[t.data.getMonth()]:'';
+      return '<div class="cctx">'+categoriaIconeHtml(t.categoria,ent)+
+        '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+'</div>'+
+        '<div class="cctx-meta">'+dia+' '+mes+' · '+escapeHtml(t.conta||"")+'</div></div>'+
+        '<div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div></div>';
+    }).join("");
+  }
+  function wireContaCorrente(){
+    atualizarListaContaCorrente();
+    var sel=document.getElementById('ccFiltro');
+    if(sel){
+      sel.addEventListener('change',function(){
+        contaFiltro=sel.value;
+        var hero=document.querySelector('.cc-hero-k'), val=document.querySelector('.cc-hero-v');
+        var contas=state.contas.filter(function(c){return c.ativa!=="Não";});
+        var saldoMostrado = contaFiltro ? (contas.filter(function(c){return c.nome===contaFiltro;}).reduce(function(s,c){return s+(c.saldo||0);},0)) : saldoTotalContas();
+        if(hero) hero.textContent='Saldo'+(contaFiltro?'':' total');
+        if(val) val.textContent=formatBRL(saldoMostrado);
+        atualizarListaContaCorrente();
+      });
+    }
   }
 
   /* ===== TELA 2: CARTÕES ===== */
@@ -979,12 +1112,12 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var areaFill='M'+penultimo.x.toFixed(2)+','+H+' L'+penultimo.x.toFixed(2)+','+penultimo.y.toFixed(2)+' '+segUltimo+' L'+ultimo.x.toFixed(2)+','+H+' Z';
     var svg='<svg class="fwave-svg" viewBox="0 0 100 '+H+'" preserveAspectRatio="none">'+
       '<defs><linearGradient id="fwGrad" x1="0" y1="0" x2="0" y2="1">'+
-        '<stop offset="0%" stop-color="var(--lime)" stop-opacity="0.32"/>'+
-        '<stop offset="100%" stop-color="var(--lime)" stop-opacity="0"/>'+
+        '<stop offset="0%" stop-color="var(--blue)" stop-opacity="0.32"/>'+
+        '<stop offset="100%" stop-color="var(--blue)" stop-opacity="0"/>'+
       '</linearGradient></defs>'+
       '<path d="'+areaFill+'" fill="url(#fwGrad)" stroke="none"/>'+
       '<path d="'+dFull+'" fill="none" stroke="var(--text-faint)" stroke-width="2.2" stroke-linecap="round" opacity="0.5"/>'+
-      '<path d="'+dUltimo+'" fill="none" stroke="var(--lime)" stroke-width="2.6" stroke-linecap="round"/>'+
+      '<path d="'+dUltimo+'" fill="none" stroke="var(--blue)" stroke-width="2.6" stroke-linecap="round"/>'+
     '</svg>';
     // Bolinhas em HTML por cima do SVG, posicionadas em % (x, igual ao SVG) e px (y, igual à
     // altura H do SVG em pixels — por isso .fwave-dots usa a mesma height fixa em CSS).
@@ -1040,7 +1173,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var rotulo=mSel.atual?'Fatura em aberto':'Fatura de '+MESES_COMPLETO[mSel.mes];
     var cp=document.getElementById('chartPanel');
     if(cp){
-      cp.innerHTML='<div class="panel-head"><span class="pt">'+rotulo+'</span><div class="pic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18"/></svg></div></div><div class="big">'+formatBRL(mSel.total)+'</div>'+onda;
+      cp.innerHTML='<div class="panel-head"><span class="pt">'+rotulo+'</span><div class="pic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18"/></svg></div></div><div class="big anim">'+formatBRL(mSel.total)+'</div>'+onda;
       cp.querySelectorAll('.fw-col').forEach(function(fc){
         fc.addEventListener('click',function(){
           mesSelecionado=Number(fc.getAttribute('data-i'));
@@ -1056,7 +1189,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     tl.innerHTML=txs.map(function(t){
       var ent=t.tipo==="Entrada",dia=t.data.getDate(),mes=MESES_ABREV[t.data.getMonth()];
       var parc=t.parcelamentoId?'<span class="tx-parcela">'+escapeHtml(t.parcelamentoId)+'</span>':'';
-      return '<div class="tx"><div class="tx-ic">'+(ent?'↓':'↑')+'</div><div class="tx-main"><div class="tx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+parc+'</div><div class="tx-meta">'+dia+' '+mes+' · '+escapeHtml(sentenceCase(t.categoria)||"Sem categoria")+'</div></div><div class="tx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div></div>';
+      return '<div class="tx">'+categoriaIconeHtml(t.categoria,ent)+'<div class="tx-main"><div class="tx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+parc+'</div><div class="tx-meta">'+dia+' '+mes+' · '+escapeHtml(sentenceCase(t.categoria)||"Sem categoria")+'</div></div><div class="tx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div></div>';
     }).join("");
   }
   function wireCartoes(){
@@ -1415,9 +1548,13 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     {id:'cartoes',titulo:'Cartões',       render:renderCartoes,    wire:wireCartoes},
     {id:'parc',   titulo:'Parcelas',      render:renderParcelas,   wire:wireParcelas},
     {id:'invest', titulo:'Investimentos', render:renderInvestimentos, wire:null},
-    {id:'prev',   titulo:'Previsões',     render:renderPrevisoes,  wire:wirePrevisoes}
+    {id:'prev',   titulo:'Previsões',     render:renderPrevisoes,  wire:wirePrevisoes},
+    {id:'conta',  titulo:'Conta Corrente',render:renderContaCorrente, wire:wireContaCorrente}
   ];
-  // ordem na navbar: visao, cartoes, parc, invest, prev  (índices = data-i)
+  // índices fixos (data-i / data-go): 0 visao, 1 cartoes, 2 parc, 3 invest, 4 prev, 5 conta
+  // "conta" foi adicionado no final de propósito pra não precisar renumerar todas as referências
+  // já existentes — sua posição NA NAVBAR (visualmente entre Visão Geral e Cartões) é controlada
+  // só pela ordem dos elementos .nav-item no HTML, não pelo índice aqui.
   var telaAtual=0;
 
   function dataHoje(){
