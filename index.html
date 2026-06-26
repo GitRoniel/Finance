@@ -314,26 +314,38 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .calc-row.total{margin-top:4px;padding-top:13px;border-top:2px solid var(--glass-border);font-size:14px;}
 .calc-row.total .lbl{color:var(--text);font-weight:600;font-family:var(--font-display);}
 .calc-row.total .amt{font-size:20px;font-weight:700;}
-/* rec-item com checkbox de "já aconteceu" */
-.rec-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:13px;background:var(--glass-bg);border:1px solid var(--glass-border);margin-bottom:8px;transition:opacity .25s;}
-.rec-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--glass-border);background:var(--track-bg);flex:0 0 26px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:background .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}
-.rec-check:active{transform:scale(0.88);}
-.rec-check.checked{background:var(--lime);border-color:var(--lime);color:#0a0a0a;}
-[data-theme="light"] .rec-check.checked{color:#0a0a0a;}
+/* rec-item com toggle deslizante */
+.rec-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:13px;background:var(--glass-bg);border:1px solid var(--glass-border);margin-bottom:8px;transition:opacity .3s;}
 .rec-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;}
 .rec-dot.in{background:var(--lime);}
 .rec-dot.out{background:var(--red);}
 .rec-main{flex:1;min-width:0;}
 .rec-name{font-size:15px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rec-check-lbl{font-size:11px;color:var(--text-faint);font-weight:500;margin-top:1px;}
-.rec-val{font-size:17px;font-weight:700;font-family:var(--font-display);flex:0 0 auto;}
+.rec-check-lbl{font-size:11px;color:var(--text-faint);font-weight:500;margin-top:1px;transition:color .2s;}
+.rec-val{font-size:17px;font-weight:700;font-family:var(--font-display);flex:0 0 auto;transition:opacity .3s;}
 .rec-val.in{color:var(--lime-deep);}
 .rec-val.out{color:var(--red);}
-.rec-del{color:var(--text-faint);cursor:pointer;font-size:17px;padding:2px 3px;flex:0 0 auto;}
-/* Item marcado como feito: opacidade reduzida + nome riscado */
-.rec-feito{opacity:0.5;}
+/* Toggle deslizante */
+.rec-toggle{position:relative;width:48px;height:27px;flex:0 0 48px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.rec-toggle input{opacity:0;width:0;height:0;position:absolute;}
+.rec-toggle-track{position:absolute;inset:0;border-radius:27px;background:var(--track-bg);border:1.5px solid var(--glass-border);transition:background .25s,border-color .25s;}
+.rec-toggle-thumb{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);transition:transform .25s cubic-bezier(0.34,1.4,0.5,1),background .25s;}
+/* Estado ON (marcado) */
+.rec-check.checked ~ .rec-toggle-track,
+.rec-toggle.checked .rec-toggle-track{background:var(--lime);border-color:var(--lime);}
+.rec-toggle.checked .rec-toggle-thumb{transform:translateX(21px);background:#fff;}
+[data-theme="light"] .rec-toggle.checked .rec-toggle-track{background:var(--lime-deep);border-color:var(--lime-deep);}
+/* Estado OFF vermelho para saídas */
+.rec-toggle.out-toggle .rec-toggle-track{background:var(--track-bg);}
+.rec-toggle.out-toggle.checked .rec-toggle-track{background:var(--red);border-color:var(--red);}
+/* Item marcado: opacidade reduzida + nome riscado */
+.rec-feito{opacity:0.45;}
 .rec-feito .rec-name{text-decoration:line-through;}
-.rec-feito .rec-val{opacity:0.6;}
+.rec-feito .rec-val{opacity:0.55;}
+.rec-feito .rec-check-lbl{color:var(--lime-deep);}
+[data-theme="light"] .rec-feito .rec-check-lbl{color:var(--lime-deep);}
+.rec-feito.rec-feito-out .rec-check-lbl{color:var(--red);}
+.rec-del{color:var(--text-faint);cursor:pointer;font-size:17px;padding:2px 3px;flex:0 0 auto;}
 /* Tag do mês */
 .rec-mes-tag{font-size:12px;color:var(--text-faint);font-weight:500;margin-left:6px;}
 /* Hint de uso */
@@ -367,7 +379,26 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   .bento{grid-template-columns:repeat(4,1fr);}
   .ccard{flex:0 0 48%;}
 }
-/* previsões — trio hero compacto */
+/* previsões — duo hero (Saldo + Faturas) */
+.prev-duo{display:flex;align-items:center;padding:14px 18px;border-radius:var(--radius-sm);margin-bottom:11px;gap:0;}
+.prev-duo-blk{flex:1;min-width:0;}
+.prev-duo-blk:last-child{text-align:right;}
+.pd-k{font-size:12px;color:var(--text-faint);font-weight:600;letter-spacing:0.01em;text-transform:uppercase;}
+.pd-v{font-size:22px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:3px;}
+.pd-v.neg{color:var(--red);}
+.pd-v.pos{color:var(--lime-deep);}
+.prev-duo-div{width:1px;background:var(--glass-border);height:36px;flex:0 0 1px;margin:0 16px;}
+/* calc card ultra-compacto */
+.calc-card{padding:12px 15px;border-radius:var(--radius-sm);margin-bottom:13px;}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;}
+.calc-row .lbl{color:var(--text-dim);}
+.calc-row .amt{font-weight:600;font-family:var(--font-display);}
+.calc-row .amt.neg{color:var(--red);}
+.calc-row .amt.pos{color:var(--lime-deep);}
+.calc-total-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0 2px;margin-top:5px;border-top:1.5px solid var(--glass-border);}
+.lbl-total{font-size:14px;font-weight:600;color:var(--text);font-family:var(--font-display);}
+.amt-total{font-size:20px;font-weight:700;font-family:var(--font-display);}
+/* prev trio legado — mantido para não quebrar nada */
 .prev-trio{display:flex;align-items:center;padding:14px 12px;border-radius:var(--radius-sm);margin-bottom:13px;gap:0;}
 .prev-trio-blk{flex:1;text-align:center;min-width:0;}
 .prev-trio-blk .pt-k{font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.01em;text-transform:uppercase;}
@@ -1179,9 +1210,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var saidas   = recs.reduce(function(s,r,i){ return r.tipo==='out' && !marcados[String(i)] ? s+r.valor : s; }, 0);
     var previsao = saldo + entradas - saidas - faturas;
 
-    // Atualiza hero
-    var ph = document.getElementById('prev-hero-prev');
-    if(ph){ ph.textContent = formatBRL(previsao); ph.className='pt-v '+(previsao<0?'neg':'pos'); }
+    // Atualiza hero (só saldo, faturas não muda sem reload)
     var ps = document.getElementById('prev-saldo-val'); if(ps) ps.textContent = formatBRL(saldo);
 
     // Atualiza linhas do cálculo
@@ -1201,11 +1230,15 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
       var el = document.getElementById('rec-item-'+i);
       if(!el) return;
       var feito = !!marcados[String(i)];
+      var r = recs[i];
+      var lblFeito = r.tipo==='in' ? 'recebido' : 'pago';
+      var lblPend  = r.tipo==='in' ? 'a receber' : 'a pagar';
       el.classList.toggle('rec-feito', feito);
-      var cb = el.querySelector('.rec-check');
-      if(cb) cb.classList.toggle('checked', feito);
+      el.classList.toggle('rec-feito-out', feito && r.tipo==='out');
+      var tog = el.querySelector('.rec-toggle');
+      if(tog) tog.classList.toggle('checked', feito);
       var lbl = el.querySelector('.rec-check-lbl');
-      if(lbl) lbl.textContent = feito ? 'feito' : 'pendente';
+      if(lbl) lbl.textContent = feito ? lblFeito : lblPend;
     });
   }
 
@@ -1250,19 +1283,22 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     // Lista de recorrentes com checkbox "já aconteceu"
     var recHtml = recs.length ? recs.map(function(r,i){
       var feito = !!marcados[String(i)];
-      var lblTipo = r.tipo==='in' ? 'Recebido' : 'Pago';
-      return '<div class="rec-item'+(feito?' rec-feito':'')+'" id="rec-item-'+i+'">'+
-        // Checkbox de status
-        '<button class="rec-check'+(feito?' checked':'')+'" data-check="'+i+'" title="Marcar como '+lblTipo.toLowerCase()+'">'+
-          (feito?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'')+
-        '</button>'+
-        // Conteúdo
+      var lblFeito = r.tipo==='in' ? 'recebido' : 'pago';
+      var lblPend  = r.tipo==='in' ? 'a receber' : 'a pagar';
+      var clsFeito = feito ? ' rec-feito'+(r.tipo==='out'?' rec-feito-out':'') : '';
+      return '<div class="rec-item'+clsFeito+'" id="rec-item-'+i+'">'+
         '<div class="rec-dot '+r.tipo+'"></div>'+
         '<div class="rec-main">'+
           '<div class="rec-name">'+escapeHtml(r.nome)+'</div>'+
-          '<div class="rec-check-lbl">'+( feito ? 'feito' : 'pendente' )+'</div>'+
+          '<div class="rec-check-lbl">'+(feito ? lblFeito : lblPend)+'</div>'+
         '</div>'+
         '<div class="rec-val '+r.tipo+'">'+(r.tipo==='in'?'+':'-')+formatBRL(r.valor)+'</div>'+
+        // Toggle deslizante — fica no canto direito
+        '<label class="rec-toggle'+(feito?' checked':'')+(r.tipo==='out'?' out-toggle':'')+'" title="Marcar como '+lblFeito+'">'+
+          '<input type="checkbox" data-check="'+i+'"'+(feito?' checked':'')+' style="display:none">'+
+          '<div class="rec-toggle-track"></div>'+
+          '<div class="rec-toggle-thumb"></div>'+
+        '</label>'+
         '<div class="rec-del" data-del="'+i+'" title="Remover item">×</div>'+
       '</div>';
     }).join('') :
@@ -1270,12 +1306,16 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 
     return ''+
     // Hero trio
-    '<div class="prev-trio glass">'+
-      '<div class="prev-trio-blk"><div class="pt-k">Saldo</div><div class="pt-v" id="prev-saldo-val">'+formatBRL(saldo)+'</div></div>'+
-      '<div class="prev-trio-div"></div>'+
-      '<div class="prev-trio-blk"><div class="pt-k">Faturas</div><div class="pt-v neg">−'+formatBRL(faturas)+'</div></div>'+
-      '<div class="prev-trio-div"></div>'+
-      '<div class="prev-trio-blk"><div class="pt-k">Previsão</div><div class="pt-v '+(previsao<0?'neg':'pos')+'" id="prev-hero-prev">'+formatBRL(previsao)+'</div></div>'+
+    '<div class="prev-duo glass">'+
+      '<div class="prev-duo-blk">'+
+        '<div class="pd-k">Saldo em contas</div>'+
+        '<div class="pd-v" id="prev-saldo-val">'+formatBRL(saldo)+'</div>'+
+      '</div>'+
+      '<div class="prev-duo-div"></div>'+
+      '<div class="prev-duo-blk">'+
+        '<div class="pd-k">Faturas abertas</div>'+
+        '<div class="pd-v neg">−'+formatBRL(faturas)+'</div>'+
+      '</div>'+
     '</div>'+
     // Cálculo
     '<div class="glass calc-card" style="margin-bottom:13px">'+
@@ -1283,7 +1323,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
       '<div class="calc-row" id="calc-row-entradas"'+(entradas?'':' style="display:none"')+'><span class="lbl">+ Entradas a receber</span><span class="amt pos" id="calc-entradas">+'+formatBRL(entradas)+'</span></div>'+
       '<div class="calc-row" id="calc-row-saidas"'+(saidas?'':' style="display:none"')+'><span class="lbl">− Saídas a pagar</span><span class="amt neg" id="calc-saidas">−'+formatBRL(saidas)+'</span></div>'+
       '<div class="calc-row"><span class="lbl">− Faturas abertas</span><span class="amt neg">−'+formatBRL(faturas)+'</span></div>'+
-      '<div class="calc-row total"><span class="lbl">Previsão</span><span class="amt '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
+      '<div class="calc-row calc-total-row"><span class="lbl-total">Previsão</span><span class="amt '+(previsao<0?'neg':'pos')+' amt-total" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
     '</div>'+
     // Seção recorrentes
     '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag">'+mes+'</span></h2>'+
@@ -1323,11 +1363,11 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
         irPara(4);
       });
     }
-    // Checkboxes (marcar como feito — atualiza só os números, sem re-render completo)
-    document.querySelectorAll('[data-check]').forEach(function(btn){
-      btn.addEventListener('click', function(ev){
+    // Toggles deslizantes (marcar como feito)
+    document.querySelectorAll('[data-check]').forEach(function(inp){
+      inp.addEventListener('change', function(ev){
         ev.stopPropagation();
-        toggleMarcacao(Number(btn.getAttribute('data-check')));
+        toggleMarcacao(Number(inp.getAttribute('data-check')));
       });
     });
     // Deletar item
