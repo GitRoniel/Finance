@@ -2,7 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" id="themeColorMeta" content="#060608">
 <title>Financeiro</title>
 <style>
 :root{
@@ -44,7 +47,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .glass::after{content:"";position:absolute;left:0;right:0;top:0;height:40%;border-radius:inherit;pointer-events:none;z-index:1;
   background:linear-gradient(180deg,var(--glass-gloss),transparent);opacity:.55;}
 .glass>*{position:relative;z-index:3;}
-.top{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 14px;margin:0 -16px;
+.top{display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 14px;margin:0 -16px;
   position:sticky;top:0;z-index:90;}
 .top>*{position:relative;z-index:1;}
 /* Fade em degradê: várias camadas de blur cada vez mais intenso perto do topo,
@@ -1543,6 +1546,8 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   function aplicarTema(t){
     if(t==="light")document.documentElement.setAttribute("data-theme","light"); else document.documentElement.removeAttribute("data-theme");
     if(accentSalvo) aplicarAcento(accentSalvo); // reaplica o brilho com a geometria certa pro tema atual
+    var meta=document.getElementById("themeColorMeta");
+    if(meta) meta.setAttribute("content", t==="light" ? "#eef0ea" : "#060608");
   }
   var temaSalvo; try{temaSalvo=localStorage.getItem(THEME_KEY);}catch(e){}
   aplicarTema(temaSalvo||"dark");
