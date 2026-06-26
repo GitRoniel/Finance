@@ -13,7 +13,7 @@
   --glow: radial-gradient(130% 85% at 50% -12%, rgba(174,243,78,0.15), transparent 52%),
           radial-gradient(80% 55% at 92% 8%, rgba(124,77,255,0.09), transparent 48%);
   --glass-bg:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.10);
-  --glass-highlight:rgba(255,255,255,0.5);--glass-gloss:rgba(255,255,255,0.09);--glass-blur:20px;
+  --glass-highlight:rgba(255,255,255,0.5);--glass-gloss:rgba(255,255,255,0.09);--glass-blur:14px;
   --text:#f5f5f7;--text-dim:#a6a7af;--text-faint:#6a6b74;
   --lime:#b4f44a;--lime-deep:#83d626;--orange:#ff8a3d;--pink:#ff4d8d;--magenta:#c44bff;--red:#ff6060;--blue:#4da3ff;
   --nav-bg:rgba(20,20,23,0.64);--nav-pill:rgba(255,255,255,0.13);--icon-bg:var(--glass-bg);
@@ -26,7 +26,7 @@
   --glow: radial-gradient(130% 80% at 50% -15%, rgba(131,214,38,0.10), transparent 48%),
           radial-gradient(80% 55% at 95% 5%, rgba(124,77,255,0.05), transparent 45%);
   --glass-bg:rgba(255,255,255,0.62);--glass-border:rgba(255,255,255,0.85);
-  --glass-highlight:rgba(255,255,255,0.95);--glass-gloss:rgba(255,255,255,0.45);--glass-blur:22px;
+  --glass-highlight:rgba(255,255,255,0.95);--glass-gloss:rgba(255,255,255,0.45);--glass-blur:16px;
   --text:#1c1d22;--text-dim:#5c5d66;--text-faint:#8d8e98;
   --lime:#7ec61c;--lime-deep:#5fa015;--orange:#f0791f;--pink:#ec3b7c;--magenta:#a93be0;--red:#e23b3b;--blue:#2b7fd4;
   --nav-bg:rgba(255,255,255,0.72);--nav-pill:rgba(0,0,0,0.07);--icon-bg:rgba(255,255,255,0.7);
@@ -47,7 +47,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .app{max-width:540px;margin:0 auto;padding:0 16px;}
 .glass{position:relative;background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur)) saturate(175%);
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(175%);border:1px solid var(--glass-border);
-  border-radius:var(--radius);overflow:hidden;isolation:isolate;box-shadow:var(--card-shadow);}
+  border-radius:var(--radius);overflow:hidden;isolation:isolate;box-shadow:var(--card-shadow);
+  contain:layout style paint;}
 .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:2;
   background:linear-gradient(135deg,var(--glass-highlight),transparent 38%,transparent 66%,rgba(255,255,255,0.10));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.65;}
@@ -64,11 +65,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   opacity:0;pointer-events:none;}
 .top.scrolled .top-fade{opacity:1;}
 .top-fade i{position:absolute;inset:0;display:block;}
-.top-fade i:nth-child(1){backdrop-filter:blur(2px) saturate(150%);-webkit-backdrop-filter:blur(2px) saturate(150%);
+.top-fade i:nth-child(1){backdrop-filter:blur(1.5px) saturate(150%);-webkit-backdrop-filter:blur(1.5px) saturate(150%);
   -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 50%,transparent 82%);mask-image:linear-gradient(to bottom,#000 0%,#000 50%,transparent 82%);}
-.top-fade i:nth-child(2){backdrop-filter:blur(6px) saturate(165%);-webkit-backdrop-filter:blur(6px) saturate(165%);
+.top-fade i:nth-child(2){backdrop-filter:blur(4px) saturate(165%);-webkit-backdrop-filter:blur(4px) saturate(165%);
   -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 36%,transparent 66%);mask-image:linear-gradient(to bottom,#000 0%,#000 36%,transparent 66%);}
-.top-fade i:nth-child(3){backdrop-filter:blur(14px) saturate(180%);-webkit-backdrop-filter:blur(14px) saturate(180%);
+.top-fade i:nth-child(3){backdrop-filter:blur(9px) saturate(180%);-webkit-backdrop-filter:blur(9px) saturate(180%);
   -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 22%,transparent 48%);mask-image:linear-gradient(to bottom,#000 0%,#000 22%,transparent 48%);}
 .top-fade i:nth-child(4){background:var(--nav-bg);
   -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 12%,transparent 30%);mask-image:linear-gradient(to bottom,#000 0%,#000 12%,transparent 30%);}
@@ -222,7 +223,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .fval{font-size:20px;font-weight:700;flex:0 0 auto;font-family:var(--font-display);letter-spacing:-0.02em;}
 .fchev{color:var(--text-faint);font-size:16px;flex:0 0 auto;}
 /* resumo dos cartões */
-.cards-resumo{display:flex;align-items:stretch;padding:13px 8px;border-radius:var(--radius-sm);margin-bottom:11px;position:sticky;top:58px;z-index:30;}
+.cards-resumo{display:flex;align-items:stretch;padding:13px 8px;border-radius:var(--radius-sm);margin-bottom:11px;position:sticky;top:58px;z-index:30;
+  backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--nav-bg);}
 .cr-blk{flex:1;text-align:center;display:flex;flex-direction:column;gap:3px;min-width:0;}
 .cr-blk .bk{font-size:12px;color:var(--text-faint);font-weight:500;}
 .cr-blk .bv{font-size:15px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -230,9 +232,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cr-blk .bv.pos{color:var(--lime-deep);}
 .cr-div{width:1px;background:var(--glass-border);margin:1px 4px;}
 /* carrossel cartões */
-.carousel{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 10px;margin:0 -4px;scrollbar-width:none;}
+.carousel{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 10px;margin:0 -4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .carousel::-webkit-scrollbar{display:none;}
-.ccard{flex:0 0 85%;scroll-snap-align:center;border-radius:18px;padding:15px 17px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+.ccard{flex:0 0 85%;scroll-snap-align:center;border-radius:18px;padding:15px 17px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 8px 22px rgba(0,0,0,0.28);will-change:transform;transform:translateZ(0);}
 .cc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .cc-bank{display:flex;align-items:center;gap:9px;min-width:0;}
 .cc-logo{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.18);flex:0 0 auto;}
@@ -428,7 +430,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* navbar */
 .navbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:100;
   width:calc(100% - 40px);max-width:300px;height:var(--nav-h);display:flex;align-items:center;padding:0 6px;
-  background:var(--nav-bg);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+  background:var(--nav-bg);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
   border:1px solid var(--glass-border);border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.10);}
 .nav-pill{position:absolute;width:46px;height:46px;top:50%;transform:translateY(-50%);border-radius:999px;
   background:var(--nav-pill);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16);
@@ -635,7 +637,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   var GAS_EXEC_URL_PLACEHOLDER = "COLE_AQUI_O_LINK_/exec_DA_IMPLANTACAO";
   var GAS_EXEC_URL = params.get("gas") || "https://script.google.com/macros/s/AKfycbzVUnPZ1KT6L4iOWaXnMRN4AOj99hLJOSWi16OW_IsrCLkaRUBYDBvcT29xHl-p8ss/exec";
   var MESES_ABREV = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-  var state = { contas:[], cartoes:[], categorias:[], transacoes:[], parcelamentos:[], assinaturas:[], metas:[], investimentos:[], faturaEmAberto:{} };
+  var state = { contas:[], cartoes:[], categorias:[], transacoes:[], txPorCartao:{}, parcelamentos:[], assinaturas:[], metas:[], investimentos:[], faturaEmAberto:{} };
 
   function $(s){ return document.querySelector(s); }
 
@@ -844,6 +846,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     return null;
   }
+  // Agrupa as transações por cartão UMA VEZ por carregamento, em vez de varrer a lista inteira
+  // de novo a cada troca de cartão/mês na tela de Cartões (era o principal gargalo de performance ali).
+  function indexarTransacoesPorCartao(transacoes){
+    var mapa={};
+    transacoes.forEach(function(t){
+      if(!t.cartao) return;
+      if(!mapa[t.cartao]) mapa[t.cartao]=[];
+      mapa[t.cartao].push(t);
+    });
+    return mapa;
+  }
+  function txDoCartao(nomeCartao){
+    return (state.txPorCartao && state.txPorCartao[nomeCartao]) || [];
+  }
   function faturaAtual(card){
     // Prioriza o valor REAL calculado pela regra de cada banco (aba Fatura Em Aberto).
     // Cai no cálculo por janela só se a aba ainda não tiver esse cartão (match tolerante a formatação).
@@ -851,8 +867,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(real && real.valor != null) return real.valor;
     if(!card.fechamento) return 0;
     var win = getInvoiceWindow(card.fechamento);
-    return state.transacoes.filter(function(t){
-      return t.cartao === card.nome && t.tipo === "Saída" && t.data && t.data >= win.start && t.data <= win.end;
+    return txDoCartao(card.nome).filter(function(t){
+      return t.tipo === "Saída" && t.data && t.data >= win.start && t.data <= win.end;
     }).reduce(function(s,t){ return s+t.valor; }, 0);
   }
 
@@ -1207,13 +1223,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return lista; // mais antiga primeiro, ciclo atual (em formação) por último
   }
   function gastosPorMesCartao(card,nMeses){
+    var txCard=txDoCartao(card.nome);
     if(!card.fechamento){
       // sem dia de fechamento cadastrado na planilha: cai no mês de calendário como aproximação
       var hoje=new Date(),out=[];
       for(var i=nMeses-1;i>=0;i--){
         var d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
         var ini=new Date(d.getFullYear(),d.getMonth(),1),fim=new Date(d.getFullYear(),d.getMonth()+1,0);
-        var total=state.transacoes.filter(function(t){return t.cartao===card.nome&&t.tipo==="Saída"&&t.data&&t.data>=ini&&t.data<=fim;}).reduce(function(s,t){return s+t.valor;},0);
+        var total=txCard.filter(function(t){return t.tipo==="Saída"&&t.data&&t.data>=ini&&t.data<=fim;}).reduce(function(s,t){return s+t.valor;},0);
         out.push({janela:{start:ini,end:fim},mes:d.getMonth(),ano:d.getFullYear(),total:total,atual:i===0});
       }
       return out;
@@ -1223,15 +1240,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var atual=(idx===janelas.length-1);
       // Pro ciclo atual usa o MESMO valor oficial do card do carrossel (aba Fatura Em Aberto);
       // pros ciclos já fechados, soma as transações reais dentro da janela de fechamento certa.
-      var total=atual?faturaAtual(card):state.transacoes.filter(function(t){
-        return t.cartao===card.nome&&t.tipo==="Saída"&&t.data&&t.data>=janela.start&&t.data<=janela.end;
+      var total=atual?faturaAtual(card):txCard.filter(function(t){
+        return t.tipo==="Saída"&&t.data&&t.data>=janela.start&&t.data<=janela.end;
       }).reduce(function(s,t){return s+t.valor;},0);
       var venc=vencimentoDaJanela(janela,card.vencimento,card.fechamento);
       return {janela:janela,mes:venc.getMonth(),ano:venc.getFullYear(),total:total,atual:atual};
     });
   }
   function transacoesDoCartaoJanela(nomeCartao,janela){
-    return state.transacoes.filter(function(t){return t.cartao===nomeCartao&&t.data&&t.data>=janela.start&&t.data<=janela.end;}).sort(function(a,b){return b.data-a.data;});
+    return txDoCartao(nomeCartao).filter(function(t){return t.data&&t.data>=janela.start&&t.data<=janela.end;}).sort(function(a,b){return b.data-a.data;});
   }
 
   // Converte uma lista de pontos {x,y} numa curva suave (Catmull-Rom -> Bézier), sem precisar
@@ -1454,9 +1471,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       // Lucro individual = valor líquido − valor aplicado
       var rendInv=(inv.valorLiquido||0)-(inv.valorAplicado||0);
       var ehManual=String(inv.obs||'').toLowerCase().indexOf('manual')!==-1;
+      var titulo=sentenceCase(inv.banco)+(inv.taxa?' - '+inv.taxa:'');
       return '<div class="inv-row'+(ehManual?' inv-manual':'')+'" data-idx="'+idx+'"><div class="inv-ic" style="background:'+info.cor1+'">'+initials(inv.banco)+'</div>'+
-        '<div class="inv-main"><div class="inv-name">'+escapeHtml(sentenceCase(inv.produto))+(ehManual?' <span class="inv-tag">manual</span>':'')+'</div><div class="inv-tipo">'+escapeHtml(inv.banco)+(inv.tipo?' · '+escapeHtml(sentenceCase(inv.tipo)):'')+'</div></div>'+
-        '<div class="inv-val"><div class="v">'+formatBRL(inv.valorAtual)+'</div><div class="r inv-liq-label">'+(rendInv>=0?'+':'')+formatBRL(rendInv)+' líq.</div></div>'+
+        '<div class="inv-main"><div class="inv-name">'+escapeHtml(titulo)+(ehManual?' <span class="inv-tag">manual</span>':'')+'</div></div>'+
+        '<div class="inv-val"><div class="v">'+formatBRL(inv.valorLiquido)+'</div><div class="r inv-liq-label">'+(rendInv>=0?'+':'')+formatBRL(rendInv)+' líq.</div></div>'+
         (ehManual?'<div class="inv-edit-chev">›</div>':'')+'</div>';
     }).join("");
     return '<div class="glass inv-hero"><div class="k">Valor bruto atual</div><div class="big">'+formatBRL(totalAtual)+'</div>'+
@@ -1477,27 +1495,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var ov=document.createElement('div');
     ov.className='modal-ov';
     function g(v){ return (v===undefined||v===null)?'':v; }
-    var dataIso='';
-    if(editando && inv.aplicacaoMaisAntiga instanceof Date && !isNaN(inv.aplicacaoMaisAntiga)){
-      var d=inv.aplicacaoMaisAntiga;
-      dataIso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    }
     ov.innerHTML='<div class="modal glass">'+
       '<div class="modal-head"><div class="modal-title">'+(editando?'Editar investimento':'Novo investimento')+'</div><div class="modal-x" id="invClose">✕</div></div>'+
       '<div class="modal-body">'+
         '<label class="fld"><span>Banco</span><input id="fBanco" type="text" placeholder="Ex: Nubank" autocomplete="off" value="'+escapeHtml(g(editando?inv.banco:''))+'"></label>'+
-        '<label class="fld"><span>Produto</span><input id="fProduto" type="text" placeholder="Ex: CDB Liquidez Diária" autocomplete="off" value="'+escapeHtml(g(editando?inv.produto:''))+'"></label>'+
         '<div class="fld-row">'+
           '<label class="fld"><span>Tipo</span><input id="fTipo" type="text" placeholder="CDB, Tesouro…" autocomplete="off" value="'+escapeHtml(g(editando?inv.tipo:''))+'"></label>'+
-          '<label class="fld"><span>Taxa</span><input id="fTaxa" type="text" placeholder="100% CDI" autocomplete="off" value="'+escapeHtml(g(editando?inv.taxa:''))+'"></label>'+
+          '<label class="fld"><span>Taxa</span><input id="fTaxa" type="text" placeholder="115% CDI" autocomplete="off" value="'+escapeHtml(g(editando?inv.taxa:''))+'"></label>'+
         '</div>'+
         '<div class="fld-row">'+
           '<label class="fld"><span>Valor aplicado</span><input id="fAplicado" type="text" inputmode="decimal" placeholder="0,00" value="'+(editando&&inv.valorAplicado?String(inv.valorAplicado).replace('.',','):'')+'"></label>'+
           '<label class="fld"><span>Valor atual</span><input id="fAtual" type="text" inputmode="decimal" placeholder="igual ao aplicado" value="'+(editando&&inv.valorAtual?String(inv.valorAtual).replace('.',','):'')+'"></label>'+
-        '</div>'+
-        '<div class="fld-row">'+
-          '<label class="fld"><span>Impostos prov.</span><input id="fImpostos" type="text" inputmode="decimal" placeholder="0,00" value="'+(editando&&inv.impostos?String(inv.impostos).replace('.',','):'')+'"></label>'+
-          '<label class="fld"><span>Data aplicação</span><input id="fData" type="date" value="'+dataIso+'"></label>'+
         '</div>'+
         '<div class="modal-msg" id="invMsg"></div>'+
       '</div>'+
@@ -1519,15 +1527,19 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var btn=this;
       var dados={
         acao: editando?'editarInvestimento':'cadastrarInvestimento',
-        banco:val('#fBanco'), produto:val('#fProduto'), tipo:val('#fTipo'), taxa:val('#fTaxa'),
-        aplicado:val('#fAplicado'), atual:val('#fAtual'), impostos:val('#fImpostos'), data:val('#fData')
+        banco:val('#fBanco'), tipo:val('#fTipo'), taxa:val('#fTaxa'),
+        aplicado:val('#fAplicado'), atual:val('#fAtual')
       };
+      // "Produto" não é mais um campo visível, mas o backend precisa de um valor não-vazio
+      // (identifica a linha e mantém ela visível na lista). Reaproveita o produto já existente
+      // (se estiver editando) ou usa taxa/banco como substituto.
+      dados.produto = (editando && inv.produto) ? inv.produto : (dados.taxa || dados.banco || 'Investimento');
       if(editando){
         // identidade original pra localizar a linha certa mesmo que banco/produto/taxa mudem
         dados.origBanco=g(inv.banco); dados.origProduto=g(inv.produto); dados.origTaxa=g(inv.taxa);
       }
       var msg=ov.querySelector('#invMsg');
-      if(!dados.banco && !dados.produto){ msg.textContent='Informe ao menos o banco ou o produto.'; msg.className='modal-msg err'; return; }
+      if(!dados.banco){ msg.textContent='Informe o banco.'; msg.className='modal-msg err'; return; }
       btn.disabled=true; btn.textContent=editando?'Salvando…':'Enviando…'; msg.textContent=''; msg.className='modal-msg';
       enviarInvestimento(dados).then(function(resp){
         if(resp && resp.ok){
@@ -2246,6 +2258,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         state.cartoes = mapCartoes(r[1]);
         state.categorias = mapCategorias(r[2]);
         state.transacoes = mapTransacoes(r[3],"cartao").concat(mapTransacoes(r[4],"conta"));
+        state.txPorCartao = indexarTransacoesPorCartao(state.transacoes);
         state.parcelamentos = mapParcelamentos(r[5]);
         state.assinaturas = mapAssinaturas(r[6]);
         state.investimentos = mapInvestimentos(r[7]);
