@@ -172,16 +172,29 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .barstack{display:flex;gap:4px;}
 .barstack span{height:8px;border-radius:4px;}
 .ring{width:40px;height:40px;}
-.gastos-cat{padding:14px 16px;border-radius:var(--radius-sm);margin-bottom:11px;cursor:pointer;}
-.gastos-cat .chev{position:absolute;top:13px;right:14px;color:var(--text-faint);font-size:15px;z-index:4;}
-.gc-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;padding-right:18px;}
-.gc-total{font-size:20px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;}
-.gc-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
-.gc-row .cat-ic{width:30px;height:30px;border-radius:9px;}
-.gc-row .cat-ic svg{width:15px;height:15px;}
-.gc-name{flex:1;font-size:14px;color:var(--text-dim);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.gc-val{font-size:14px;font-weight:600;font-family:var(--font-display);}
-.gc-empty{font-size:13px;color:var(--text-faint);padding:6px 0;}
+.gcat-hero{padding:18px;border-radius:var(--radius-sm);margin-bottom:6px;text-align:center;}
+.gcat-hero-k{font-size:13px;color:var(--text-faint);font-weight:500;}
+.gcat-hero-v{font-size:28px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin:5px 0 3px;}
+.gcat-hero-s{font-size:13px;color:var(--text-faint);}
+.gcat{border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden;}
+.gcat-head{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer;}
+.gcat-head .cat-ic{width:38px;height:38px;border-radius:11px;}
+.gcat-head .cat-ic svg{width:19px;height:19px;}
+.gcat-info{flex:1;min-width:0;}
+.gcat-name{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gcat-bar{height:4px;border-radius:4px;background:var(--track-bg);overflow:hidden;margin-top:6px;}
+.gcat-fill{height:100%;border-radius:4px;transition:width .5s cubic-bezier(0.16,1,0.3,1);}
+.gcat-right{text-align:right;flex:0 0 auto;}
+.gcat-val{font-size:16px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;}
+.gcat-count{font-size:11px;color:var(--text-faint);margin-top:1px;}
+.gcat-chev{color:var(--text-faint);font-size:16px;flex:0 0 auto;width:14px;text-align:center;}
+.gcat-txs{border-top:1px solid var(--glass-border);animation:fadeUp .3s ease both;}
+.gcat-tx{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px 9px 50px;}
+.gcat-tx:not(:last-child){border-bottom:1px solid var(--glass-border);}
+.gcat-tx-main{min-width:0;}
+.gcat-tx-desc{font-size:13.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gcat-tx-meta{font-size:11px;color:var(--text-faint);margin-top:1px;}
+.gcat-tx-val{font-size:14px;font-weight:600;font-family:var(--font-display);flex:0 0 auto;}
 .invest-tile{flex-direction:row!important;align-items:center;gap:12px;min-height:auto!important;padding:14px 16px!important;}
 .invest-tile .invest-tile-main{flex:1;min-width:0;}
 .invest-tile .tv{margin-top:0;}
@@ -235,30 +248,34 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 .panel-head .pt{font-size:16px;color:var(--text-dim);font-weight:400;}
 .panel-head .pic{width:30px;height:30px;border-radius:9px;background:var(--track-bg);display:flex;align-items:center;justify-content:center;color:var(--text-dim);}
+.ftl-tag{font-size:12.5px;font-weight:500;color:var(--text-dim);background:var(--track-bg);padding:6px 11px;border-radius:10px;}
 .panel .big{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;}
 @keyframes popIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 .panel .big.anim{animation:popIn .3s cubic-bezier(0.16,1,0.3,1);}
-/* Onda do resumo mês a mês: linha suave (SVG) + bolinhas em DIVs HTML (não no SVG — assim elas
-   nunca ficam "ovais" por causa do preserveAspectRatio=none, que estica o SVG só na horizontal)
-   + caixas de valor. Mês selecionado em destaque (cor de acento); ciclo em aberto = bolinha vazada. */
-.fwave{position:relative;margin-top:16px;}
-.fwave-svg{position:absolute;left:0;top:20px;width:100%;height:40px;display:block;overflow:visible;}
-.fwave-dots{position:absolute;left:0;top:20px;width:100%;height:40px;pointer-events:none;}
-.fw-dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--text-faint);
-  border:2px solid var(--bg);transform:translate(-50%,-50%);box-sizing:content-box;}
-.fw-dot.sel{background:var(--blue);}
-.fw-dot.vazado{background:var(--bg);border-width:2.3px;border-color:var(--text-faint);width:9px;height:9px;}
-.fw-dot.vazado.sel{border-color:var(--blue);}
-.fwave-row{display:flex;gap:7px;position:relative;z-index:1;}
-.fw-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;}
-.fw-col:active{transform:scale(0.96);}
-.fw-lbl{font-size:11.5px;line-height:14px;color:var(--text-faint);font-weight:600;text-transform:capitalize;}
-.fw-dotzone{height:40px;width:100%;}
-.fw-box{width:100%;min-height:54px;border-radius:16px;background:var(--track-bg);display:flex;align-items:center;
-  justify-content:center;font-size:12.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;
-  line-height:1.15;padding:8px 5px;border:1.5px solid transparent;text-align:center;color:var(--text-dim);
-  transition:border-color .25s,background .25s,transform .25s,font-size .25s,min-height .25s;}
-.fw-col.sel .fw-box{border-color:var(--blue);border-width:2px;background:rgba(77,163,255,0.14);color:var(--blue);min-height:62px;font-size:14px;transform:scale(1.03);}
+/* Timeline "Evolução da fatura": cards verticais altos, a curva Bézier atravessa por dentro deles,
+   nome no topo, ponto sobre a curva, valor embaixo. Mês selecionado = card com borda azul e fundo azul. */
+.ftl{position:relative;margin-top:14px;height:148px;}
+.ftl-svg{position:absolute;left:0;top:0;width:100%;height:148px;display:block;overflow:visible;pointer-events:none;z-index:1;}
+.ftl-dots{position:absolute;left:0;top:0;width:100%;height:148px;pointer-events:none;z-index:3;}
+.ftl-row{display:flex;gap:8px;height:100%;position:relative;z-index:2;}
+.ftl-col{flex:1;min-width:0;border-radius:16px;border:1.5px solid transparent;cursor:pointer;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:11px 4px 12px;
+  transition:border-color .3s,background .3s,transform .3s;}
+.ftl-col:active{transform:scale(0.97);}
+.ftl-col.sel{border-color:var(--blue);background:rgba(77,163,255,0.12);}
+.ftl-lbl{font-size:13px;font-weight:600;color:var(--text-faint);text-transform:capitalize;line-height:1;z-index:3;}
+.ftl-col.sel .ftl-lbl{color:var(--blue);}
+.ftl-dotzone{flex:1;width:100%;}
+.ftl-val{font-size:12.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;color:var(--text-dim);
+  text-align:center;line-height:1.15;z-index:3;transition:color .3s,font-size .3s;}
+.ftl-col.sel .ftl-val{color:var(--blue);font-size:13.5px;}
+.ftl-dot{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--text-faint);
+  border:2.5px solid var(--bg);transform:translate(-50%,-50%);box-sizing:content-box;z-index:4;transition:background .3s;}
+.ftl-dot.sel{background:var(--blue);}
+.ftl-dot.vazado{background:var(--bg);border-color:var(--text-faint);}
+.ftl-dot.vazado.sel{border-color:var(--blue);background:var(--bg);}
+@keyframes ftlFade{from{opacity:0;}to{opacity:1;}}
+.ftl-line,.ftl-area{animation:ftlFade .4s ease;}
 /* transações */
 .tx-list{border-radius:var(--radius-sm);overflow:hidden;}
 .tx{display:flex;align-items:center;gap:10px;padding:9px 14px;}
@@ -865,15 +882,21 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
       return t.tipo==="Saída"&&t.data&&t.data.getMonth()===h.getMonth()&&t.data.getFullYear()===h.getFullYear();
     }).reduce(function(s,t){return s+t.valor;},0);
   }
-  // Gastos de CARTÃO (não conta) deste mês, agrupados por categoria — usado no card "Gastos por categoria".
-  function gastosPorCategoriaCartao(){
+  // Todos os gastos deste mês, agrupados por categoria (cartão + conta).
+  // Retorna {categoria, total, txs[]} pra permitir o drill-down (clicar e ver as transações).
+  function gastosPorCategoria(){
     var h=new Date(),mapa={};
     state.transacoes.forEach(function(t){
-      if(t.tipo!=="Saída"||!t.data||!t.cartao||t.data.getMonth()!==h.getMonth()||t.data.getFullYear()!==h.getFullYear())return;
+      if(t.tipo!=="Saída"||!t.data||t.data.getMonth()!==h.getMonth()||t.data.getFullYear()!==h.getFullYear())return;
       var cat=sentenceCase(t.categoria)||"Outros";
-      mapa[cat]=(mapa[cat]||0)+t.valor;
+      if(!mapa[cat]) mapa[cat]={categoria:cat,total:0,txs:[]};
+      mapa[cat].total+=t.valor;
+      mapa[cat].txs.push(t);
     });
-    return Object.keys(mapa).map(function(k){return {categoria:k,total:mapa[k]};}).sort(function(a,b){return b.total-a.total;});
+    return Object.keys(mapa).map(function(k){
+      mapa[k].txs.sort(function(a,b){return b.data-a.data;});
+      return mapa[k];
+    }).sort(function(a,b){return b.total-a.total;});
   }
   function totalAssinaturas(){
     return state.assinaturas.filter(function(a){return a.ativa!=="Não";})
@@ -900,7 +923,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var assin=totalAssinaturas();
     var limDisp=limiteDisponivel(), limTot=limiteTotal();
     var parcAtivos=parcelamentosAtivos();
-    var previsao=saldo-faturas;  // simplificado; tela Previsões refina
+    var previsao=calcularPrevisao().previsao;  // mesma fórmula da aba Previsões (inclui recorrentes)
     var contasAtivas=state.contas.filter(function(c){return c.ativa!=="Não";});
     var investAtual=state.investimentos.reduce(function(s,i){return s+(i.valorAtual||0);},0);
     var investAplicado=state.investimentos.reduce(function(s,i){return s+(i.valorAplicado||0);},0);
@@ -927,14 +950,6 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
         '<div class="fval">'+formatBRL(fat)+'</div><div class="fchev">›</div></div>';
     }).join("");
 
-    var gastosCat=gastosPorCategoriaCartao();
-    var gastosCatTop=gastosCat.slice(0,4);
-    var gastosCatHtml=gastosCatTop.length?gastosCatTop.map(function(g){
-      return '<div class="gc-row">'+categoriaIconeHtml(g.categoria,false)+
-        '<div class="gc-name">'+escapeHtml(g.categoria)+'</div>'+
-        '<div class="gc-val">'+formatBRL(g.total)+'</div></div>';
-    }).join(""):'<div class="gc-empty">Nenhum gasto de cartão este mês.</div>';
-
     return ''+
     '<div class="top-cards">'+
       '<div class="glass tcard" data-go="5"><span class="chev">›</span>'+
@@ -948,20 +963,19 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
           '<div class="divider"></div>'+
           '<div class="blk"><div class="bk">Previsão fim do mês</div><div class="bv '+(previsao<0?'neg':'pos')+'">'+formatBRL(previsao)+'</div></div>'+
         '</div><div class="spacer"></div>'+
-        '<div class="cs">após faturas em aberto</div></div>'+
-    '</div>'+
-    '<div class="glass gastos-cat" data-go="1"><span class="chev">›</span>'+
-      '<div class="gc-head"><div class="tk">Gastos · este mês</div><div class="gc-total">'+formatBRL(gastos)+'</div></div>'+
-      gastosCatHtml+
+        '<div class="cs">com recorrentes e faturas</div></div>'+
     '</div>'+
     '<div class="bento">'+
+      '<div class="glass tile" data-go="6"><span class="chev">›</span>'+
+        '<div class="barstack"><span style="width:46%;background:var(--orange)"></span><span style="width:30%;background:var(--pink)"></span><span style="width:16%;background:var(--magenta)"></span></div>'+
+        '<div class="spacer"></div><div class="tk">Gastos · este mês</div><div class="tv">'+formatBRL(gastos)+'</div><div class="ts">por categoria</div></div>'+
       '<div class="glass tile" data-go="2" data-sub="assin"><span class="chev">›</span>'+
         '<div class="tile-icon" style="background:rgba(124,77,255,0.18);color:#cba6ff"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M12 3v18M4 7l8 4 8-4"/></svg></div>'+
         '<div class="spacer"></div><div class="tk">Assinaturas</div><div class="tv">'+formatBRL(assin)+'</div><div class="ts">por mês</div></div>'+
       '<div class="glass tile" data-go="1"><span class="chev">›</span>'+
         '<svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--track-bg)" stroke-width="3.4"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--lime)" stroke-width="3.4" stroke-dasharray="97" stroke-dashoffset="'+ringOffset+'" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg>'+
         '<div class="spacer"></div><div class="tk">Limite disponível</div><div class="tv">'+formatBRL(limDisp)+'</div><div class="ts">de '+formatBRL(limTot)+'</div></div>'+
-      '<div class="glass tile" data-go="2" data-sub="parc" style="grid-column:1 / -1"><span class="chev">›</span>'+
+      '<div class="glass tile" data-go="2" data-sub="parc"><span class="chev">›</span>'+
         '<div class="tile-icon" style="background:rgba(255,138,61,0.18);color:var(--orange)"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></div>'+
         '<div class="spacer"></div><div class="tk">Parcelamentos</div><div class="tv">'+parcAtivos.length+' ativos</div><div class="ts">'+formatBRL(totalParcelasMes())+' / mês</div></div>'+
       (state.investimentos.length?'<div class="glass tile invest-tile" data-go="3" style="grid-column:1 / -1"><span class="chev">›</span>'+
@@ -975,18 +989,43 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 
   /* ===== TELA EXTRA: CONTA CORRENTE ===== */
   var contaFiltro=''; // '' = todas as contas
+  // Nomes de conta tolerantes (ignora caixa/acentos/espaços) pra casar o filtro com t.conta,
+  // que pode estar grafado diferente do nome de exibição da aba "Contas".
+  function normNome(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim(); }
+  function contasNasTransacoes(){
+    // Lista única de nomes de conta que de fato aparecem nas transações de origem "conta".
+    var mapa={},ordem=[];
+    state.transacoes.forEach(function(t){
+      if(t.origem!=='conta') return;
+      var nome=(t.conta||'').trim();
+      if(!nome) return;
+      var k=normNome(nome);
+      if(!mapa[k]){ mapa[k]=nome; ordem.push(nome); }
+    });
+    return ordem;
+  }
   function transacoesContaFiltradas(){
+    var alvo=normNome(contaFiltro);
     return state.transacoes.filter(function(t){
-      return t.origem==='conta' && (!contaFiltro || t.conta===contaFiltro);
+      return t.origem==='conta' && (!contaFiltro || normNome(t.conta)===alvo);
     }).sort(function(a,b){return b.data-a.data;});
   }
+  function saldoDaContaFiltro(){
+    // Tenta casar o saldo da aba "Contas" com o nome de conta selecionado (match tolerante).
+    if(!contaFiltro) return saldoTotalContas();
+    var alvo=normNome(contaFiltro);
+    return state.contas.filter(function(c){return c.ativa!=="Não" && (normNome(c.nome)===alvo || normNome(c.nome).indexOf(alvo)!==-1 || alvo.indexOf(normNome(c.nome))!==-1);})
+      .reduce(function(s,c){return s+(c.saldo||0);},0);
+  }
   function renderContaCorrente(){
-    var contas=state.contas.filter(function(c){return c.ativa!=="Não";});
-    if(!contas.length) return '<div class="empty"><div class="ei">🏦</div><div class="et">Nenhuma conta na planilha.</div></div>';
-    if(contaFiltro && !contas.some(function(c){return c.nome===contaFiltro;})) contaFiltro='';
-    var saldoMostrado = contaFiltro ? (contas.filter(function(c){return c.nome===contaFiltro;}).reduce(function(s,c){return s+(c.saldo||0);},0)) : saldoTotalContas();
-    var opcoes='<option value="">Todas as contas</option>'+contas.map(function(c){
-      return '<option value="'+escapeHtml(c.nome)+'"'+(contaFiltro===c.nome?' selected':'')+'>'+escapeHtml(c.nome)+'</option>';
+    var nomesConta=contasNasTransacoes();
+    if(!nomesConta.length && !state.contas.filter(function(c){return c.ativa!=="Não";}).length){
+      return '<div class="empty"><div class="ei">🏦</div><div class="et">Nenhuma conta na planilha.</div></div>';
+    }
+    if(contaFiltro && nomesConta.map(normNome).indexOf(normNome(contaFiltro))===-1) contaFiltro='';
+    var saldoMostrado = saldoDaContaFiltro();
+    var opcoes='<option value="">Todas as contas</option>'+nomesConta.map(function(nome){
+      return '<option value="'+escapeHtml(nome)+'"'+(normNome(contaFiltro)===normNome(nome)?' selected':'')+'>'+escapeHtml(nome)+'</option>';
     }).join("");
     return '<div class="glass cc-hero"><div class="cc-hero-top"><div><div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div><div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div></div>'+
         '<select class="cc-filter" id="ccFiltro">'+opcoes+'</select></div></div>'+
@@ -1013,13 +1052,51 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
       sel.addEventListener('change',function(){
         contaFiltro=sel.value;
         var hero=document.querySelector('.cc-hero-k'), val=document.querySelector('.cc-hero-v');
-        var contas=state.contas.filter(function(c){return c.ativa!=="Não";});
-        var saldoMostrado = contaFiltro ? (contas.filter(function(c){return c.nome===contaFiltro;}).reduce(function(s,c){return s+(c.saldo||0);},0)) : saldoTotalContas();
         if(hero) hero.textContent='Saldo'+(contaFiltro?'':' total');
-        if(val) val.textContent=formatBRL(saldoMostrado);
+        if(val) val.textContent=formatBRL(saldoDaContaFiltro());
         atualizarListaContaCorrente();
       });
     }
+  }
+
+  /* ===== TELA EXTRA: GASTOS POR CATEGORIA ===== */
+  var categoriaAberta=null; // categoria expandida no drill-down
+  function renderGastos(){
+    var cats=gastosPorCategoria();
+    var total=cats.reduce(function(s,c){return s+c.total;},0);
+    if(!cats.length) return '<div class="empty"><div class="ei">📊</div><div class="et">Nenhum gasto registrado este mês.</div></div>';
+    var maxV=cats[0]?cats[0].total:1;
+    var lista=cats.map(function(c,i){
+      var pct=maxV>0?Math.round((c.total/maxV)*100):0;
+      var aberta=(categoriaAberta===c.categoria);
+      var info=categoriaInfo(c.categoria);
+      var txsHtml=aberta?('<div class="gcat-txs">'+c.txs.map(function(t){
+        var dia=t.data?t.data.getDate():'',mes=t.data?MESES_ABREV[t.data.getMonth()]:'';
+        var origem=t.cartao||t.conta||'';
+        return '<div class="gcat-tx"><div class="gcat-tx-main"><div class="gcat-tx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+'</div>'+
+          '<div class="gcat-tx-meta">'+dia+' '+mes+(origem?' · '+escapeHtml(origem):'')+'</div></div>'+
+          '<div class="gcat-tx-val">'+formatBRL(t.valor)+'</div></div>';
+      }).join("")+'</div>'):'';
+      return '<div class="glass gcat'+(aberta?' open':'')+'" data-cat="'+escapeHtml(c.categoria)+'">'+
+        '<div class="gcat-head">'+categoriaIconeHtml(c.categoria,false)+
+          '<div class="gcat-info"><div class="gcat-name">'+escapeHtml(c.categoria)+'</div>'+
+            '<div class="gcat-bar"><div class="gcat-fill" style="width:'+pct+'%;background:'+info.color+'"></div></div></div>'+
+          '<div class="gcat-right"><div class="gcat-val">'+formatBRL(c.total)+'</div><div class="gcat-count">'+c.txs.length+(c.txs.length===1?' compra':' compras')+'</div></div>'+
+          '<div class="gcat-chev">'+(aberta?'⌄':'›')+'</div>'+
+        '</div>'+txsHtml+'</div>';
+    }).join("");
+    return '<div class="glass gcat-hero"><div class="gcat-hero-k">Total gasto · este mês</div><div class="gcat-hero-v">'+formatBRL(total)+'</div><div class="gcat-hero-s">'+cats.length+(cats.length===1?' categoria':' categorias')+'</div></div>'+
+      '<div class="section-head"><h2>Por categoria</h2><span class="cnt">toque para detalhar</span></div>'+
+      lista;
+  }
+  function wireGastos(){
+    document.querySelectorAll('.gcat').forEach(function(el){
+      el.querySelector('.gcat-head').addEventListener('click',function(){
+        var cat=el.getAttribute('data-cat');
+        categoriaAberta=(categoriaAberta===cat)?null:cat;
+        irPara(6); // re-renderiza a tela mantendo a categoria aberta/fechada
+      });
+    });
   }
 
   /* ===== TELA 2: CARTÕES ===== */
@@ -1087,53 +1164,49 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     return 'R$ '+Math.round(Number(n)||0).toLocaleString('pt-BR');
   }
 
-  // Gera a "onda": linha suave (SVG, pode esticar na horizontal sem problema — é só a linha) +
-  // bolinhas como DIVs HTML posicionados por cima (essas NÃO podem ir dentro do SVG esticado,
-  // porque preserveAspectRatio=none deforma círculos em elipses) + caixa de valor por mês.
-  // Mês selecionado fica destacado na cor de acento; ciclo "em aberto" (atual) = bolinha vazada.
-  function gerarOndaHtml(meses, idxSel){
+  // Gera a timeline "Evolução da fatura" igual à referência: cada mês é um CARD VERTICAL alto e
+  // clicável (nome no topo, valor embaixo) e a curva Bézier suave passa POR DENTRO dos cards,
+  // com gradiente abaixo dela. O mês selecionado ganha borda/fundo azul. Para os pontos não virarem
+  // elipses, o SVG NÃO é esticado (preserveAspectRatio padrão) e usa coordenadas reais em px,
+  // medidas a partir da largura real do container no momento do render.
+  function gerarTimelineHtml(meses, idxSel){
     var n=meses.length;
     var valores=meses.map(function(m){return m.total;});
     var maxV=Math.max.apply(null,valores.concat([1])), minV=Math.min.apply(null,valores.concat([0]));
-    var topPad=7, H=40, faixa=H-topPad*2;
+    // Geometria em % (x) e px (y) — a curva fica na faixa vertical do meio dos cards (zona do ponto).
+    var H=148;            // altura total do bloco (== .ftl height)
+    var zoneTop=34;       // abaixo do rótulo do mês
+    var zoneH=70;         // altura útil onde a curva oscila
     var pts=meses.map(function(m,i){
       var x=((i+0.5)/n)*100;
-      var y=(maxV===minV)?(H/2):(topPad+(1-((m.total-minV)/(maxV-minV)))*faixa);
+      var y=(maxV===minV)?(zoneTop+zoneH/2):(zoneTop+(1-((m.total-minV)/(maxV-minV)))*zoneH);
       return {x:x,y:y};
     });
     var dFull=caminhoSuave(pts);
-    var ultimo=pts[n-1], penultimo=pts[n-2]||ultimo, antePenultimo=pts[n-3]||penultimo;
-    // Recalcula só o ÚLTIMO trecho da curva (mesma fórmula usada dentro de caminhoSuave pro
-    // último segmento) pra poder destacá-lo com cor de acento e desenhar o gradiente embaixo.
-    var c1x=penultimo.x+(ultimo.x-antePenultimo.x)/6, c1y=penultimo.y+(ultimo.y-antePenultimo.y)/6;
-    var c2x=ultimo.x-(ultimo.x-penultimo.x)/6, c2y=ultimo.y-(ultimo.y-penultimo.y)/6;
-    var segUltimo='C'+c1x.toFixed(2)+','+c1y.toFixed(2)+' '+c2x.toFixed(2)+','+c2y.toFixed(2)+' '+ultimo.x.toFixed(2)+','+ultimo.y.toFixed(2);
-    var dUltimo='M'+penultimo.x.toFixed(2)+','+penultimo.y.toFixed(2)+' '+segUltimo;
-    var areaFill='M'+penultimo.x.toFixed(2)+','+H+' L'+penultimo.x.toFixed(2)+','+penultimo.y.toFixed(2)+' '+segUltimo+' L'+ultimo.x.toFixed(2)+','+H+' Z';
-    var svg='<svg class="fwave-svg" viewBox="0 0 100 '+H+'" preserveAspectRatio="none">'+
-      '<defs><linearGradient id="fwGrad" x1="0" y1="0" x2="0" y2="1">'+
-        '<stop offset="0%" stop-color="var(--blue)" stop-opacity="0.32"/>'+
+    var areaFill=dFull+' L'+pts[n-1].x.toFixed(2)+','+H+' L'+pts[0].x.toFixed(2)+','+H+' Z';
+    // SVG com viewBox 0..100 em x e 0..H em y; preserveAspectRatio=none só na horizontal é aceitável
+    // aqui porque os PONTOS são DIVs HTML por cima (não distorcem). A linha pode esticar à vontade.
+    var svg='<svg class="ftl-svg" viewBox="0 0 100 '+H+'" preserveAspectRatio="none">'+
+      '<defs><linearGradient id="ftlGrad" x1="0" y1="0" x2="0" y2="1">'+
+        '<stop offset="0%" stop-color="var(--blue)" stop-opacity="0.30"/>'+
         '<stop offset="100%" stop-color="var(--blue)" stop-opacity="0"/>'+
       '</linearGradient></defs>'+
-      '<path d="'+areaFill+'" fill="url(#fwGrad)" stroke="none"/>'+
-      '<path d="'+dFull+'" fill="none" stroke="var(--text-faint)" stroke-width="2.2" stroke-linecap="round" opacity="0.5"/>'+
-      '<path d="'+dUltimo+'" fill="none" stroke="var(--blue)" stroke-width="2.6" stroke-linecap="round"/>'+
+      '<path class="ftl-area" d="'+areaFill+'" fill="url(#ftlGrad)" stroke="none"/>'+
+      '<path class="ftl-line" d="'+dFull+'" fill="none" stroke="var(--blue)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'+
     '</svg>';
-    // Bolinhas em HTML por cima do SVG, posicionadas em % (x, igual ao SVG) e px (y, igual à
-    // altura H do SVG em pixels — por isso .fwave-dots usa a mesma height fixa em CSS).
     var dots=pts.map(function(p,i){
       var sel=(i===idxSel), vazado=meses[i].atual;
-      var cls='fw-dot'+(sel?' sel':'')+(vazado?' vazado':'');
+      var cls='ftl-dot'+(sel?' sel':'')+(vazado?' vazado':'');
       return '<div class="'+cls+'" style="left:'+p.x.toFixed(2)+'%;top:'+p.y.toFixed(2)+'px"></div>';
     }).join("");
     var cols=meses.map(function(m,i){
-      return '<div class="fw-col'+(i===idxSel?' sel':'')+'" data-i="'+i+'">'+
-        '<div class="fw-lbl">'+MESES_ABREV[m.mes]+'</div>'+
-        '<div class="fw-dotzone"></div>'+
-        '<div class="fw-box">'+formatBRLInt(m.total)+'</div>'+
+      return '<div class="ftl-col'+(i===idxSel?' sel':'')+'" data-i="'+i+'">'+
+        '<div class="ftl-lbl">'+MESES_ABREV[m.mes]+'</div>'+
+        '<div class="ftl-dotzone"></div>'+
+        '<div class="ftl-val">'+formatBRLInt(m.total)+'</div>'+
       '</div>';
     }).join("");
-    return '<div class="fwave">'+svg+'<div class="fwave-dots">'+dots+'</div><div class="fwave-row">'+cols+'</div></div>';
+    return '<div class="ftl">'+svg+'<div class="ftl-dots">'+dots+'</div><div class="ftl-row">'+cols+'</div></div>';
   }
 
   function renderCartoes(){
@@ -1168,13 +1241,12 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var meses=gastosPorMesCartao(card,4);
     var idxAtual=meses.length-1;
     var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtual;
-    var onda=gerarOndaHtml(meses,idxSel);
+    var timeline=gerarTimelineHtml(meses,idxSel);
     var mSel=meses[idxSel];
-    var rotulo=mSel.atual?'Fatura em aberto':'Fatura de '+MESES_COMPLETO[mSel.mes];
     var cp=document.getElementById('chartPanel');
     if(cp){
-      cp.innerHTML='<div class="panel-head"><span class="pt">'+rotulo+'</span><div class="pic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18"/></svg></div></div><div class="big anim">'+formatBRL(mSel.total)+'</div>'+onda;
-      cp.querySelectorAll('.fw-col').forEach(function(fc){
+      cp.innerHTML='<div class="panel-head"><span class="pt">Evolução da fatura</span><div class="ftl-tag">Últimos 4 meses</div></div>'+timeline;
+      cp.querySelectorAll('.ftl-col').forEach(function(fc){
         fc.addEventListener('click',function(){
           mesSelecionado=Number(fc.getAttribute('data-i'));
           renderDetalheCartao(card);
@@ -1303,6 +1375,18 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   function lerRecorrentes(){ try{ return JSON.parse(localStorage.getItem(REC_KEY))||[]; }catch(e){ return []; } }
   function salvarRecorrentes(arr){ try{ localStorage.setItem(REC_KEY, JSON.stringify(arr)); }catch(e){} }
 
+  // Cálculo ÚNICO da previsão de fim de mês, usado tanto na Visão Geral quanto na aba Previsões,
+  // pra os dois números sempre baterem. Item recorrente já marcado (= já aconteceu) não entra na conta.
+  function calcularPrevisao(){
+    var saldo    = saldoTotalContas();
+    var faturas  = totalFaturasAbertas();
+    var recs     = lerRecorrentes();
+    var marcados = lerMarcacoes();
+    var entradas = recs.reduce(function(s,r,i){ return r.tipo==='in'  && !marcados[String(i)] ? s+r.valor : s; }, 0);
+    var saidas   = recs.reduce(function(s,r,i){ return r.tipo==='out' && !marcados[String(i)] ? s+r.valor : s; }, 0);
+    return { saldo:saldo, faturas:faturas, entradas:entradas, saidas:saidas, previsao: saldo + entradas - saidas - faturas };
+  }
+
   // Retorna a chave "AAAA-MM" do mês atual
   function mesAtualKey(){
     var d = new Date();
@@ -1336,15 +1420,12 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 
   // Atualiza só os números e os estilos dos itens sem destruir o DOM (para não perder foco)
   function renderPrevisoesParcial(){
-    var saldo    = saldoTotalContas();
-    var faturas  = totalFaturasAbertas();
-    var recs     = lerRecorrentes();
-    var marcados = lerMarcacoes();
-
-    // Recalcula: item marcado = já aconteceu = não soma/desconta da previsão
-    var entradas = recs.reduce(function(s,r,i){ return r.tipo==='in'  && !marcados[String(i)] ? s+r.valor : s; }, 0);
-    var saidas   = recs.reduce(function(s,r,i){ return r.tipo==='out' && !marcados[String(i)] ? s+r.valor : s; }, 0);
-    var previsao = saldo + entradas - saidas - faturas;
+    var calc     = calcularPrevisao();
+    var saldo    = calc.saldo;
+    var faturas  = calc.faturas;
+    var entradas = calc.entradas;
+    var saidas   = calc.saidas;
+    var previsao = calc.previsao;
 
     // Atualiza hero (só saldo, faturas não muda sem reload)
     var ps = document.getElementById('prev-saldo-val'); if(ps) ps.textContent = formatBRL(saldo);
@@ -1403,15 +1484,14 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   }
 
   function renderPrevisoes(){
-    var saldo    = saldoTotalContas();
-    var faturas  = totalFaturasAbertas();
     var recs     = lerRecorrentes();
     var marcados = lerMarcacoes();
-
-    // Itens não marcados = ainda vão acontecer = entram na previsão
-    var entradas = recs.reduce(function(s,r,i){ return r.tipo==='in'  && !marcados[String(i)] ? s+r.valor : s; }, 0);
-    var saidas   = recs.reduce(function(s,r,i){ return r.tipo==='out' && !marcados[String(i)] ? s+r.valor : s; }, 0);
-    var previsao = saldo + entradas - saidas - faturas;
+    var calc     = calcularPrevisao();
+    var saldo    = calc.saldo;
+    var faturas  = calc.faturas;
+    var entradas = calc.entradas;
+    var saidas   = calc.saidas;
+    var previsao = calc.previsao;
 
     var mes = (new Date()).toLocaleString('pt-BR',{month:'long',year:'numeric'});
     var sheetOk = GAS_EXEC_URL && GAS_EXEC_URL !== GAS_EXEC_URL_PLACEHOLDER;
@@ -1549,7 +1629,8 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     {id:'parc',   titulo:'Parcelas',      render:renderParcelas,   wire:wireParcelas},
     {id:'invest', titulo:'Investimentos', render:renderInvestimentos, wire:null},
     {id:'prev',   titulo:'Previsões',     render:renderPrevisoes,  wire:wirePrevisoes},
-    {id:'conta',  titulo:'Conta Corrente',render:renderContaCorrente, wire:wireContaCorrente}
+    {id:'conta',  titulo:'Conta Corrente',render:renderContaCorrente, wire:wireContaCorrente},
+    {id:'gastos', titulo:'Gastos do mês', render:renderGastos,      wire:wireGastos}
   ];
   // índices fixos (data-i / data-go): 0 visao, 1 cartoes, 2 parc, 3 invest, 4 prev, 5 conta
   // "conta" foi adicionado no final de propósito pra não precisar renumerar todas as referências
@@ -1602,7 +1683,9 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     }
     // navbar
     document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
-    var item=document.querySelector('.nav-item[data-i="'+i+'"]');
+    // Telas de drill-down (Gastos=6) não têm ícone próprio: mantém o "pai" destacado na navbar.
+    var navIdx = (i===6) ? 0 : i;
+    var item=document.querySelector('.nav-item[data-i="'+navIdx+'"]');
     if(item){ item.classList.add('active'); movePill(item); }
     window.scrollTo(0,0);
     atualizarCabecalho(); // já reseta pro estado "no topo" (saudação completa / sem fade)
