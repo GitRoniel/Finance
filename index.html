@@ -314,23 +314,31 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .calc-row.total{margin-top:4px;padding-top:13px;border-top:2px solid var(--glass-border);font-size:14px;}
 .calc-row.total .lbl{color:var(--text);font-weight:600;font-family:var(--font-display);}
 .calc-row.total .amt{font-size:20px;font-weight:700;}
-/* form recorrentes */
-.rec-add{display:flex;gap:8px;margin-bottom:12px;}
-.rec-add input,.rec-add select{flex:1;min-width:0;padding:11px 12px;border-radius:11px;border:1px solid var(--glass-border);
-  background:var(--glass-bg);color:var(--text);font-size:13px;font-family:var(--font);outline:none;}
-.rec-add input::placeholder{color:var(--text-faint);}
-.rec-add .add-btn{flex:0 0 auto;width:44px;border-radius:11px;border:none;background:var(--lime);color:#0a0a0a;font-size:22px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.rec-add .add-btn:active{transform:scale(0.9);}
-.rec-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:13px;background:var(--glass-bg);border:1px solid var(--glass-border);margin-bottom:8px;}
-.rec-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+/* rec-item com checkbox de "já aconteceu" */
+.rec-item{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:13px;background:var(--glass-bg);border:1px solid var(--glass-border);margin-bottom:8px;transition:opacity .25s;}
+.rec-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--glass-border);background:var(--track-bg);flex:0 0 26px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:background .2s,border-color .2s;-webkit-tap-highlight-color:transparent;}
+.rec-check:active{transform:scale(0.88);}
+.rec-check.checked{background:var(--lime);border-color:var(--lime);color:#0a0a0a;}
+[data-theme="light"] .rec-check.checked{color:#0a0a0a;}
+.rec-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;}
 .rec-dot.in{background:var(--lime);}
 .rec-dot.out{background:var(--red);}
-.rec-name{flex:1;font-size:16px;font-weight:400;}
-.rec-val{font-size:20px;font-weight:700;font-family:var(--font-display);}
+.rec-main{flex:1;min-width:0;}
+.rec-name{font-size:15px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rec-check-lbl{font-size:11px;color:var(--text-faint);font-weight:500;margin-top:1px;}
+.rec-val{font-size:17px;font-weight:700;font-family:var(--font-display);flex:0 0 auto;}
 .rec-val.in{color:var(--lime-deep);}
 .rec-val.out{color:var(--red);}
-.rec-del{color:var(--text-faint);cursor:pointer;font-size:17px;padding:0 2px;}
-.rec-group-label{font-size:13px;color:var(--text-faint);font-weight:600;letter-spacing:0;margin:14px 2px 8px;}
+.rec-del{color:var(--text-faint);cursor:pointer;font-size:17px;padding:2px 3px;flex:0 0 auto;}
+/* Item marcado como feito: opacidade reduzida + nome riscado */
+.rec-feito{opacity:0.5;}
+.rec-feito .rec-name{text-decoration:line-through;}
+.rec-feito .rec-val{opacity:0.6;}
+/* Tag do mês */
+.rec-mes-tag{font-size:12px;color:var(--text-faint);font-weight:500;margin-left:6px;}
+/* Hint de uso */
+.rec-reset-hint{font-size:12px;color:var(--text-faint);margin-bottom:11px;padding:0 2px;line-height:1.5;}
+
 .banner{padding:11px 14px;border-radius:12px;background:rgba(77,163,255,0.12);border:1px solid rgba(77,163,255,0.25);color:var(--blue);font-size:13px;margin-bottom:13px;line-height:1.5;}
 .cnt{font-size:13px;color:var(--text-faint);font-weight:500;}
 /* navbar */
@@ -488,7 +496,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   // Link /exec da implantação do Apps Script como "App da Web" (Implantar > Nova implantação).
   // NÃO é o link do editor — precisa terminar em .../exec.
   var GAS_EXEC_URL_PLACEHOLDER = "COLE_AQUI_O_LINK_/exec_DA_IMPLANTACAO";
-  var GAS_EXEC_URL = params.get("gas") || GAS_EXEC_URL_PLACEHOLDER;
+  var GAS_EXEC_URL = params.get("gas") || "https://script.google.com/macros/s/AKfycbzVUnPZ1KT6L4iOWaXnMRN4AOj99hLJOSWi16OW_IsrCLkaRUBYDBvcT29xHl-p8ss/exec";
   var MESES_ABREV = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
   var state = { contas:[], cartoes:[], categorias:[], transacoes:[], parcelamentos:[], assinaturas:[], metas:[], investimentos:[], faturaEmAberto:{} };
 
@@ -1116,132 +1124,243 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
       '<div class="glass tx-list">'+lista+'</div>';
   }
 
-  /* ===== TELA 5: PREVISÕES (com sync na planilha) ===== */
-  // Tenta ler da aba "Previsões" da planilha; se não tiver, usa localStorage como fallback.
-  var REC_KEY='financeiro-recorrentes';
-  var recorrentes_sincronizando=false;
+  /* ===== TELA 5: PREVISÕES ===== */
+  // ARMAZENAMENTO
+  // REC_KEY  → lista de recorrentes: [{nome, valor, tipo:'in'|'out'}]
+  // CHECK_KEY → marcações do mês atual: {"AAAA-MM": {"0":true, "2":true, ...}}
+  //   Quando o mês muda, as marcações do mês anterior são descartadas automaticamente.
+  var REC_KEY   = 'financeiro-recorrentes';
+  var CHECK_KEY = 'financeiro-recorrentes-check';
+  var recorrentes_sincronizando = false;
 
-  function lerRecorrentes(){ try{return JSON.parse(localStorage.getItem(REC_KEY))||[];}catch(e){return [];} }
-  function salvarRecorrentes(arr){ try{localStorage.setItem(REC_KEY,JSON.stringify(arr));}catch(e){} }
+  function lerRecorrentes(){ try{ return JSON.parse(localStorage.getItem(REC_KEY))||[]; }catch(e){ return []; } }
+  function salvarRecorrentes(arr){ try{ localStorage.setItem(REC_KEY, JSON.stringify(arr)); }catch(e){} }
+
+  // Retorna a chave "AAAA-MM" do mês atual
+  function mesAtualKey(){
+    var d = new Date();
+    return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
+  }
+
+  // Lê as marcações do mês atual (descarta automaticamente meses anteriores)
+  function lerMarcacoes(){
+    try{
+      var raw = JSON.parse(localStorage.getItem(CHECK_KEY)) || {};
+      var mes = mesAtualKey();
+      // Se não tem entrada pro mês atual, começa tudo desmarcado (reset automático)
+      return raw[mes] || {};
+    }catch(e){ return {}; }
+  }
+
+  // Salva marcações preservando só o mês atual
+  function salvarMarcacoes(marcacoes){
+    try{
+      var obj = {}; obj[mesAtualKey()] = marcacoes;
+      localStorage.setItem(CHECK_KEY, JSON.stringify(obj));
+    }catch(e){}
+  }
+
+  function toggleMarcacao(idx){
+    var m = lerMarcacoes();
+    m[String(idx)] = !m[String(idx)];
+    salvarMarcacoes(m);
+    renderPrevisoesParcial(); // atualiza sem recriar tudo
+  }
+
+  // Atualiza só os números e os estilos dos itens sem destruir o DOM (para não perder foco)
+  function renderPrevisoesParcial(){
+    var saldo    = saldoTotalContas();
+    var faturas  = totalFaturasAbertas();
+    var recs     = lerRecorrentes();
+    var marcados = lerMarcacoes();
+
+    // Recalcula: item marcado = já aconteceu = não soma/desconta da previsão
+    var entradas = recs.reduce(function(s,r,i){ return r.tipo==='in'  && !marcados[String(i)] ? s+r.valor : s; }, 0);
+    var saidas   = recs.reduce(function(s,r,i){ return r.tipo==='out' && !marcados[String(i)] ? s+r.valor : s; }, 0);
+    var previsao = saldo + entradas - saidas - faturas;
+
+    // Atualiza hero
+    var ph = document.getElementById('prev-hero-prev');
+    if(ph){ ph.textContent = formatBRL(previsao); ph.className='pt-v '+(previsao<0?'neg':'pos'); }
+    var ps = document.getElementById('prev-saldo-val'); if(ps) ps.textContent = formatBRL(saldo);
+
+    // Atualiza linhas do cálculo
+    var ce = document.getElementById('calc-entradas');
+    var cs = document.getElementById('calc-saidas');
+    var ct = document.getElementById('calc-total');
+    var cr = document.getElementById('calc-row-entradas');
+    var crout = document.getElementById('calc-row-saidas');
+    if(ce){ ce.textContent = '+'+formatBRL(entradas); }
+    if(cs){ cs.textContent = '−'+formatBRL(saidas); }
+    if(ct){ ct.textContent = formatBRL(previsao); ct.className='amt '+(previsao<0?'neg':'pos'); }
+    if(cr)  cr.style.display  = entradas ? '' : 'none';
+    if(crout) crout.style.display = saidas  ? '' : 'none';
+
+    // Atualiza visual de cada item (riscado ou não)
+    recs.forEach(function(_,i){
+      var el = document.getElementById('rec-item-'+i);
+      if(!el) return;
+      var feito = !!marcados[String(i)];
+      el.classList.toggle('rec-feito', feito);
+      var cb = el.querySelector('.rec-check');
+      if(cb) cb.classList.toggle('checked', feito);
+      var lbl = el.querySelector('.rec-check-lbl');
+      if(lbl) lbl.textContent = feito ? 'feito' : 'pendente';
+    });
+  }
 
   // Lê a aba "Previsões" da planilha e mescla com o localStorage (planilha tem prioridade)
   function carregarRecorrentesSheet(){
     return fetchSheet('Previsões').then(function(rows){
       if(!rows||!rows.length) return lerRecorrentes();
-      var arr=rows.map(function(c){
-        var tipo=strVal(c,2);
+      var arr = rows.map(function(c){
+        var tipo = strVal(c,2);
         return { nome:strVal(c,1), valor:numVal(c,3), tipo:(tipo==='Entrada'?'in':'out') };
-      }).filter(function(x){return x.nome&&x.valor>0;});
-      // Sincroniza localStorage
+      }).filter(function(x){ return x.nome && x.valor>0; });
       salvarRecorrentes(arr);
       return arr;
     }).catch(function(){ return lerRecorrentes(); });
   }
 
-  // Grava um item na aba "Previsões" via Apps Script (doPost ou append via form).
-  // Usa a URL de execução do GAS se disponível; senão só salva local.
   function gravarRecorrenteSheet(item, callback){
     if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
-    var url=GAS_EXEC_URL+'?action=addPrevisao&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor);
+    var url = GAS_EXEC_URL+'?action=addPrevisao&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor);
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
   function deletarRecorrenteSheet(idx, callback){
     if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
-    var url=GAS_EXEC_URL+'?action=delPrevisao&idx='+idx;
+    var url = GAS_EXEC_URL+'?action=delPrevisao&idx='+idx;
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
 
   function renderPrevisoes(){
-    var saldo=saldoTotalContas();
-    var faturas=totalFaturasAbertas();
-    var recs=lerRecorrentes();
-    var entradas=recs.filter(function(r){return r.tipo==='in';}).reduce(function(s,r){return s+r.valor;},0);
-    var saidas=recs.filter(function(r){return r.tipo==='out';}).reduce(function(s,r){return s+r.valor;},0);
-    var previsao=saldo+entradas-saidas-faturas;
+    var saldo    = saldoTotalContas();
+    var faturas  = totalFaturasAbertas();
+    var recs     = lerRecorrentes();
+    var marcados = lerMarcacoes();
 
-    var recHtml=recs.length?recs.map(function(r,i){
-      return '<div class="rec-item">'+
+    // Itens não marcados = ainda vão acontecer = entram na previsão
+    var entradas = recs.reduce(function(s,r,i){ return r.tipo==='in'  && !marcados[String(i)] ? s+r.valor : s; }, 0);
+    var saidas   = recs.reduce(function(s,r,i){ return r.tipo==='out' && !marcados[String(i)] ? s+r.valor : s; }, 0);
+    var previsao = saldo + entradas - saidas - faturas;
+
+    var mes = (new Date()).toLocaleString('pt-BR',{month:'long',year:'numeric'});
+    var sheetOk = GAS_EXEC_URL && GAS_EXEC_URL !== GAS_EXEC_URL_PLACEHOLDER;
+
+    // Lista de recorrentes com checkbox "já aconteceu"
+    var recHtml = recs.length ? recs.map(function(r,i){
+      var feito = !!marcados[String(i)];
+      var lblTipo = r.tipo==='in' ? 'Recebido' : 'Pago';
+      return '<div class="rec-item'+(feito?' rec-feito':'')+'" id="rec-item-'+i+'">'+
+        // Checkbox de status
+        '<button class="rec-check'+(feito?' checked':'')+'" data-check="'+i+'" title="Marcar como '+lblTipo.toLowerCase()+'">'+
+          (feito?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'')+
+        '</button>'+
+        // Conteúdo
         '<div class="rec-dot '+r.tipo+'"></div>'+
-        '<div class="rec-name">'+escapeHtml(r.nome)+'</div>'+
+        '<div class="rec-main">'+
+          '<div class="rec-name">'+escapeHtml(r.nome)+'</div>'+
+          '<div class="rec-check-lbl">'+( feito ? 'feito' : 'pendente' )+'</div>'+
+        '</div>'+
         '<div class="rec-val '+r.tipo+'">'+(r.tipo==='in'?'+':'-')+formatBRL(r.valor)+'</div>'+
-        '<div class="rec-del" data-del="'+i+'" title="Remover">×</div>'+
+        '<div class="rec-del" data-del="'+i+'" title="Remover item">×</div>'+
       '</div>';
-    }).join(""):
-    '<div class="empty" style="padding:16px 0 4px"><div class="et">Nenhuma recorrente. Adicione salário, aluguel, etc.</div></div>';
+    }).join('') :
+    '<div class="empty" style="padding:16px 0 4px"><div class="et">Nenhuma recorrente ainda. Adicione salário, aluguel, etc.</div></div>';
 
-    var sheetOk=GAS_EXEC_URL&&GAS_EXEC_URL!==GAS_EXEC_URL_PLACEHOLDER;
     return ''+
-    // Hero compacto: 3 números em linha
+    // Hero trio
     '<div class="prev-trio glass">'+
-      '<div class="prev-trio-blk"><div class="pt-k">Saldo</div><div class="pt-v">'+formatBRL(saldo)+'</div></div>'+
+      '<div class="prev-trio-blk"><div class="pt-k">Saldo</div><div class="pt-v" id="prev-saldo-val">'+formatBRL(saldo)+'</div></div>'+
       '<div class="prev-trio-div"></div>'+
-      '<div class="prev-trio-blk"><div class="pt-k">Faturas</div><div class="pt-v neg">-'+formatBRL(faturas)+'</div></div>'+
+      '<div class="prev-trio-blk"><div class="pt-k">Faturas</div><div class="pt-v neg">−'+formatBRL(faturas)+'</div></div>'+
       '<div class="prev-trio-div"></div>'+
-      '<div class="prev-trio-blk"><div class="pt-k">Previsão</div><div class="pt-v '+(previsao<0?'neg':'pos')+'">'+formatBRL(previsao)+'</div></div>'+
+      '<div class="prev-trio-blk"><div class="pt-k">Previsão</div><div class="pt-v '+(previsao<0?'neg':'pos')+'" id="prev-hero-prev">'+formatBRL(previsao)+'</div></div>'+
     '</div>'+
-    // Cálculo compacto
+    // Cálculo
     '<div class="glass calc-card" style="margin-bottom:13px">'+
-      '<div class="calc-row"><span class="lbl">Saldo em contas</span><span class="amt">'+formatBRL(saldo)+'</span></div>'+
-      (entradas?'<div class="calc-row"><span class="lbl">+ Entradas recorrentes</span><span class="amt pos">+'+formatBRL(entradas)+'</span></div>':'')+
-      (saidas?'<div class="calc-row"><span class="lbl">− Saídas recorrentes</span><span class="amt neg">−'+formatBRL(saidas)+'</span></div>':'')+
+      '<div class="calc-row"><span class="lbl">Saldo em contas</span><span class="amt" id="prev-saldo-val2">'+formatBRL(saldo)+'</span></div>'+
+      '<div class="calc-row" id="calc-row-entradas"'+(entradas?'':' style="display:none"')+'><span class="lbl">+ Entradas a receber</span><span class="amt pos" id="calc-entradas">+'+formatBRL(entradas)+'</span></div>'+
+      '<div class="calc-row" id="calc-row-saidas"'+(saidas?'':' style="display:none"')+'><span class="lbl">− Saídas a pagar</span><span class="amt neg" id="calc-saidas">−'+formatBRL(saidas)+'</span></div>'+
       '<div class="calc-row"><span class="lbl">− Faturas abertas</span><span class="amt neg">−'+formatBRL(faturas)+'</span></div>'+
-      '<div class="calc-row total"><span class="lbl">Previsão</span><span class="amt '+(previsao<0?'neg':'pos')+'">'+formatBRL(previsao)+'</span></div>'+
+      '<div class="calc-row total"><span class="lbl">Previsão</span><span class="amt '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
     '</div>'+
-    // Seção de recorrentes com form inline
-    '<div class="section-head" style="margin-top:2px"><h2>Recorrentes</h2>'+
-      (sheetOk?'<span class="rec-sync-badge" id="recSyncBadge" title="Sincronizando com a planilha">📊 planilha</span>':'<span class="rec-sync-badge local">💾 local</span>')+
+    // Seção recorrentes
+    '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag">'+mes+'</span></h2>'+
+      (sheetOk?'<span class="rec-sync-badge" id="recSyncBadge">📊 planilha</span>':'<span class="rec-sync-badge local">💾 local</span>')+
     '</div>'+
-    '<div class="rec-add-compact">'+
-      '<input type="text" id="recNome" placeholder="Nome (ex: Salário)" maxlength="30">'+
+    '<div class="rec-reset-hint">Toque no círculo para marcar como recebido/pago. As marcações resetam no próximo mês automaticamente.</div>'+
+    '<div id="recLista">'+recHtml+'</div>'+
+    // Formulário de adição
+    '<div class="rec-add-compact" style="margin-top:14px">'+
+      '<input type="text" id="recNome" placeholder="Nome (ex: Salário, Aluguel)" maxlength="30">'+
       '<div class="rec-add-row2">'+
         '<input type="number" id="recValor" placeholder="Valor" inputmode="decimal">'+
         '<select id="recTipo"><option value="in">✅ Entrada</option><option value="out">🔴 Saída</option></select>'+
         '<button class="add-btn" id="recAdd">+</button>'+
       '</div>'+
     '</div>'+
-    '<div id="recLista">'+recHtml+'</div>'+
-    (sheetOk?'<div class="banner" style="margin-top:10px">📊 Os itens são salvos na aba <b>Previsões</b> da planilha. Sincronize para ver atualizações de outros dispositivos.<br><span style="display:flex;align-items:center;gap:8px;margin-top:8px"><button class="rec-sheet-sync-btn" id="recSheetSync">⟳ Sincronizar planilha</button></span></div>':
-    '<div class="banner" style="margin-top:10px">💡 Configure o GAS_EXEC_URL para sincronizar com a planilha. Por enquanto, os dados ficam neste aparelho.</div>');
+    (sheetOk?
+      '<div class="banner" style="margin-top:10px">📊 Itens salvos na aba <b>Previsões</b> da planilha. <button class="rec-sheet-sync-btn" id="recSheetSync" style="margin-top:6px;display:block;width:100%">⟳ Sincronizar com a planilha</button></div>':
+      '<div class="banner" style="margin-top:10px">💡 Configure o GAS_EXEC_URL para sincronizar com a planilha. Por enquanto, os dados ficam neste aparelho.</div>');
   }
 
   function wirePrevisoes(){
-    var add=document.getElementById('recAdd');
+    // Botão adicionar
+    var add = document.getElementById('recAdd');
     if(add){
-      add.addEventListener('click',function(){
-        var nome=(document.getElementById('recNome').value||'').trim();
-        var valor=parseFloat(document.getElementById('recValor').value);
-        var tipo=document.getElementById('recTipo').value;
+      add.addEventListener('click', function(){
+        var nome  = (document.getElementById('recNome').value||'').trim();
+        var valor = parseFloat(document.getElementById('recValor').value);
+        var tipo  = document.getElementById('recTipo').value;
         if(!nome||isNaN(valor)||valor<=0) return;
-        var item={nome:nome,valor:valor,tipo:tipo};
-        var recs=lerRecorrentes(); recs.push(item); salvarRecorrentes(recs);
-        // Tenta gravar na planilha também
+        var item = {nome:nome, valor:valor, tipo:tipo};
+        var recs = lerRecorrentes(); recs.push(item); salvarRecorrentes(recs);
         gravarRecorrenteSheet(item, function(ok){
-          var badge=document.getElementById('recSyncBadge');
-          if(badge) badge.title=ok?'Salvo na planilha':'Salvo localmente (planilha não respondeu)';
+          var b = document.getElementById('recSyncBadge');
+          if(b) b.title = ok?'Salvo na planilha':'Salvo localmente';
         });
         irPara(4);
       });
     }
-    document.querySelectorAll('[data-del]').forEach(function(d){
-      d.addEventListener('click',function(){
-        var i=Number(d.getAttribute('data-del'));
-        deletarRecorrenteSheet(i, function(){});
-        var recs=lerRecorrentes(); recs.splice(i,1); salvarRecorrentes(recs); irPara(4);
+    // Checkboxes (marcar como feito — atualiza só os números, sem re-render completo)
+    document.querySelectorAll('[data-check]').forEach(function(btn){
+      btn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        toggleMarcacao(Number(btn.getAttribute('data-check')));
       });
     });
-    // Botão de sincronizar com a planilha
-    var syncBtn=document.getElementById('recSheetSync');
+    // Deletar item
+    document.querySelectorAll('[data-del]').forEach(function(d){
+      d.addEventListener('click', function(){
+        var i = Number(d.getAttribute('data-del'));
+        deletarRecorrenteSheet(i, function(){});
+        // Reindexar marcações ao remover um item do meio
+        var m = lerMarcacoes();
+        var newM = {};
+        var recs = lerRecorrentes();
+        recs.forEach(function(_,j){
+          if(j < i && m[String(j)]) newM[String(j)] = true;
+          if(j > i && m[String(j)]) newM[String(j-1)] = true;
+        });
+        salvarMarcacoes(newM);
+        recs.splice(i,1); salvarRecorrentes(recs);
+        irPara(4);
+      });
+    });
+    // Sincronizar com planilha
+    var syncBtn = document.getElementById('recSheetSync');
     if(syncBtn){
-      syncBtn.addEventListener('click',function(){
+      syncBtn.addEventListener('click', function(){
         if(recorrentes_sincronizando) return;
-        recorrentes_sincronizando=true;
-        syncBtn.textContent='Sincronizando…'; syncBtn.disabled=true;
+        recorrentes_sincronizando = true;
+        syncBtn.textContent = 'Sincronizando…'; syncBtn.disabled = true;
         carregarRecorrentesSheet().then(function(){
-          recorrentes_sincronizando=false;
+          recorrentes_sincronizando = false;
           irPara(4);
         }).catch(function(){
-          recorrentes_sincronizando=false;
-          syncBtn.textContent='Erro — tente de novo'; syncBtn.disabled=false;
+          recorrentes_sincronizando = false;
+          syncBtn.textContent = 'Erro — tente de novo'; syncBtn.disabled = false;
         });
       });
     }
