@@ -359,7 +359,32 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   .bento{grid-template-columns:repeat(4,1fr);}
   .ccard{flex:0 0 48%;}
 }
-@media(prefers-reduced-motion:reduce){.screen.active{animation:none;transition:none;}.nav-pill{transition:none;}}
+/* previsões — trio hero compacto */
+.prev-trio{display:flex;align-items:center;padding:14px 12px;border-radius:var(--radius-sm);margin-bottom:13px;gap:0;}
+.prev-trio-blk{flex:1;text-align:center;min-width:0;}
+.prev-trio-blk .pt-k{font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.01em;text-transform:uppercase;}
+.prev-trio-blk .pt-v{font-size:18px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prev-trio-blk .pt-v.neg{color:var(--red);}
+.prev-trio-blk .pt-v.pos{color:var(--lime-deep);}
+.prev-trio-div{width:1px;background:var(--glass-border);height:32px;flex:0 0 1px;margin:0 4px;}
+/* form recorrentes compacto */
+.rec-add-compact{margin-bottom:12px;display:flex;flex-direction:column;gap:8px;}
+.rec-add-compact input[type="text"]{width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:14px;font-family:var(--font);outline:none;}
+.rec-add-compact input[type="text"]::placeholder{color:var(--text-faint);}
+.rec-add-row2{display:flex;gap:8px;}
+.rec-add-row2 input{flex:1;min-width:0;padding:11px 12px;border-radius:11px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:14px;font-family:var(--font);outline:none;}
+.rec-add-row2 select{flex:0 0 auto;padding:11px 10px;border-radius:11px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:13px;font-family:var(--font);outline:none;}
+.rec-add-row2 .add-btn{flex:0 0 44px;border-radius:11px;border:none;background:var(--lime);color:#0a0a0a;font-size:22px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.rec-add-row2 .add-btn:active{transform:scale(0.9);}
+/* badge de sync */
+.rec-sync-badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:8px;background:rgba(77,163,255,0.14);color:var(--blue);border:1px solid rgba(77,163,255,0.22);}
+.rec-sync-badge.local{background:rgba(255,255,255,0.07);color:var(--text-faint);border-color:var(--glass-border);}
+.rec-sheet-sync-btn{flex:1;padding:8px 14px;border-radius:10px;border:1px solid rgba(77,163,255,0.3);background:rgba(77,163,255,0.12);color:var(--blue);font-size:13px;font-weight:600;cursor:pointer;}
+.rec-sheet-sync-btn:active{transform:scale(0.97);}
+/* investimentos — label líquido */
+.inv-liq-label{color:var(--lime-deep);}
+.inv-hero-sub{margin:2px 0 4px;}
+.inv-liq-badge{display:inline-block;font-size:13px;font-weight:600;padding:3px 10px;border-radius:8px;background:rgba(180,244,74,0.13);color:var(--lime-deep);border:1px solid rgba(180,244,74,0.22);}
 
 </style>
 </head>
@@ -965,7 +990,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   }
   function renderDetalheCartao(card){
     if(!card)return;
-    var meses=gastosPorMesCartao(card,6);
+    var meses=gastosPorMesCartao(card,4);
     var idxAtual=meses.length-1;
     var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtual;
     var onda=gerarOndaHtml(meses,idxSel);
@@ -1066,30 +1091,65 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var invs=state.investimentos;
     if(!invs.length) return '<div class="empty"><div class="ei">📈</div><div class="et">Nenhum investimento cadastrado na planilha.</div></div>';
     var totalAtual=invs.reduce(function(s,i){return s+(i.valorAtual||0);},0);
+    var totalLiquido=invs.reduce(function(s,i){return s+(i.valorLiquido||0);},0);
     var totalAplicado=invs.reduce(function(s,i){return s+(i.valorAplicado||0);},0);
-    var rend=totalAtual-totalAplicado;
+    // Lucro = valor líquido (saque hoje) − valor aplicado
+    var rend=totalLiquido-totalAplicado;
     var pctRend=totalAplicado>0?(rend/totalAplicado*100):0;
     var lista=invs.map(function(inv){
       var info=bancoDe(inv.banco);
-      var rendInv=(inv.valorAtual||0)-(inv.valorAplicado||0);
+      // Lucro individual = valor líquido − valor aplicado
+      var rendInv=(inv.valorLiquido||0)-(inv.valorAplicado||0);
       return '<div class="inv-row"><div class="inv-ic" style="background:'+info.cor1+'">'+initials(inv.banco)+'</div>'+
         '<div class="inv-main"><div class="inv-name">'+escapeHtml(sentenceCase(inv.produto))+'</div><div class="inv-tipo">'+escapeHtml(inv.banco)+(inv.tipo?' · '+escapeHtml(sentenceCase(inv.tipo)):'')+'</div></div>'+
-        '<div class="inv-val"><div class="v">'+formatBRL(inv.valorAtual)+'</div><div class="r">'+(rendInv>=0?'+':'')+formatBRL(rendInv)+'</div></div></div>';
+        '<div class="inv-val"><div class="v">'+formatBRL(inv.valorAtual)+'</div><div class="r inv-liq-label">'+(rendInv>=0?'+':'')+formatBRL(rendInv)+' líq.</div></div></div>';
     }).join("");
-    return '<div class="glass inv-hero"><div class="k">Valor atual</div><div class="big">'+formatBRL(totalAtual)+'</div><div class="delta">'+(rend>=0?'+':'')+formatBRL(rend)+' ('+pctRend.toFixed(1)+'%)</div></div>'+
+    return '<div class="glass inv-hero"><div class="k">Valor bruto atual</div><div class="big">'+formatBRL(totalAtual)+'</div>'+
+      '<div class="inv-hero-sub"><span class="inv-liq-badge">Líquido: '+formatBRL(totalLiquido)+'</span></div>'+
+      '<div class="delta">'+(rend>=0?'+':'')+formatBRL(rend)+' ('+pctRend.toFixed(1)+'%) líquido</div></div>'+
       '<div class="glass tcard" style="min-height:auto;padding:16px 18px;margin-bottom:11px"><div class="split" style="margin-top:0">'+
         '<div class="blk"><div class="bk">Valor investido</div><div class="bv">'+formatBRL(totalAplicado)+'</div></div>'+
         '<div class="divider"></div>'+
-        '<div class="blk"><div class="bk">Rendimento total</div><div class="bv '+(rend<0?'neg':'pos')+'">'+(rend>=0?'+':'')+formatBRL(rend)+'</div></div>'+
+        '<div class="blk"><div class="bk">Lucro líquido (saque hoje)</div><div class="bv '+(rend<0?'neg':'pos')+'">'+(rend>=0?'+':'')+formatBRL(rend)+'</div></div>'+
       '</div></div>'+
       '<div class="section-head"><h2>Meus investimentos</h2><span class="cnt">'+invs.length+'</span></div>'+
       '<div class="glass tx-list">'+lista+'</div>';
   }
 
-  /* ===== TELA 5: PREVISÕES ===== */
+  /* ===== TELA 5: PREVISÕES (com sync na planilha) ===== */
+  // Tenta ler da aba "Previsões" da planilha; se não tiver, usa localStorage como fallback.
   var REC_KEY='financeiro-recorrentes';
+  var recorrentes_sincronizando=false;
+
   function lerRecorrentes(){ try{return JSON.parse(localStorage.getItem(REC_KEY))||[];}catch(e){return [];} }
   function salvarRecorrentes(arr){ try{localStorage.setItem(REC_KEY,JSON.stringify(arr));}catch(e){} }
+
+  // Lê a aba "Previsões" da planilha e mescla com o localStorage (planilha tem prioridade)
+  function carregarRecorrentesSheet(){
+    return fetchSheet('Previsões').then(function(rows){
+      if(!rows||!rows.length) return lerRecorrentes();
+      var arr=rows.map(function(c){
+        var tipo=strVal(c,2);
+        return { nome:strVal(c,1), valor:numVal(c,3), tipo:(tipo==='Entrada'?'in':'out') };
+      }).filter(function(x){return x.nome&&x.valor>0;});
+      // Sincroniza localStorage
+      salvarRecorrentes(arr);
+      return arr;
+    }).catch(function(){ return lerRecorrentes(); });
+  }
+
+  // Grava um item na aba "Previsões" via Apps Script (doPost ou append via form).
+  // Usa a URL de execução do GAS se disponível; senão só salva local.
+  function gravarRecorrenteSheet(item, callback){
+    if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
+    var url=GAS_EXEC_URL+'?action=addPrevisao&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor);
+    fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
+  }
+  function deletarRecorrenteSheet(idx, callback){
+    if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
+    var url=GAS_EXEC_URL+'?action=delPrevisao&idx='+idx;
+    fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
+  }
 
   function renderPrevisoes(){
     var saldo=saldoTotalContas();
@@ -1100,47 +1160,91 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var previsao=saldo+entradas-saidas-faturas;
 
     var recHtml=recs.length?recs.map(function(r,i){
-      return '<div class="rec-item"><div class="rec-dot '+r.tipo+'"></div><div class="rec-name">'+escapeHtml(r.nome)+'</div><div class="rec-val '+r.tipo+'">'+(r.tipo==='in'?'+':'-')+formatBRL(r.valor)+'</div><div class="rec-del" data-del="'+i+'">×</div></div>';
-    }).join(""):'<div class="empty" style="padding:20px"><div class="et">Nenhuma entrada/saída recorrente. Cadastre abaixo (salário, aluguel, etc).</div></div>';
+      return '<div class="rec-item">'+
+        '<div class="rec-dot '+r.tipo+'"></div>'+
+        '<div class="rec-name">'+escapeHtml(r.nome)+'</div>'+
+        '<div class="rec-val '+r.tipo+'">'+(r.tipo==='in'?'+':'-')+formatBRL(r.valor)+'</div>'+
+        '<div class="rec-del" data-del="'+i+'" title="Remover">×</div>'+
+      '</div>';
+    }).join(""):
+    '<div class="empty" style="padding:16px 0 4px"><div class="et">Nenhuma recorrente. Adicione salário, aluguel, etc.</div></div>';
 
+    var sheetOk=GAS_EXEC_URL&&GAS_EXEC_URL!==GAS_EXEC_URL_PLACEHOLDER;
     return ''+
-    '<div class="prev-hero">'+
-      '<div class="glass prev-box"><div class="k">Saldo atual</div><div class="v">'+formatBRL(saldo)+'</div><div class="s">em contas hoje</div></div>'+
-      '<div class="glass prev-box"><div class="k">Previsão fim do mês</div><div class="v '+(previsao<0?'neg':'pos')+'">'+formatBRL(previsao)+'</div><div class="s">após tudo</div></div>'+
+    // Hero compacto: 3 números em linha
+    '<div class="prev-trio glass">'+
+      '<div class="prev-trio-blk"><div class="pt-k">Saldo</div><div class="pt-v">'+formatBRL(saldo)+'</div></div>'+
+      '<div class="prev-trio-div"></div>'+
+      '<div class="prev-trio-blk"><div class="pt-k">Faturas</div><div class="pt-v neg">-'+formatBRL(faturas)+'</div></div>'+
+      '<div class="prev-trio-div"></div>'+
+      '<div class="prev-trio-blk"><div class="pt-k">Previsão</div><div class="pt-v '+(previsao<0?'neg':'pos')+'">'+formatBRL(previsao)+'</div></div>'+
     '</div>'+
-    '<div class="glass calc-card">'+
+    // Cálculo compacto
+    '<div class="glass calc-card" style="margin-bottom:13px">'+
       '<div class="calc-row"><span class="lbl">Saldo em contas</span><span class="amt">'+formatBRL(saldo)+'</span></div>'+
-      '<div class="calc-row"><span class="lbl">+ Entradas recorrentes</span><span class="amt pos">+ '+formatBRL(entradas)+'</span></div>'+
-      '<div class="calc-row"><span class="lbl">− Saídas recorrentes</span><span class="amt neg">− '+formatBRL(saidas)+'</span></div>'+
-      '<div class="calc-row"><span class="lbl">− Faturas em aberto</span><span class="amt neg">− '+formatBRL(faturas)+'</span></div>'+
-      '<div class="calc-row total"><span class="lbl">Previsão fim do mês</span><span class="amt '+(previsao<0?'neg':'pos')+'">'+formatBRL(previsao)+'</span></div>'+
+      (entradas?'<div class="calc-row"><span class="lbl">+ Entradas recorrentes</span><span class="amt pos">+'+formatBRL(entradas)+'</span></div>':'')+
+      (saidas?'<div class="calc-row"><span class="lbl">− Saídas recorrentes</span><span class="amt neg">−'+formatBRL(saidas)+'</span></div>':'')+
+      '<div class="calc-row"><span class="lbl">− Faturas abertas</span><span class="amt neg">−'+formatBRL(faturas)+'</span></div>'+
+      '<div class="calc-row total"><span class="lbl">Previsão</span><span class="amt '+(previsao<0?'neg':'pos')+'">'+formatBRL(previsao)+'</span></div>'+
     '</div>'+
-    '<div class="banner">💡 As entradas e saídas que você cadastrar aqui ficam salvas neste aparelho. Em breve poderão ser salvas direto na planilha.</div>'+
-    '<div class="section-head" style="margin-top:6px"><h2>Entradas e saídas recorrentes</h2></div>'+
-    '<div class="rec-add">'+
+    // Seção de recorrentes com form inline
+    '<div class="section-head" style="margin-top:2px"><h2>Recorrentes</h2>'+
+      (sheetOk?'<span class="rec-sync-badge" id="recSyncBadge" title="Sincronizando com a planilha">📊 planilha</span>':'<span class="rec-sync-badge local">💾 local</span>')+
+    '</div>'+
+    '<div class="rec-add-compact">'+
       '<input type="text" id="recNome" placeholder="Nome (ex: Salário)" maxlength="30">'+
-      '<input type="number" id="recValor" placeholder="R$" inputmode="decimal" style="flex:0 0 90px">'+
-      '<select id="recTipo"><option value="in">Entra</option><option value="out">Sai</option></select>'+
-      '<button class="add-btn" id="recAdd">+</button>'+
+      '<div class="rec-add-row2">'+
+        '<input type="number" id="recValor" placeholder="Valor" inputmode="decimal">'+
+        '<select id="recTipo"><option value="in">✅ Entrada</option><option value="out">🔴 Saída</option></select>'+
+        '<button class="add-btn" id="recAdd">+</button>'+
+      '</div>'+
     '</div>'+
-    '<div id="recLista">'+recHtml+'</div>';
+    '<div id="recLista">'+recHtml+'</div>'+
+    (sheetOk?'<div class="banner" style="margin-top:10px">📊 Os itens são salvos na aba <b>Previsões</b> da planilha. Sincronize para ver atualizações de outros dispositivos.<br><span style="display:flex;align-items:center;gap:8px;margin-top:8px"><button class="rec-sheet-sync-btn" id="recSheetSync">⟳ Sincronizar planilha</button></span></div>':
+    '<div class="banner" style="margin-top:10px">💡 Configure o GAS_EXEC_URL para sincronizar com a planilha. Por enquanto, os dados ficam neste aparelho.</div>');
   }
+
   function wirePrevisoes(){
-    var add=document.getElementById('recAdd'); if(!add)return;
-    add.addEventListener('click',function(){
-      var nome=(document.getElementById('recNome').value||'').trim();
-      var valor=parseFloat(document.getElementById('recValor').value);
-      var tipo=document.getElementById('recTipo').value;
-      if(!nome||isNaN(valor)||valor<=0){ return; }
-      var recs=lerRecorrentes(); recs.push({nome:nome,valor:valor,tipo:tipo}); salvarRecorrentes(recs);
-      irPara(4); // re-render previsões
-    });
+    var add=document.getElementById('recAdd');
+    if(add){
+      add.addEventListener('click',function(){
+        var nome=(document.getElementById('recNome').value||'').trim();
+        var valor=parseFloat(document.getElementById('recValor').value);
+        var tipo=document.getElementById('recTipo').value;
+        if(!nome||isNaN(valor)||valor<=0) return;
+        var item={nome:nome,valor:valor,tipo:tipo};
+        var recs=lerRecorrentes(); recs.push(item); salvarRecorrentes(recs);
+        // Tenta gravar na planilha também
+        gravarRecorrenteSheet(item, function(ok){
+          var badge=document.getElementById('recSyncBadge');
+          if(badge) badge.title=ok?'Salvo na planilha':'Salvo localmente (planilha não respondeu)';
+        });
+        irPara(4);
+      });
+    }
     document.querySelectorAll('[data-del]').forEach(function(d){
       d.addEventListener('click',function(){
         var i=Number(d.getAttribute('data-del'));
+        deletarRecorrenteSheet(i, function(){});
         var recs=lerRecorrentes(); recs.splice(i,1); salvarRecorrentes(recs); irPara(4);
       });
     });
+    // Botão de sincronizar com a planilha
+    var syncBtn=document.getElementById('recSheetSync');
+    if(syncBtn){
+      syncBtn.addEventListener('click',function(){
+        if(recorrentes_sincronizando) return;
+        recorrentes_sincronizando=true;
+        syncBtn.textContent='Sincronizando…'; syncBtn.disabled=true;
+        carregarRecorrentesSheet().then(function(){
+          recorrentes_sincronizando=false;
+          irPara(4);
+        }).catch(function(){
+          recorrentes_sincronizando=false;
+          syncBtn.textContent='Erro — tente de novo'; syncBtn.disabled=false;
+        });
+      });
+    }
   }
 
   /* ===== NAVEGAÇÃO ENTRE TELAS ===== */
@@ -1190,6 +1294,13 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var content=document.getElementById('content');
     content.innerHTML='<div class="screen active">'+tela.render()+'</div>';
     if(tela.wire) tela.wire();
+    // Ao entrar em Previsões, tenta sincronizar a lista com a aba da planilha uma vez
+    if(i===4 && !irPara._prevSyncDone){
+      irPara._prevSyncDone=true;
+      carregarRecorrentesSheet().then(function(arr){
+        if(arr&&arr.length){ salvarRecorrentes(arr); irPara(4); }
+      }).catch(function(){});
+    }
     // navbar
     document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
     var item=document.querySelector('.nav-item[data-i="'+i+'"]');
