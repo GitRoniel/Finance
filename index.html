@@ -19,7 +19,7 @@
   --nav-bg:rgba(20,20,23,0.64);--nav-pill:rgba(255,255,255,0.13);--icon-bg:var(--glass-bg);
   --track-bg:rgba(255,255,255,0.09);--card-shadow:none;--chart-bar:rgba(255,255,255,0.10);
   --radius:22px;--radius-sm:16px;--radius-xs:11px;
-  --font-display:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:58px;
+  --font-display:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:64px;
 }
 [data-theme="light"]{
   --bg:#eef0ea;
@@ -32,11 +32,18 @@
   --nav-bg:rgba(255,255,255,0.72);--nav-pill:rgba(0,0,0,0.07);--icon-bg:rgba(255,255,255,0.7);
   --track-bg:rgba(0,0,0,0.08);--card-shadow:0 4px 20px rgba(60,70,40,0.08);--chart-bar:rgba(0,0,0,0.07);
 }
-html{transition:background .4s ease;}
+html{transition:background .4s ease;background:var(--bg);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{font-family:var(--font);background:var(--glow),var(--bg);background-attachment:fixed;color:var(--text);
+/* Pinta a faixa da barra de status (relógio/bateria) com EXATAMENTE o mesmo fundo do app,
+   pra não haver diferença de tonalidade entre a status bar do iOS e o cabeçalho. */
+.statusbar-bg{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);z-index:200;
+  background:var(--bg);pointer-events:none;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);
   min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;
   padding-bottom:calc(var(--nav-h) + 42px + env(safe-area-inset-bottom,0px));transition:background .4s,color .4s;}
+/* O glow agora é uma camada fixa separada (antes era background-attachment:fixed no body,
+   que no iOS standalone às vezes "vazava" tonalidade diferente pra cima da status bar). */
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow);pointer-events:none;}
 .app{max-width:540px;margin:0 auto;padding:0 16px;}
 .glass{position:relative;background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur)) saturate(175%);
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(175%);border:1px solid var(--glass-border);
@@ -51,19 +58,20 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   position:sticky;top:0;z-index:90;}
 .top>*{position:relative;z-index:1;}
 /* Fade em degradê: várias camadas de blur cada vez mais intenso perto do topo,
-   mascaradas para diluir gradualmente até ficar 100% transparente no final do efeito. */
-.top-fade{position:absolute;left:0;right:0;top:0;height:calc(100% + 46px);z-index:0;
-  opacity:0;transition:opacity .4s ease;pointer-events:none;}
+   mascaradas para diluir gradualmente. SEM transition de opacity (era a causa do "delay" ao rolar
+   pouco) — o blur aparece na hora. A área foi aumentada pra um degradê mais suave e longo. */
+.top-fade{position:absolute;left:0;right:0;top:0;height:calc(100% + 72px);z-index:0;
+  opacity:0;pointer-events:none;}
 .top.scrolled .top-fade{opacity:1;}
 .top-fade i{position:absolute;inset:0;display:block;}
 .top-fade i:nth-child(1){backdrop-filter:blur(2px) saturate(150%);-webkit-backdrop-filter:blur(2px) saturate(150%);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 40%,transparent 70%);mask-image:linear-gradient(to bottom,#000 0%,#000 40%,transparent 70%);}
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 50%,transparent 82%);mask-image:linear-gradient(to bottom,#000 0%,#000 50%,transparent 82%);}
 .top-fade i:nth-child(2){backdrop-filter:blur(6px) saturate(165%);-webkit-backdrop-filter:blur(6px) saturate(165%);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 28%,transparent 55%);mask-image:linear-gradient(to bottom,#000 0%,#000 28%,transparent 55%);}
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 36%,transparent 66%);mask-image:linear-gradient(to bottom,#000 0%,#000 36%,transparent 66%);}
 .top-fade i:nth-child(3){backdrop-filter:blur(14px) saturate(180%);-webkit-backdrop-filter:blur(14px) saturate(180%);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 16%,transparent 38%);mask-image:linear-gradient(to bottom,#000 0%,#000 16%,transparent 38%);}
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 22%,transparent 48%);mask-image:linear-gradient(to bottom,#000 0%,#000 22%,transparent 48%);}
 .top-fade i:nth-child(4){background:var(--nav-bg);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%);mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 22%);}
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 12%,transparent 30%);mask-image:linear-gradient(to bottom,#000 0%,#000 12%,transparent 30%);}
 .top h1{font-size:22px;font-weight:400;font-family:var(--font-display);letter-spacing:-0.01em;transition:font-size .3s ease;}
 .top.scrolled h1{font-size:18px;}
 .top .sub{font-size:13px;color:var(--text-faint);margin-top:1px;font-weight:500;}
@@ -224,21 +232,21 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 /* carrossel cartões */
 .carousel{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 10px;margin:0 -4px;scrollbar-width:none;}
 .carousel::-webkit-scrollbar{display:none;}
-.ccard{flex:0 0 85%;scroll-snap-align:center;border-radius:18px;padding:15px 17px;min-height:128px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
-.cc-top{display:flex;align-items:flex-start;justify-content:space-between;}
-.cc-bank{display:flex;align-items:center;gap:10px;}
-.cc-logo{width:33px;height:33px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.18);}
+.ccard{flex:0 0 85%;scroll-snap-align:center;border-radius:18px;padding:15px 17px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+.cc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.cc-bank{display:flex;align-items:center;gap:9px;min-width:0;}
+.cc-logo{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.18);flex:0 0 auto;}
 .cc-logo svg{width:58%;height:58%;color:#fff;}
-.cc-logo .txt{font-weight:700;font-size:15px;font-family:var(--font-display);}
-.cc-name{font-size:16px;font-weight:400;opacity:.95;}
-.cc-flag{font-size:13px;opacity:.7;font-weight:500;}
-.cc-chip{width:28px;height:21px;border-radius:5px;background:linear-gradient(135deg,rgba(255,255,255,0.5),rgba(255,255,255,0.2));}
-.cc-mid{margin-top:auto;}
-.cc-label{font-size:13px;opacity:.75;font-weight:500;letter-spacing:0;}
-.cc-fatura{font-size:24px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:1px;}
-.cc-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:7px;}
-.cc-foot .it .k{font-size:13px;opacity:.7;font-weight:500;letter-spacing:0;}
-.cc-foot .it .v{font-size:13px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
+.cc-logo .txt{font-weight:700;font-size:14px;font-family:var(--font-display);}
+.cc-name{font-size:13.5px;font-weight:600;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cc-flag{font-size:11.5px;opacity:.7;font-weight:500;}
+.cc-venc{font-size:12px;font-weight:500;opacity:.95;background:rgba(255,255,255,0.18);padding:5px 11px;border-radius:999px;white-space:nowrap;flex:0 0 auto;}
+.cc-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:auto;}
+.cc-bot-main{min-width:0;}
+.cc-bot-side{text-align:right;flex:0 0 auto;}
+.cc-label{font-size:12px;opacity:.72;font-weight:500;letter-spacing:0;}
+.cc-fatura{font-size:25px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:1px;line-height:1.05;}
+.cc-disp{font-size:14px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
 .cc-glow{position:absolute;right:-30px;bottom:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.22),transparent 70%);pointer-events:none;}
 .dots{display:flex;justify-content:center;gap:6px;margin:2px 0 12px;}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--text-faint);opacity:.4;transition:all .3s;cursor:pointer;}
@@ -262,18 +270,23 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:11px 4px 12px;
   transition:border-color .3s,background .3s,transform .3s;}
 .ftl-col:active{transform:scale(0.97);}
-.ftl-col.sel{border-color:var(--blue);background:rgba(77,163,255,0.12);}
+/* Mês selecionado: card "em aberto" (atual) destaca azul; card pago destaca verde. */
+.ftl-col.sel.aberto{border-color:var(--blue);background:rgba(77,163,255,0.12);}
+.ftl-col.sel.pago{border-color:var(--lime-deep);background:rgba(131,214,38,0.12);}
 .ftl-lbl{font-size:13px;font-weight:600;color:var(--text-faint);text-transform:capitalize;line-height:1;z-index:3;}
-.ftl-col.sel .ftl-lbl{color:var(--blue);}
+.ftl-col.sel.aberto .ftl-lbl{color:var(--blue);}
+.ftl-col.sel.pago .ftl-lbl{color:var(--lime-deep);}
 .ftl-dotzone{flex:1;width:100%;}
 .ftl-val{font-size:12.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;color:var(--text-dim);
   text-align:center;line-height:1.15;z-index:3;transition:color .3s,font-size .3s;}
-.ftl-col.sel .ftl-val{color:var(--blue);font-size:13.5px;}
-.ftl-dot{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--text-faint);
+.ftl-col.sel.aberto .ftl-val{color:var(--blue);font-size:13.5px;}
+.ftl-col.sel.pago .ftl-val{color:var(--lime-deep);font-size:13.5px;}
+.ftl-dot{position:absolute;width:9px;height:9px;border-radius:50%;
   border:2.5px solid var(--bg);transform:translate(-50%,-50%);box-sizing:content-box;z-index:4;transition:background .3s;}
-.ftl-dot.sel{background:var(--blue);}
-.ftl-dot.vazado{background:var(--bg);border-color:var(--text-faint);}
-.ftl-dot.vazado.sel{border-color:var(--blue);background:var(--bg);}
+.ftl-dot.pago{background:var(--lime-deep);}
+.ftl-dot.aberto{background:var(--bg);border-color:var(--blue);}
+.ftl-dot.aberto.sel{background:var(--blue);}
+.ftl-dot.pago.sel{background:var(--lime-deep);}
 @keyframes ftlFade{from{opacity:0;}to{opacity:1;}}
 .ftl-line,.ftl-area{animation:ftlFade .4s ease;}
 /* transações */
@@ -291,11 +304,11 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .tx-parcela{display:inline-block;background:var(--track-bg);color:var(--text-faint);font-size:9.5px;padding:1px 6px;border-radius:6px;margin-left:6px;}
 
 /* conta corrente */
-.cc-hero{padding:16px 16px;border-radius:var(--radius-sm);}
-.cc-hero-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.cc-hero{padding:16px;border-radius:var(--radius-sm);margin-bottom:9px;}
 .cc-hero-k{font-size:13px;color:var(--text-faint);font-weight:500;}
-.cc-hero-v{font-size:22px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;}
-.cc-filter{max-width:150px;padding:8px 10px;border-radius:11px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:12.5px;font-family:var(--font);outline:none;}
+.cc-hero-v{font-size:24px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;}
+.cc-filters{display:flex;gap:8px;margin-bottom:2px;}
+.cc-filter{flex:1;min-width:0;padding:9px 11px;border-radius:11px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:12.5px;font-family:var(--font);outline:none;}
 .cc-list{border-radius:var(--radius-sm);overflow:hidden;}
 .cctx{display:flex;align-items:center;gap:9px;padding:8px 12px;}
 .cctx:not(:last-child){border-bottom:1px solid var(--glass-border);}
@@ -406,15 +419,15 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 .cnt{font-size:13px;color:var(--text-faint);font-weight:500;}
 /* navbar */
 .navbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:100;
-  width:calc(100% - 48px);max-width:253px;height:var(--nav-h);display:flex;align-items:center;padding:0 5px;
+  width:calc(100% - 40px);max-width:300px;height:var(--nav-h);display:flex;align-items:center;padding:0 6px;
   background:var(--nav-bg);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
-  border:1px solid var(--glass-border);border-radius:29px;box-shadow:0 8px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.10);}
-.nav-pill{position:absolute;width:39px;height:39px;top:50%;transform:translateY(-50%);border-radius:13px;
+  border:1px solid var(--glass-border);border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.10);}
+.nav-pill{position:absolute;width:46px;height:46px;top:50%;transform:translateY(-50%);border-radius:999px;
   background:var(--nav-pill);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16);
-  transition:left .42s cubic-bezier(0.34,1.4,0.5,1),top .42s cubic-bezier(0.34,1.4,0.5,1),width .42s cubic-bezier(0.34,1.4,0.5,1),height .42s cubic-bezier(0.34,1.4,0.5,1);z-index:1;pointer-events:none;}
+  transition:left .4s cubic-bezier(0.34,1.3,0.5,1),top .4s cubic-bezier(0.34,1.3,0.5,1),width .4s cubic-bezier(0.34,1.3,0.5,1),height .4s cubic-bezier(0.34,1.3,0.5,1);z-index:1;pointer-events:none;}
 .nav-item{flex:1;display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-faint);cursor:pointer;position:relative;z-index:2;transition:color .25s;}
 .nav-ico{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
-.nav-item svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round;transition:transform .42s cubic-bezier(0.34,1.4,0.5,1);}
+.nav-item svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round;transition:transform .42s cubic-bezier(0.34,1.4,0.5,1);}
 .nav-item.active{color:var(--text);}
 .nav-item.active svg{stroke-width:2.05;transform:translateY(-1px) scale(1.08);}
 .nav-label{display:none;font-size:13px;font-weight:500;white-space:nowrap;}
@@ -423,10 +436,10 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 @media(min-width:760px){
   body{padding-bottom:0;padding-left:220px;}
   .app{max-width:720px;padding-top:6px;}
-  .navbar{left:18px;transform:none;top:50%;translate:0 -50%;bottom:auto;width:auto;min-width:165px;max-width:189px;height:auto;flex-direction:column;align-items:stretch;gap:2px;padding:6px;border-radius:30px;}
-  .nav-item{width:100%;height:50px;flex:0 0 auto;justify-content:flex-start;padding:0 14px;gap:12px;}
+  .navbar{left:18px;transform:none;top:50%;translate:0 -50%;bottom:auto;width:auto;min-width:182px;max-width:208px;height:auto;flex-direction:column;align-items:stretch;gap:2px;padding:7px;border-radius:34px;}
+  .nav-item{width:100%;height:52px;flex:0 0 auto;justify-content:flex-start;padding:0 15px;gap:13px;}
   .nav-label{display:inline-block;}
-  .nav-pill{border-radius:15px;}
+  .nav-pill{border-radius:999px;}
   .bento{grid-template-columns:repeat(4,1fr);}
   .ccard{flex:0 0 48%;}
 }
@@ -479,6 +492,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
 </style>
 </head>
 <body>
+<div class="statusbar-bg"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="logo-nubank" viewBox="0 0 24 24"><path fill="currentColor" d="M7.2795 5.4336c-1.1815 0-2.1846.4628-2.9432 1.252h-.002c-.0541-.0022-.1074-.002-.162-.002-1.5436 0-2.9925.8835-3.699 2.2559-.3088.5996-.4234 1.2442-.459 1.9003-.0321.589 0 1.1863 0 1.7696v5.6523H3.184s.0022-2.784 0-5.1777c-.0014-1.6112-.0118-3.0471 0-3.3418.056-1.3937.4372-2.3053 1.1484-3.0508 2.3585.0018 3.8852 1.6091 3.9705 4.168.0196.5874.0254 3.7304.0254 3.7304v3.672h3.1678v-4.965c0-1.5007.0127-2.8006-.0918-3.6952-.292-2.5-1.821-4.168-4.1248-4.168zm8.3903.3008l-3.166.0039v4.9648c0 1.5009-.0127 2.8007.0919 3.6953.2921 2.5001 1.821 4.168 4.1248 4.168 1.1815 0 2.1846-.4628 2.9432-1.252.0003-.0003.0016.0004.002 0 .0542.0023.1093.002.164.002 1.5435 0 2.9905-.8835 3.6971-2.2558.3088-.5997.4233-1.2442.459-1.9004.032-.5889 0-1.1862 0-1.7695V5.7383H20.816s-.0022 2.784 0 5.1777c.0015 1.6113.0119 3.047 0 3.3418-.056 1.3935-.4372 2.3053-1.1483 3.0508-2.3586-.0018-3.8853-1.6091-3.9706-4.168-.0196-.5874-.0273-2.0437-.0273-3.7324Z"/></symbol>
   <symbol id="logo-mercadopago" viewBox="0 0 24 24"><path fill="currentColor" d="M11.115 16.479a.93.927 0 0 1-.939-.886c-.002-.042-.006-.155-.103-.155-.04 0-.074.023-.113.059-.112.103-.254.206-.46.206a.816.814 0 0 1-.305-.066c-.535-.214-.542-.578-.521-.725.006-.038.007-.08-.02-.11l-.032-.03h-.034c-.027 0-.055.012-.093.039a.788.786 0 0 1-.454.16.7.699 0 0 1-.253-.05c-.708-.27-.65-.928-.617-1.126.005-.041-.005-.072-.03-.092l-.05-.04-.047.043a.728.726 0 0 1-.505.203.73.728 0 0 1-.732-.725c0-.4.328-.722.732-.722.364 0 .675.27.721.63l.026.195.11-.165c.01-.018.307-.46.852-.46.102 0 .21.016.316.05.434.13.508.52.519.68.008.094.075.1.09.1.037 0 .064-.024.083-.045a.746.744 0 0 1 .54-.225c.128 0 .263.03.402.09.69.293.379 1.158.374 1.167-.058.144-.061.207-.005.244l.027.013h.02c.03 0 .07-.014.134-.035.093-.032.235-.08.367-.08a.944.942 0 0 1 .94.93.936.934 0 0 1-.94.928zm7.302-4.171c-1.138-.98-3.768-3.24-4.481-3.77-.406-.302-.685-.462-.928-.533a1.559 1.554 0 0 0-.456-.07c-.182 0-.376.032-.58.095-.46.145-.918.505-1.362.854l-.023.018c-.414.324-.84.66-1.164.73a1.986 1.98 0 0 1-.43.049c-.362 0-.687-.104-.81-.258-.02-.025-.007-.066.04-.125l.008-.008 1-1.067c.783-.774 1.525-1.506 3.23-1.545h.085c1.062 0 2.12.469 2.24.524a7.03 7.03 0 0 0 3.056.724c1.076 0 2.188-.263 3.354-.795a9.135 9.11 0 0 0-.405-.317c-1.025.44-2.003.66-2.946.66-.962 0-1.925-.229-2.858-.68-.05-.022-1.22-.567-2.44-.57-.032 0-.065 0-.096.002-1.434.033-2.24.536-2.782.976-.528.013-.982.138-1.388.25-.361.1-.673.186-.979.185-.125 0-.35-.01-.37-.012-.35-.01-2.115-.437-3.518-.962-.143.1-.28.203-.415.31 1.466.593 3.25 1.053 3.812 1.089.157.01.323.027.491.027.372 0 .744-.103 1.104-.203.213-.059.446-.123.692-.17l-.196.194-1.017 1.087c-.08.08-.254.294-.14.557a.705.703 0 0 0 .268.292c.243.162.677.27 1.08.271.152 0 .297-.015.43-.044.427-.095.874-.448 1.349-.82.377-.296.913-.672 1.323-.782a1.494 1.49 0 0 1 .37-.05.611.61 0 0 1 .095.005c.27.034.533.125 1.003.472.835.62 4.531 3.815 4.566 3.846.002.002.238.203.22.537-.007.186-.11.352-.294.466a.902.9 0 0 1-.484.15.804.802 0 0 1-.428-.124c-.014-.01-1.28-1.157-1.746-1.543-.074-.06-.146-.115-.22-.115a.122.122 0 0 0-.096.045c-.073.09.01.212.105.294l1.48 1.47c.002 0 .184.17.204.395.012.244-.106.447-.35.606a.957.955 0 0 1-.526.171.766.764 0 0 1-.42-.127l-.214-.206a21.035 20.978 0 0 0-1.08-1.009c-.072-.058-.148-.112-.221-.112a.127.127 0 0 0-.094.038c-.033.037-.056.103.028.212a.698.696 0 0 0 .075.083l1.078 1.198c.01.01.222.26.024.511l-.038.048a1.18 1.178 0 0 1-.1.096c-.184.15-.43.164-.527.164a.8.798 0 0 1-.147-.012c-.106-.018-.178-.048-.212-.089l-.013-.013c-.06-.06-.602-.609-1.054-.98-.059-.05-.133-.11-.21-.11a.128.128 0 0 0-.096.042c-.09.096.044.24.1.293l.92 1.003a.204.204 0 0 1-.033.062c-.033.044-.144.155-.479.196a.91.907 0 0 1-.122.007c-.345 0-.712-.164-.902-.264a1.343 1.34 0 0 0 .13-.576 1.368 1.365 0 0 0-1.42-1.357c.024-.342-.025-.99-.697-1.274a1.455 1.452 0 0 0-.575-.125c-.146 0-.287.025-.42.075a1.153 1.15 0 0 0-.671-.564 1.52 1.515 0 0 0-.494-.085c-.28 0-.537.08-.767.242a1.168 1.165 0 0 0-.903-.43 1.173 1.17 0 0 0-.82.335c-.287-.217-1.425-.93-4.467-1.613a17.39 17.344 0 0 1-.692-.189 4.822 4.82 0 0 0-.077.494l.67.157c3.108.682 4.136 1.391 4.309 1.525a1.145 1.142 0 0 0-.09.442 1.16 1.158 0 0 0 1.378 1.132c.096.467.406.821.879 1.003a1.165 1.162 0 0 0 .415.08c.09 0 .179-.012.266-.034.086.22.282.493.722.668a1.233 1.23 0 0 0 .457.094c.122 0 .241-.022.355-.063a1.373 1.37 0 0 0 1.269.841c.37.002.726-.147.985-.41.221.121.688.341 1.163.341.06 0 .118-.002.175-.01.47-.059.689-.24.789-.382a.571.57 0 0 0 .048-.078c.11.032.234.058.373.058.255 0 .501-.086.75-.265.244-.174.418-.424.444-.637v-.01c.083.017.167.026.251.026.265 0 .527-.082.773-.242.48-.31.562-.715.554-.98a1.28 1.279 0 0 0 .978-.194 1.04 1.04 0 0 0 .502-.808 1.088 1.085 0 0 0-.16-.653c.804-.342 2.636-1.003 4.795-1.483a4.734 4.721 0 0 0-.067-.492 27.742 27.667 0 0 0-5.049 1.62zm5.123-.763c0 4.027-5.166 7.293-11.537 7.293-6.372 0-11.538-3.266-11.538-7.293 0-4.028 5.165-7.293 11.539-7.293 6.371 0 11.537 3.265 11.537 7.293zm.46.004c0-4.272-5.374-7.755-12-7.755S.002 7.277.002 11.55L0 12.004c0 4.533 4.695 8.203 11.999 8.203 7.347 0 12-3.67 12-8.204z"/></symbol>
@@ -988,48 +1002,82 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   }
 
   /* ===== TELA EXTRA: CONTA CORRENTE ===== */
-  var contaFiltro=''; // '' = todas as contas
-  // Nomes de conta tolerantes (ignora caixa/acentos/espaços) pra casar o filtro com t.conta,
-  // que pode estar grafado diferente do nome de exibição da aba "Contas".
+  var contaFiltro=''; // '' = todos os bancos; senão a chave do banco (ex 'nubank','itau','mercado')
+  var contaMesFiltro=''; // '' = todos os meses; senão 'AAAA-M'
   function normNome(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim(); }
-  function contasNasTransacoes(){
-    // Lista única de nomes de conta que de fato aparecem nas transações de origem "conta".
+  // Identifica o banco de uma transação de conta: tenta pelo nome da conta; se não casar com
+  // nenhum banco conhecido, usa o próprio nome como rótulo (pra não sumir nada).
+  function bancoDaTransacaoConta(t){
+    var nome=(t.conta||'').trim();
+    var n=nome.toLowerCase();
+    if(n.indexOf('nubank')!==-1||n.indexOf('nu ')!==-1) return {chave:'nubank', rotulo:'Nubank'};
+    if(n.indexOf('ita')!==-1) return {chave:'itau', rotulo:'Itaú'};
+    if(n.indexOf('mercado')!==-1) return {chave:'mercado', rotulo:'Mercado Pago'};
+    // fallback: usa o nome cru como chave/rótulo
+    return {chave:'_'+normNome(nome), rotulo:nome||'Conta'};
+  }
+  function bancosNasTransacoes(){
+    // Lista única de BANCOS (não nomes crus) que aparecem nas transações de conta.
     var mapa={},ordem=[];
     state.transacoes.forEach(function(t){
       if(t.origem!=='conta') return;
-      var nome=(t.conta||'').trim();
-      if(!nome) return;
-      var k=normNome(nome);
-      if(!mapa[k]){ mapa[k]=nome; ordem.push(nome); }
+      var b=bancoDaTransacaoConta(t);
+      if(!mapa[b.chave]){ mapa[b.chave]={chave:b.chave,rotulo:b.rotulo}; ordem.push(b.chave); }
     });
-    return ordem;
+    return ordem.map(function(k){return mapa[k];});
+  }
+  function mesesNasTransacoes(){
+    // Lista de meses (AAAA-M) presentes nas transações de conta, mais recente primeiro.
+    var set={},ordem=[];
+    state.transacoes.forEach(function(t){
+      if(t.origem!=='conta'||!t.data) return;
+      var k=t.data.getFullYear()+'-'+t.data.getMonth();
+      if(!set[k]){ set[k]={ano:t.data.getFullYear(),mes:t.data.getMonth(),k:k}; ordem.push(k); }
+    });
+    return ordem.map(function(k){return set[k];}).sort(function(a,b){return (b.ano-a.ano)||(b.mes-a.mes);});
   }
   function transacoesContaFiltradas(){
-    var alvo=normNome(contaFiltro);
     return state.transacoes.filter(function(t){
-      return t.origem==='conta' && (!contaFiltro || normNome(t.conta)===alvo);
+      if(t.origem!=='conta') return false;
+      if(contaFiltro && bancoDaTransacaoConta(t).chave!==contaFiltro) return false;
+      if(contaMesFiltro){
+        if(!t.data) return false;
+        if((t.data.getFullYear()+'-'+t.data.getMonth())!==contaMesFiltro) return false;
+      }
+      return true;
     }).sort(function(a,b){return b.data-a.data;});
   }
   function saldoDaContaFiltro(){
-    // Tenta casar o saldo da aba "Contas" com o nome de conta selecionado (match tolerante).
+    // Saldo do banco selecionado (casa o nome da aba "Contas" com o banco), ou total se "todos".
     if(!contaFiltro) return saldoTotalContas();
-    var alvo=normNome(contaFiltro);
-    return state.contas.filter(function(c){return c.ativa!=="Não" && (normNome(c.nome)===alvo || normNome(c.nome).indexOf(alvo)!==-1 || alvo.indexOf(normNome(c.nome))!==-1);})
-      .reduce(function(s,c){return s+(c.saldo||0);},0);
+    return state.contas.filter(function(c){
+      if(c.ativa==="Não") return false;
+      var n=(c.instituicao||c.nome||'').toLowerCase();
+      if(contaFiltro==='nubank') return n.indexOf('nubank')!==-1||n.indexOf('nu ')!==-1;
+      if(contaFiltro==='itau') return n.indexOf('ita')!==-1;
+      if(contaFiltro==='mercado') return n.indexOf('mercado')!==-1;
+      return normNome(c.nome)===contaFiltro.replace(/^_/,'');
+    }).reduce(function(s,c){return s+(c.saldo||0);},0);
   }
   function renderContaCorrente(){
-    var nomesConta=contasNasTransacoes();
-    if(!nomesConta.length && !state.contas.filter(function(c){return c.ativa!=="Não";}).length){
+    var bancos=bancosNasTransacoes();
+    var meses=mesesNasTransacoes();
+    if(!bancos.length && !state.contas.filter(function(c){return c.ativa!=="Não";}).length){
       return '<div class="empty"><div class="ei">🏦</div><div class="et">Nenhuma conta na planilha.</div></div>';
     }
-    if(contaFiltro && nomesConta.map(normNome).indexOf(normNome(contaFiltro))===-1) contaFiltro='';
+    if(contaFiltro && bancos.map(function(b){return b.chave;}).indexOf(contaFiltro)===-1) contaFiltro='';
+    if(contaMesFiltro && meses.map(function(m){return m.k;}).indexOf(contaMesFiltro)===-1) contaMesFiltro='';
     var saldoMostrado = saldoDaContaFiltro();
-    var opcoes='<option value="">Todas as contas</option>'+nomesConta.map(function(nome){
-      return '<option value="'+escapeHtml(nome)+'"'+(normNome(contaFiltro)===normNome(nome)?' selected':'')+'>'+escapeHtml(nome)+'</option>';
+    var optsBanco='<option value="">Todos os bancos</option>'+bancos.map(function(b){
+      return '<option value="'+escapeHtml(b.chave)+'"'+(contaFiltro===b.chave?' selected':'')+'>'+escapeHtml(b.rotulo)+'</option>';
     }).join("");
-    return '<div class="glass cc-hero"><div class="cc-hero-top"><div><div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div><div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div></div>'+
-        '<select class="cc-filter" id="ccFiltro">'+opcoes+'</select></div></div>'+
-      '<div class="section-head" style="margin-top:14px"><h2 id="ccTitle">Movimentações</h2><span class="cnt" id="ccCount"></span></div>'+
+    var optsMes='<option value="">Todos os meses</option>'+meses.map(function(m){
+      return '<option value="'+m.k+'"'+(contaMesFiltro===m.k?' selected':'')+'>'+MESES_COMPLETO_CAP(m.mes)+' '+m.ano+'</option>';
+    }).join("");
+    return '<div class="glass cc-hero"><div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div><div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div></div>'+
+      '<div class="cc-filters"><select class="cc-filter" id="ccFiltroBanco">'+optsBanco+'</select>'+
+        '<select class="cc-filter" id="ccFiltroMes">'+optsMes+'</select></div>'+
+      '<div class="section-head" style="margin-top:6px"><h2 id="ccTitle">Movimentações</h2><span class="cnt" id="ccCount"></span></div>'+
       '<div class="glass cc-list" id="ccList"></div>';
   }
   function atualizarListaContaCorrente(){
@@ -1041,22 +1089,22 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
       var ent=t.tipo==="Entrada",dia=t.data?t.data.getDate():'',mes=t.data?MESES_ABREV[t.data.getMonth()]:'';
       return '<div class="cctx">'+categoriaIconeHtml(t.categoria,ent)+
         '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+'</div>'+
-        '<div class="cctx-meta">'+dia+' '+mes+' · '+escapeHtml(t.conta||"")+'</div></div>'+
+        '<div class="cctx-meta">'+dia+' '+mes+' · '+escapeHtml(bancoDaTransacaoConta(t).rotulo)+'</div></div>'+
         '<div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div></div>';
     }).join("");
   }
   function wireContaCorrente(){
     atualizarListaContaCorrente();
-    var sel=document.getElementById('ccFiltro');
-    if(sel){
-      sel.addEventListener('change',function(){
-        contaFiltro=sel.value;
-        var hero=document.querySelector('.cc-hero-k'), val=document.querySelector('.cc-hero-v');
-        if(hero) hero.textContent='Saldo'+(contaFiltro?'':' total');
-        if(val) val.textContent=formatBRL(saldoDaContaFiltro());
-        atualizarListaContaCorrente();
-      });
+    var selB=document.getElementById('ccFiltroBanco');
+    var selM=document.getElementById('ccFiltroMes');
+    function aplicar(){
+      var hero=document.querySelector('.cc-hero-k'), val=document.querySelector('.cc-hero-v');
+      if(hero) hero.textContent='Saldo'+(contaFiltro?'':' total');
+      if(val) val.textContent=formatBRL(saldoDaContaFiltro());
+      atualizarListaContaCorrente();
     }
+    if(selB){ selB.addEventListener('change',function(){ contaFiltro=selB.value; aplicar(); }); }
+    if(selM){ selM.addEventListener('change',function(){ contaMesFiltro=selM.value; aplicar(); }); }
   }
 
   /* ===== TELA EXTRA: GASTOS POR CATEGORIA ===== */
@@ -1104,6 +1152,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   var subtabAlvo=null; // guarda qual sub-aba (parc/assin) abrir ao entrar na tela "Parcelas"
   var mesSelecionado=null; // índice dentro do array de 6 ciclos do gráfico; null = ciclo atual (a última barra)
   var MESES_COMPLETO=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  function MESES_COMPLETO_CAP(m){ var s=MESES_COMPLETO[m]||''; return s.charAt(0).toUpperCase()+s.slice(1); }
 
   // Gera as últimas nMeses janelas de FATURA (fechamento a fechamento) — o mesmo ciclo que a
   // aba "Fatura Em Aberto" usa. Isso é o que faltava: antes o gráfico somava por mês de calendário,
@@ -1173,34 +1222,46 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var n=meses.length;
     var valores=meses.map(function(m){return m.total;});
     var maxV=Math.max.apply(null,valores.concat([1])), minV=Math.min.apply(null,valores.concat([0]));
-    // Geometria em % (x) e px (y) — a curva fica na faixa vertical do meio dos cards (zona do ponto).
-    var H=148;            // altura total do bloco (== .ftl height)
-    var zoneTop=34;       // abaixo do rótulo do mês
-    var zoneH=70;         // altura útil onde a curva oscila
+    var H=148, zoneTop=34, zoneH=70;
     var pts=meses.map(function(m,i){
       var x=((i+0.5)/n)*100;
       var y=(maxV===minV)?(zoneTop+zoneH/2):(zoneTop+(1-((m.total-minV)/(maxV-minV)))*zoneH);
       return {x:x,y:y};
     });
+    // Índice do primeiro mês "em aberto" (atual). Antes dele = pago (verde); a partir dele = aberto (azul).
+    var idxAberto=-1;
+    for(var k=0;k<n;k++){ if(meses[k].atual){ idxAberto=k; break; } }
+    if(idxAberto===-1) idxAberto=n-1;
+
     var dFull=caminhoSuave(pts);
+    // Para colorir metades diferentes, desenho a curva inteira em VERDE e por cima desenho só o
+    // último segmento (penúltimo ponto -> último ponto) em AZUL, recriando o mesmo trecho Bézier.
+    var idxSplit=Math.max(idxAberto-1,0); // ponto onde começa o trecho azul
+    var segAzul='M'+pts[idxSplit].x.toFixed(2)+','+pts[idxSplit].y.toFixed(2);
+    for(var s=idxSplit;s<n-1;s++){
+      var p0=pts[s-1]||pts[s], p1=pts[s], p2=pts[s+1], p3=pts[s+2]||p2;
+      var c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+      var c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+      segAzul+=' C'+c1x.toFixed(2)+','+c1y.toFixed(2)+' '+c2x.toFixed(2)+','+c2y.toFixed(2)+' '+p2.x.toFixed(2)+','+p2.y.toFixed(2);
+    }
     var areaFill=dFull+' L'+pts[n-1].x.toFixed(2)+','+H+' L'+pts[0].x.toFixed(2)+','+H+' Z';
-    // SVG com viewBox 0..100 em x e 0..H em y; preserveAspectRatio=none só na horizontal é aceitável
-    // aqui porque os PONTOS são DIVs HTML por cima (não distorcem). A linha pode esticar à vontade.
     var svg='<svg class="ftl-svg" viewBox="0 0 100 '+H+'" preserveAspectRatio="none">'+
       '<defs><linearGradient id="ftlGrad" x1="0" y1="0" x2="0" y2="1">'+
-        '<stop offset="0%" stop-color="var(--blue)" stop-opacity="0.30"/>'+
-        '<stop offset="100%" stop-color="var(--blue)" stop-opacity="0"/>'+
+        '<stop offset="0%" stop-color="var(--lime)" stop-opacity="0.26"/>'+
+        '<stop offset="100%" stop-color="var(--lime)" stop-opacity="0"/>'+
       '</linearGradient></defs>'+
       '<path class="ftl-area" d="'+areaFill+'" fill="url(#ftlGrad)" stroke="none"/>'+
-      '<path class="ftl-line" d="'+dFull+'" fill="none" stroke="var(--blue)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'+
+      '<path class="ftl-line" d="'+dFull+'" fill="none" stroke="var(--lime-deep)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'+
+      '<path class="ftl-line" d="'+segAzul+'" fill="none" stroke="var(--blue)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'+
     '</svg>';
     var dots=pts.map(function(p,i){
-      var sel=(i===idxSel), vazado=meses[i].atual;
-      var cls='ftl-dot'+(sel?' sel':'')+(vazado?' vazado':'');
+      var sel=(i===idxSel), aberto=meses[i].atual;
+      var cls='ftl-dot'+(sel?' sel':'')+(aberto?' aberto':' pago');
       return '<div class="'+cls+'" style="left:'+p.x.toFixed(2)+'%;top:'+p.y.toFixed(2)+'px"></div>';
     }).join("");
     var cols=meses.map(function(m,i){
-      return '<div class="ftl-col'+(i===idxSel?' sel':'')+'" data-i="'+i+'">'+
+      var aberto=m.atual;
+      return '<div class="ftl-col'+(i===idxSel?' sel':'')+(aberto?' aberto':' pago')+'" data-i="'+i+'">'+
         '<div class="ftl-lbl">'+MESES_ABREV[m.mes]+'</div>'+
         '<div class="ftl-dotzone"></div>'+
         '<div class="ftl-val">'+formatBRLInt(m.total)+'</div>'+
@@ -1225,10 +1286,14 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     '</div>';
     var cards=ativos.map(function(card){
       var info=bancoDe(card.nome),fat=faturaAtual(card),disp=card.limite-fat;
+      var venc=card.vencimento?('Venc. dia '+card.vencimento):'';
       return '<div class="ccard" style="background:linear-gradient(140deg,'+info.cor1+','+info.cor2+')"><div class="cc-glow"></div>'+
-        '<div class="cc-top"><div class="cc-bank"><div class="cc-logo">'+logoHtml(info)+'</div><div><div class="cc-name">'+escapeHtml(card.nome)+'</div><div class="cc-flag">'+info.flag+'</div></div></div><div class="cc-chip"></div></div>'+
-        '<div class="cc-mid"><div class="cc-label">Fatura em aberto</div><div class="cc-fatura">'+formatBRL(fat)+'</div></div>'+
-        '<div class="cc-foot"><div class="it"><div class="k">Disponível</div><div class="v">'+formatBRL(disp)+'</div></div><div class="it" style="text-align:right"><div class="k">Vencimento</div><div class="v">'+(card.vencimento?'dia '+card.vencimento:'—')+'</div></div></div></div>';
+        '<div class="cc-top"><div class="cc-bank"><div class="cc-logo">'+logoHtml(info)+'</div><div><div class="cc-name">'+escapeHtml(card.nome)+'</div><div class="cc-flag">'+info.flag+'</div></div></div>'+
+          (venc?'<div class="cc-venc">'+venc+'</div>':'')+'</div>'+
+        '<div class="cc-bottom">'+
+          '<div class="cc-bot-main"><div class="cc-label">Fatura em aberto</div><div class="cc-fatura">'+formatBRL(fat)+'</div></div>'+
+          '<div class="cc-bot-side"><div class="cc-label">Disponível</div><div class="cc-disp">'+formatBRL(disp)+'</div></div>'+
+        '</div></div>';
     }).join("");
     var dots=ativos.map(function(_,i){return '<div class="dot'+(i===cartaoAtivo?' active':'')+'" data-d="'+i+'"></div>';}).join("");
     return resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div>'+
@@ -1656,7 +1721,7 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
   // Usada tanto ao navegar entre telas quanto no scroll, pra ficarem sempre consistentes.
   function atualizarCabecalho(){
     var topEl=document.querySelector('.top');
-    var scrolled=window.scrollY>24;
+    var scrolled=window.scrollY>4;
     if(topEl) topEl.classList.toggle('scrolled',scrolled);
     var titleEl=document.getElementById('appTitle');
     if(!titleEl) return;
@@ -1716,8 +1781,13 @@ body{font-family:var(--font);background:var(--glow),var(--bg);background-attachm
     var isDesktop=window.matchMedia("(min-width:760px)").matches;
     var navRect=navbar.getBoundingClientRect(), itemRect=el.getBoundingClientRect();
     var w,h;
-    if(isDesktop){ w=itemRect.width-10; h=41; } // cobre ícone+nome da aba inteira
-    else { w=39; h=39; } // pílula compacta, só o ícone
+    if(isDesktop){
+      w=itemRect.width-8; h=44; // cobre ícone+nome da aba inteira
+    } else {
+      // Cápsula vertical seguindo a silhueta da navbar: largura = slot do ícone, altura = quase toda a navbar.
+      w=Math.min(itemRect.width-6, 50);
+      h=navRect.height-12;
+    }
     var cx=(itemRect.left+itemRect.width/2)-navRect.left;
     var cy=(itemRect.top+itemRect.height/2)-navRect.top;
     pill.style.width=w+"px";
