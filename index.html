@@ -5,32 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" id="themeColorMeta" content="#060608">
+<meta name="theme-color" id="themeColorMeta" content="#08080b">
 <title>Financeiro</title>
 <style>
 :root{
-  --bg:#060608;
-  --glow: radial-gradient(130% 85% at 50% -12%, rgba(174,243,78,0.15), transparent 52%),
-          radial-gradient(80% 55% at 92% 8%, rgba(124,77,255,0.09), transparent 48%);
-  --glass-bg:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.10);
-  --glass-highlight:rgba(255,255,255,0.5);--glass-gloss:rgba(255,255,255,0.09);--glass-blur:14px;
-  --text:#f5f5f7;--text-dim:#a6a7af;--text-faint:#6a6b74;
-  --lime:#b4f44a;--lime-deep:#83d626;--orange:#ff8a3d;--pink:#ff4d8d;--magenta:#c44bff;--red:#ff6060;--blue:#4da3ff;
-  --nav-bg:rgba(20,20,23,0.64);--nav-pill:rgba(255,255,255,0.13);--icon-bg:var(--glass-bg);
-  --track-bg:rgba(255,255,255,0.09);--card-shadow:none;--chart-bar:rgba(255,255,255,0.10);
-  --radius:22px;--radius-sm:16px;--radius-xs:11px;
+  --bg:#08080b;
+  --glow: radial-gradient(125% 80% at 50% -10%, rgba(63,224,163,0.18), transparent 55%),
+          radial-gradient(85% 60% at 88% 4%, rgba(124,77,255,0.12), transparent 52%),
+          radial-gradient(80% 65% at 6% 104%, rgba(77,163,255,0.08), transparent 58%);
+  --glass-bg:rgba(255,255,255,0.055);--glass-border:rgba(255,255,255,0.14);
+  --glass-highlight:rgba(255,255,255,0.62);--glass-gloss:rgba(255,255,255,0.11);--glass-blur:22px;
+  --text:#f6f6f8;--text-dim:#a9aab3;--text-faint:#6c6d78;
+  --lime:#3fe0a3;--lime-deep:#16c78d;--orange:#ff8a3d;--pink:#ff4d8d;--magenta:#c44bff;--red:#ff6060;--blue:#4da3ff;
+  --nav-bg:rgba(18,18,22,0.60);--nav-pill:rgba(255,255,255,0.14);--icon-bg:var(--glass-bg);
+  --track-bg:rgba(255,255,255,0.08);
+  --card-shadow:0 10px 30px rgba(0,0,0,0.42),0 2px 8px rgba(0,0,0,0.30);
+  --chart-bar:rgba(255,255,255,0.11);
+  --radius:26px;--radius-sm:18px;--radius-xs:12px;
   --font-display:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:64px;
 }
 [data-theme="light"]{
   --bg:#eef0ea;
-  --glow: radial-gradient(130% 80% at 50% -15%, rgba(131,214,38,0.10), transparent 48%),
-          radial-gradient(80% 55% at 95% 5%, rgba(124,77,255,0.05), transparent 45%);
-  --glass-bg:rgba(255,255,255,0.62);--glass-border:rgba(255,255,255,0.85);
-  --glass-highlight:rgba(255,255,255,0.95);--glass-gloss:rgba(255,255,255,0.45);--glass-blur:16px;
+  --glow: radial-gradient(125% 80% at 50% -12%, rgba(16,185,129,0.12), transparent 50%),
+          radial-gradient(85% 58% at 92% 4%, rgba(124,77,255,0.06), transparent 48%),
+          radial-gradient(80% 60% at 6% 104%, rgba(77,163,255,0.05), transparent 55%);
+  --glass-bg:rgba(255,255,255,0.60);--glass-border:rgba(255,255,255,0.90);
+  --glass-highlight:rgba(255,255,255,0.98);--glass-gloss:rgba(255,255,255,0.50);--glass-blur:20px;
   --text:#1c1d22;--text-dim:#5c5d66;--text-faint:#8d8e98;
-  --lime:#7ec61c;--lime-deep:#5fa015;--orange:#f0791f;--pink:#ec3b7c;--magenta:#a93be0;--red:#e23b3b;--blue:#2b7fd4;
+  --lime:#12bf86;--lime-deep:#0a9266;--orange:#f0791f;--pink:#ec3b7c;--magenta:#a93be0;--red:#e23b3b;--blue:#2b7fd4;
   --nav-bg:rgba(255,255,255,0.72);--nav-pill:rgba(0,0,0,0.07);--icon-bg:rgba(255,255,255,0.7);
-  --track-bg:rgba(0,0,0,0.08);--card-shadow:0 4px 20px rgba(60,70,40,0.08);--chart-bar:rgba(0,0,0,0.07);
+  --track-bg:rgba(0,0,0,0.07);--card-shadow:0 8px 26px rgba(40,60,50,0.12),0 1px 4px rgba(0,0,0,0.05);--chart-bar:rgba(0,0,0,0.07);
 }
 html{transition:background .4s ease;background:var(--bg);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -45,15 +49,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);
    que no iOS standalone às vezes "vazava" tonalidade diferente pra cima da status bar). */
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow);pointer-events:none;}
 .app{max-width:540px;margin:0 auto;padding:0 16px;}
-.glass{position:relative;background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur)) saturate(175%);
-  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(175%);border:1px solid var(--glass-border);
+.glass{position:relative;background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur)) saturate(180%) brightness(1.04);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%) brightness(1.04);border:1px solid var(--glass-border);
   border-radius:var(--radius);overflow:hidden;isolation:isolate;box-shadow:var(--card-shadow);
   contain:layout style paint;}
 .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:2;
-  background:linear-gradient(135deg,var(--glass-highlight),transparent 38%,transparent 66%,rgba(255,255,255,0.10));
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.65;}
-.glass::after{content:"";position:absolute;left:0;right:0;top:0;height:40%;border-radius:inherit;pointer-events:none;z-index:1;
-  background:linear-gradient(180deg,var(--glass-gloss),transparent);opacity:.55;}
+  background:linear-gradient(140deg,var(--glass-highlight) 0%,rgba(255,255,255,0.10) 26%,transparent 46%,transparent 60%,rgba(255,255,255,0.06) 82%,var(--glass-highlight) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;}
+.glass::after{content:"";position:absolute;left:0;right:0;top:0;height:46%;border-radius:inherit;pointer-events:none;z-index:1;
+  background:radial-gradient(125% 90% at 50% -22%,var(--glass-gloss),transparent 62%);opacity:.6;}
 .glass>*{position:relative;z-index:3;}
 .top{display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 14px;margin:0 -16px;
   position:sticky;top:0;z-index:90;overflow:clip;}
@@ -585,14 +589,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         <div class="color-pop" id="colorPop">
           <div class="color-pop-title">Cor de destaque</div>
           <div class="swatches">
-            <button class="swatch" data-c="#b4f44a" style="background:#b4f44a" title="Verde lima"></button>
+            <button class="swatch" data-c="#3fe0a3" style="background:#3fe0a3" title="Verde menta"></button>
             <button class="swatch" data-c="#4da3ff" style="background:#4da3ff" title="Azul"></button>
             <button class="swatch" data-c="#c44bff" style="background:#c44bff" title="Roxo"></button>
             <button class="swatch" data-c="#ff4d8d" style="background:#ff4d8d" title="Rosa"></button>
             <button class="swatch" data-c="#ff8a3d" style="background:#ff8a3d" title="Laranja"></button>
             <button class="swatch" data-c="#ff6060" style="background:#ff6060" title="Vermelho"></button>
             <label class="swatch custom-swatch" title="Escolher outra cor">
-              <input type="color" id="colorCustom" value="#b4f44a">
+              <input type="color" id="colorCustom" value="#3fe0a3">
             </label>
           </div>
         </div>
@@ -2143,9 +2147,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function buildGlow(theme,rgb){
     var cor='rgba('+rgb.r+','+rgb.g+','+rgb.b+',';
     if(theme==='light'){
-      return 'radial-gradient(130% 80% at 50% -15%, '+cor+'0.10), transparent 48%), radial-gradient(80% 55% at 95% 5%, rgba(124,77,255,0.05), transparent 45%)';
+      return 'radial-gradient(125% 80% at 50% -12%, '+cor+'0.12), transparent 50%), radial-gradient(85% 58% at 92% 4%, rgba(124,77,255,0.06), transparent 48%), radial-gradient(80% 60% at 6% 104%, rgba(77,163,255,0.05), transparent 55%)';
     }
-    return 'radial-gradient(130% 85% at 50% -12%, '+cor+'0.15), transparent 52%), radial-gradient(80% 55% at 92% 8%, rgba(124,77,255,0.09), transparent 48%)';
+    return 'radial-gradient(125% 80% at 50% -10%, '+cor+'0.18), transparent 55%), radial-gradient(85% 60% at 88% 4%, rgba(124,77,255,0.12), transparent 52%), radial-gradient(80% 65% at 6% 104%, rgba(77,163,255,0.08), transparent 58%)';
   }
   function aplicarAcento(hex){
     if(!hex) return;
@@ -2160,7 +2164,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(t==="light")document.documentElement.setAttribute("data-theme","light"); else document.documentElement.removeAttribute("data-theme");
     if(accentSalvo) aplicarAcento(accentSalvo); // reaplica o brilho com a geometria certa pro tema atual
     var meta=document.getElementById("themeColorMeta");
-    if(meta) meta.setAttribute("content", t==="light" ? "#eef0ea" : "#060608");
+    if(meta) meta.setAttribute("content", t==="light" ? "#eef0ea" : "#08080b");
   }
   var temaSalvo; try{temaSalvo=localStorage.getItem(THEME_KEY);}catch(e){}
   aplicarTema(temaSalvo||"dark");
@@ -2509,6 +2513,39 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   box-shadow:0 20px 56px rgba(0,0,0,.48),0 4px 16px rgba(0,0,0,.28),
     inset 0 1px 0 rgba(255,255,255,.22),0 0 0 1px rgba(255,255,255,.10)!important;
 }
+/* ── REDESIGN POLISH LAYER ─────────────────────────────────── */
+body{text-rendering:optimizeLegibility;}
+.tcard,.tile,.fatura-card,.frow,.ccard,.gcat,.pcard,.acard,.inv-row{
+  transition:transform .2s cubic-bezier(.16,1,.3,1),box-shadow .22s ease,background .2s ease;
+}
+@media(hover:hover){
+  .tile:hover,.tcard:hover{transform:translateY(-3px);}
+  .ccard:hover{transform:translateY(-3px) scale(1.012);}
+  .frow:hover{background:rgba(255,255,255,.035);}
+  .gcat-head:hover{background:rgba(255,255,255,.03);}
+}
+/* Botoes primarios: gradiente + brilho do acento */
+.btn-primary,.inv-add-btn,.rec-add-row2 .add-btn{
+  background:linear-gradient(135deg,var(--lime),var(--lime-deep))!important;
+  box-shadow:0 6px 20px -5px var(--lime),inset 0 1px 0 rgba(255,255,255,.40)!important;
+}
+/* Cartoes de credito: profundidade extra + rim light de vidro */
+.ccard{
+  box-shadow:0 16px 38px -8px rgba(0,0,0,.55),0 4px 12px rgba(0,0,0,.32),
+    inset 0 1px 0 rgba(255,255,255,.24),inset 0 0 0 1px rgba(255,255,255,.06)!important;
+}
+/* Modal: overlay e folha mais suaves */
+.modal-ov{backdrop-filter:blur(10px) saturate(120%)!important;-webkit-backdrop-filter:blur(10px) saturate(120%)!important;}
+.modal{box-shadow:0 -22px 60px rgba(0,0,0,.55),0 -2px 14px rgba(0,0,0,.30)!important;}
+/* Navbar: blur mais profundo */
+.navbar{backdrop-filter:blur(36px) saturate(190%)!important;-webkit-backdrop-filter:blur(36px) saturate(190%)!important;}
+.nav-item.active svg{filter:drop-shadow(0 1px 6px rgba(255,255,255,.22));}
+/* Foco com halo do acento */
+.fld input:focus,.cc-filter:focus,.rec-add-compact input:focus,.rec-add-row2 input:focus{
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--lime) 26%,transparent);
+}
+/* Fills/progress com leve glow do acento */
+.ffill,.pprog-fill,.gcat-fill{box-shadow:0 0 10px -2px var(--lime);}
 </style>
 
 <script id="lg-script">
