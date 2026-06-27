@@ -339,19 +339,21 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .tx-parcela{display:inline-block;background:var(--track-bg);color:var(--text-faint);font-size:9.5px;padding:1px 6px;border-radius:6px;margin-left:6px;}
 
 /* conta corrente */
-.cc-hero{padding:14px 16px 12px;border-radius:var(--radius-sm);margin-bottom:12px;}
-.cc-hero-k{font-size:11.5px;color:var(--text-faint);font-weight:500;text-transform:uppercase;letter-spacing:0.02em;}
+.cc-hero{padding:14px 16px;border-radius:var(--radius-sm);margin-bottom:12px;display:flex;align-items:center;gap:0;}
+/* lado esquerdo: saldo total */
+.cc-hero-left{flex:1;min-width:0;}
+.cc-hero-k{font-size:11px;color:var(--text-faint);font-weight:500;text-transform:uppercase;letter-spacing:0.03em;}
 .cc-hero-v{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;}
-/* linha divisória entre saldo total e contas */
-.cc-hero-div{height:1px;background:var(--hairline);margin:10px 0 9px;}
-/* lista de contas dentro do hero */
-.cc-hero-accounts{display:flex;flex-direction:column;gap:6px;}
-.cc-hero-acc{display:flex;align-items:center;gap:8px;}
-.cc-hero-acc-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 auto;font-size:8px;font-weight:700;font-family:var(--font-display);}
+/* divisória vertical */
+.cc-hero-vdiv{width:1px;background:var(--hairline);align-self:stretch;margin:0 14px;flex:0 0 1px;}
+/* lado direito: lista de contas empilhadas */
+.cc-hero-accounts{display:flex;flex-direction:column;gap:7px;flex:0 0 auto;min-width:0;max-width:54%;}
+.cc-hero-acc{display:flex;align-items:center;gap:7px;}
+.cc-hero-acc-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 auto;}
 .cc-hero-acc-dot svg{width:58%;height:58%;}
-.cc-hero-acc-dot .txt{font-size:7.5px;font-weight:700;font-family:var(--font-display);}
-.cc-hero-acc-name{flex:1;font-size:12px;color:var(--text-dim);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cc-hero-acc-val{font-size:12.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;flex:0 0 auto;}
+.cc-hero-acc-dot .txt{font-size:7px;font-weight:700;font-family:var(--font-display);}
+.cc-hero-acc-name{flex:1;font-size:11px;color:var(--text-dim);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;}
+.cc-hero-acc-val{font-size:12px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;flex:0 0 auto;}
 .cc-filters{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
 
 /* ── FILTRO DE MESES: cápsula horizontal com scroll ── */
@@ -439,21 +441,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cc-sticky-hdr{
   position:sticky;top:var(--top-bar-h,0px);z-index:20;
   background:transparent;
-  padding-bottom:14px;
+  padding-bottom:6px;
   margin:0 -16px;padding-left:16px;padding-right:16px;
 }
 /* Material fosco translucido ATRAS dos cabecalhos fixos (Conta Corrente e Cartoes):
-   blur forte + tint suave em degrade, cobrindo so o cabecalho e dissolvendo no rodape.
-   z-index:-1 mantem o conteudo do cabecalho nitido por cima; a LISTA abaixo nunca desfoca. */
+   blur leve + tint suave cobrindo só o cabeçalho; dissolve rápido logo abaixo. */
 .cc-sticky-hdr::before,.cards-sticky-hdr::before,.cards-tx-sticky::before{
   content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%);
+  backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
   background:linear-gradient(to bottom,
-    color-mix(in srgb,var(--bg) 68%,transparent) 0%,
-    color-mix(in srgb,var(--bg) 52%,transparent) 68%,
-    color-mix(in srgb,var(--bg) 28%,transparent) 100%);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 84%,transparent 100%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 84%,transparent 100%);
+    color-mix(in srgb,var(--bg) 82%,transparent) 0%,
+    color-mix(in srgb,var(--bg) 60%,transparent) 70%,
+    transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 72%,transparent 92%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 72%,transparent 92%);
 }
 /* ── CARTÕES: sticky header (resumo + carousel + dots) ── */
 .cards-sticky-hdr{
@@ -1320,10 +1321,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(contaMesFiltro && meses.map(function(m){return m.k;}).indexOf(contaMesFiltro)===-1) contaMesFiltro='';
     var saldoMostrado = saldoDaContaFiltro();
 
-    // ── Breakdown por conta ──
+    // ── Breakdown por conta (coluna direita) ──
     var accountsHtml='';
     if(contasAtivas.length){
-      accountsHtml='<div class="cc-hero-div"></div><div class="cc-hero-accounts">'+
+      accountsHtml='<div class="cc-hero-vdiv"></div>'+
+        '<div class="cc-hero-accounts">'+
         contasAtivas.map(function(c){
           var info=bancoDe(c.instituicao||c.nome);
           var inner=(info.logo==='txt-i')?'<span class="txt">i</span>':(info.logo==='txt-c')?'<span class="txt">'+initials(c.nome)+'</span>':'<svg><use href="#'+info.logo+'"/></svg>';
@@ -1365,8 +1367,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
     return '<div class="cc-sticky-hdr">'+
       '<div class="glass cc-hero">'+
-        '<div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div>'+
-        '<div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div>'+
+        '<div class="cc-hero-left">'+
+          '<div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div>'+
+          '<div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div>'+
+        '</div>'+
         accountsHtml+
       '</div>'+
       '<div class="cc-filters">'+mesHtml+bancoHtml+'</div>'+
@@ -1428,8 +1432,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       if(hero) hero.textContent='Saldo'+(contaFiltro?'':' total');
       if(val) val.textContent=formatBRL(saldoDaContaFiltro());
       atualizarListaContaCorrente();
-    }
-    // Pills de mês
+    }    // Pills de mês
     var scroll=document.getElementById('ccMonthScroll');
     if(scroll){
       scroll.querySelectorAll('.cc-month-pill').forEach(function(pill){
@@ -2464,22 +2467,28 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
      evita que ele fique "atrás" dos cards por causa do overflow:clip do cabeçalho .top. */
   function posicionarPopover(btn,pop){
     var r=btn.getBoundingClientRect();
-    pop.style.top=(r.bottom+8)+"px";
+    var topVal=r.bottom+8;
+    // garante que não vá negativo nem para cima da barra de status
+    if(topVal<8) topVal=8;
+    pop.style.top=topVal+"px";
     pop.style.right=Math.max(12,window.innerWidth-r.right)+"px";
     pop.style.left="auto";
+    pop.style.bottom="auto";
+  }
+  function fecharTodosPopovers(){
+    if(colorPop) colorPop.classList.remove("show");
+    if(banksPop) banksPop.classList.remove("show");
   }
 
   var colorToggle=$("#colorToggle"), colorPop=$("#colorPop"), colorCustom=$("#colorCustom");
+  var banksToggle=$("#banksToggle"), banksPop=$("#banksPop");
+
   if(colorToggle&&colorPop){
     colorToggle.addEventListener("click",function(ev){
       ev.stopPropagation();
-      if(!colorPop.classList.contains("show")) posicionarPopover(colorToggle,colorPop);
-      colorPop.classList.toggle("show");
-    });
-    document.addEventListener("click",function(ev){
-      if(colorPop.classList.contains("show")&&!colorPop.contains(ev.target)&&ev.target!==colorToggle&&!colorToggle.contains(ev.target)){
-        colorPop.classList.remove("show");
-      }
+      var opening=!colorPop.classList.contains("show");
+      fecharTodosPopovers();
+      if(opening){ posicionarPopover(colorToggle,colorPop); colorPop.classList.add("show"); }
     });
     document.querySelectorAll(".swatch[data-c]").forEach(function(sw){
       sw.addEventListener("click",function(){
@@ -2542,20 +2551,24 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       }).join(""):'<div class="empty" style="padding:14px"><div class="et">Nenhuma conta conectada ainda.</div></div>';
     }
   }
-  var banksToggle=$("#banksToggle"), banksPop=$("#banksPop");
   if(banksToggle&&banksPop){
     banksToggle.addEventListener("click",function(ev){
       ev.stopPropagation();
       renderBancos(); // recalcula o "atualizado há Xmin" no momento em que abre
-      if(!banksPop.classList.contains("show")) posicionarPopover(banksToggle,banksPop);
-      banksPop.classList.toggle("show");
-    });
-    document.addEventListener("click",function(ev){
-      if(banksPop.classList.contains("show")&&!banksPop.contains(ev.target)&&ev.target!==banksToggle&&!banksToggle.contains(ev.target)){
-        banksPop.classList.remove("show");
-      }
+      var opening=!banksPop.classList.contains("show");
+      fecharTodosPopovers();
+      if(opening){ posicionarPopover(banksToggle,banksPop); banksPop.classList.add("show"); }
     });
   }
+
+  // Fecha qualquer popover aberto ao clicar/tocar fora (click + touchstart para mobile)
+  function outsideClickHandler(ev){
+    var inColor=colorPop&&(colorPop.contains(ev.target)||colorToggle&&colorToggle.contains(ev.target));
+    var inBanks=banksPop&&(banksPop.contains(ev.target)||banksToggle&&banksToggle.contains(ev.target));
+    if(!inColor&&!inBanks) fecharTodosPopovers();
+  }
+  document.addEventListener("click",outsideClickHandler);
+  document.addEventListener("touchstart",outsideClickHandler,{passive:true});
   window.addEventListener("resize",function(){
     if(colorPop&&colorPop.classList.contains("show")) posicionarPopover(colorToggle,colorPop);
     if(banksPop&&banksPop.classList.contains("show")) posicionarPopover(banksToggle,banksPop);
