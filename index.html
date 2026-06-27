@@ -758,6 +758,54 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 </style>
 </head>
 <body>
+<!-- Popovers (cor de destaque / bancos conectados): ficam fora de .top de propósito.
+     .top é position:sticky + overflow:clip, e no Safari/iOS isso faz com que elementos
+     position:fixed dentro dele sejam tratados como contidos na caixa do header (bug
+     conhecido), aparecendo "atrás" ou cortados pelos cards em vez de flutuar por cima
+     de tudo. Ficando como filhos diretos do body, o position:fixed funciona corretamente
+     relativo à viewport. O JS continua posicionando via getBoundingClientRect do botão. -->
+<div class="color-pop" id="colorPop">
+  <div class="color-pop-title">Cor de destaque</div>
+  <div class="swatches">
+    <button class="swatch" data-c="#3fe0a3" style="background:#3fe0a3" title="Verde menta"></button>
+    <button class="swatch" data-c="#4da3ff" style="background:#4da3ff" title="Azul"></button>
+    <button class="swatch" data-c="#c44bff" style="background:#c44bff" title="Roxo"></button>
+    <button class="swatch" data-c="#ff4d8d" style="background:#ff4d8d" title="Rosa"></button>
+    <button class="swatch" data-c="#ff8a3d" style="background:#ff8a3d" title="Laranja"></button>
+    <button class="swatch" data-c="#ff6060" style="background:#ff6060" title="Vermelho"></button>
+    <label class="swatch custom-swatch" title="Escolher outra cor">
+      <input type="color" id="colorCustom" value="#3fe0a3">
+    </label>
+  </div>
+</div>
+<div class="color-pop banks-pop" id="banksPop">
+  <div class="color-pop-title">Contas conectadas</div>
+  <div id="banksList"></div>
+  <div class="banks-divider"></div>
+  <div class="refresh-opt" id="refreshForce">
+    <div class="ro-ic" id="refreshForceIc" style="background:rgba(180,244,74,0.13);color:var(--lime)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+    <div class="ro-txt">
+      <div class="ro-t" style="color:var(--lime)">Forçar atualização do banco</div>
+      <div class="ro-s">Limpa cache do Pluggy e busca saldo atualizado</div>
+    </div>
+  </div>
+  <div class="refresh-opt" id="refreshSync">
+    <div class="ro-ic" id="refreshSyncIc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M3 16v5h5M21 8V3h-5"/></svg></div>
+    <div class="ro-txt">
+      <div class="ro-t">Sincronizar com o banco</div>
+      <div class="ro-s">Busca dados novos via Open Finance (Apps Script)</div>
+    </div>
+  </div>
+  <div class="refresh-opt" id="refreshPage">
+    <div class="ro-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+    <div class="ro-txt">
+      <div class="ro-t">Atualizar página</div>
+      <div class="ro-s">Só recarrega o que já está na planilha</div>
+    </div>
+  </div>
+  <div class="refresh-status" id="refreshStatus" style="display:none"></div>
+  <div class="banks-add" id="banksAdd" title="Conectar um novo banco via Open Finance">+ Adicionar conta</div>
+</div>
 <div class="statusbar-bg"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="logo-nubank" viewBox="0 0 24 24"><path fill="currentColor" d="M7.2795 5.4336c-1.1815 0-2.1846.4628-2.9432 1.252h-.002c-.0541-.0022-.1074-.002-.162-.002-1.5436 0-2.9925.8835-3.699 2.2559-.3088.5996-.4234 1.2442-.459 1.9003-.0321.589 0 1.1863 0 1.7696v5.6523H3.184s.0022-2.784 0-5.1777c-.0014-1.6112-.0118-3.0471 0-3.3418.056-1.3937.4372-2.3053 1.1484-3.0508 2.3585.0018 3.8852 1.6091 3.9705 4.168.0196.5874.0254 3.7304.0254 3.7304v3.672h3.1678v-4.965c0-1.5007.0127-2.8006-.0918-3.6952-.292-2.5-1.821-4.168-4.1248-4.168zm8.3903.3008l-3.166.0039v4.9648c0 1.5009-.0127 2.8007.0919 3.6953.2921 2.5001 1.821 4.168 4.1248 4.168 1.1815 0 2.1846-.4628 2.9432-1.252.0003-.0003.0016.0004.002 0 .0542.0023.1093.002.164.002 1.5435 0 2.9905-.8835 3.6971-2.2558.3088-.5997.4233-1.2442.459-1.9004.032-.5889 0-1.1862 0-1.7695V5.7383H20.816s-.0022 2.784 0 5.1777c.0015 1.6113.0119 3.047 0 3.3418-.056 1.3935-.4372 2.3053-1.1483 3.0508-2.3586-.0018-3.8853-1.6091-3.9706-4.168-.0196-.5874-.0273-2.0437-.0273-3.7324Z"/></symbol>
@@ -779,52 +827,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         <div class="icon-btn pill" id="colorToggle" title="Cor de destaque">
           <span class="color-dot"></span>
         </div>
-        <div class="color-pop" id="colorPop">
-          <div class="color-pop-title">Cor de destaque</div>
-          <div class="swatches">
-            <button class="swatch" data-c="#3fe0a3" style="background:#3fe0a3" title="Verde menta"></button>
-            <button class="swatch" data-c="#4da3ff" style="background:#4da3ff" title="Azul"></button>
-            <button class="swatch" data-c="#c44bff" style="background:#c44bff" title="Roxo"></button>
-            <button class="swatch" data-c="#ff4d8d" style="background:#ff4d8d" title="Rosa"></button>
-            <button class="swatch" data-c="#ff8a3d" style="background:#ff8a3d" title="Laranja"></button>
-            <button class="swatch" data-c="#ff6060" style="background:#ff6060" title="Vermelho"></button>
-            <label class="swatch custom-swatch" title="Escolher outra cor">
-              <input type="color" id="colorCustom" value="#3fe0a3">
-            </label>
-          </div>
-        </div>
       </div>
       <div class="icon-btn-wrap">
         <div class="icon-btn pill" id="banksToggle" title="Bancos conectados">
           <div class="banks-stack" id="banksStack"></div>
-        </div>
-        <div class="color-pop banks-pop" id="banksPop">
-          <div class="color-pop-title">Contas conectadas</div>
-          <div id="banksList"></div>
-          <div class="banks-divider"></div>
-          <div class="refresh-opt" id="refreshForce">
-            <div class="ro-ic" id="refreshForceIc" style="background:rgba(180,244,74,0.13);color:var(--lime)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-            <div class="ro-txt">
-              <div class="ro-t" style="color:var(--lime)">Forçar atualização do banco</div>
-              <div class="ro-s">Limpa cache do Pluggy e busca saldo atualizado</div>
-            </div>
-          </div>
-          <div class="refresh-opt" id="refreshSync">
-            <div class="ro-ic" id="refreshSyncIc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M3 16v5h5M21 8V3h-5"/></svg></div>
-            <div class="ro-txt">
-              <div class="ro-t">Sincronizar com o banco</div>
-              <div class="ro-s">Busca dados novos via Open Finance (Apps Script)</div>
-            </div>
-          </div>
-          <div class="refresh-opt" id="refreshPage">
-            <div class="ro-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
-            <div class="ro-txt">
-              <div class="ro-t">Atualizar página</div>
-              <div class="ro-s">Só recarrega o que já está na planilha</div>
-            </div>
-          </div>
-          <div class="refresh-status" id="refreshStatus" style="display:none"></div>
-          <div class="banks-add" id="banksAdd" title="Conectar um novo banco via Open Finance">+ Adicionar conta</div>
         </div>
       </div>
     </div>
