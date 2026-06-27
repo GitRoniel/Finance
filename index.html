@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" id="themeColorMeta" content="#08080b">
 <title>Financeiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#08080b;
@@ -19,10 +22,11 @@
   --lime:#3fe0a3;--lime-deep:#16c78d;--orange:#ff8a3d;--pink:#ff4d8d;--magenta:#c44bff;--red:#ff6060;--blue:#4da3ff;
   --nav-bg:rgba(18,18,22,0.60);--nav-pill:rgba(255,255,255,0.14);--icon-bg:var(--glass-bg);
   --track-bg:rgba(255,255,255,0.08);
+  --hairline:rgba(255,255,255,0.07);
   --card-shadow:0 10px 30px rgba(0,0,0,0.42),0 2px 8px rgba(0,0,0,0.30);
   --chart-bar:rgba(255,255,255,0.11);
   --radius:26px;--radius-sm:18px;--radius-xs:12px;
-  --font-display:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:64px;
+  --font-display:"Geist","Geist Fallback",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"Geist","Geist Fallback",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:64px;
 }
 [data-theme="light"]{
   --bg:#eef0ea;
@@ -35,6 +39,7 @@
   --lime:#12bf86;--lime-deep:#0a9266;--orange:#f0791f;--pink:#ec3b7c;--magenta:#a93be0;--red:#e23b3b;--blue:#2b7fd4;
   --nav-bg:rgba(255,255,255,0.72);--nav-pill:rgba(0,0,0,0.07);--icon-bg:rgba(255,255,255,0.7);
   --track-bg:rgba(0,0,0,0.07);--card-shadow:0 8px 26px rgba(40,60,50,0.12),0 1px 4px rgba(0,0,0,0.05);--chart-bar:rgba(0,0,0,0.07);
+  --hairline:rgba(0,0,0,0.08);
 }
 html{transition:background .4s ease;background:var(--bg);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -96,9 +101,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 [data-theme="light"] .theme-toggle .ic-moon{opacity:0;transform:rotate(90deg) scale(0.5);}
 .icon-btn-wrap{position:relative;}
 .color-dot{width:17px;height:17px;border-radius:50%;display:block;background:conic-gradient(from 0deg,#ff6060,#ff8a3d,#b4f44a,#4da3ff,#c44bff,#ff4d8d,#ff6060);}
-.color-pop{position:absolute;top:48px;right:0;width:208px;padding:14px;border-radius:18px;background:var(--glass-bg);
+.color-pop{position:fixed;top:0;right:16px;width:208px;padding:14px;border-radius:18px;background:var(--glass-bg);
   backdrop-filter:blur(var(--glass-blur)) saturate(175%);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(175%);
-  border:1px solid var(--glass-border);box-shadow:0 14px 34px rgba(0,0,0,0.35);z-index:50;
+  border:1px solid var(--glass-border);box-shadow:0 14px 34px rgba(0,0,0,0.35);z-index:250;
   opacity:0;transform:translateY(-6px) scale(0.96);pointer-events:none;transition:opacity .2s,transform .2s;}
 .color-pop.show{opacity:1;transform:none;pointer-events:auto;}
 .color-pop-title{font-size:13px;font-weight:500;color:var(--text-dim);margin-bottom:10px;}
@@ -216,6 +221,27 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .invest-tile .tv{margin-top:0;}
 /* faturas list */
 .fatura-card{border-radius:var(--radius-sm);}
+/* Liquid glass mais suave, só nos cards da Visão Geral (top-cards + bento + lista de faturas):
+   blur leve (em vez do blur(22px) saturate(180%) brightness(1.04) do .glass padrão), sombra mais
+   discreta e brilho/realce reduzidos — pra ficar com a sutileza do exemplo de referência.
+   O anel de brilho do ::before (gradiente diagonal) foi desativado aqui: ele desenhava uma 2ª linha
+   de contorno por cima da border normal, dando a impressão de borda duplicada/desalinhada. */
+.tcard,.tile,.fatura-card{
+  background:rgba(255,255,255,0.07);
+  border-color:rgba(255,255,255,0.09);
+  backdrop-filter:blur(6px) saturate(140%);
+  -webkit-backdrop-filter:blur(6px) saturate(140%);
+  box-shadow:0 8px 20px rgba(0,0,0,0.22),0 2px 6px rgba(0,0,0,0.16);
+  --glass-gloss:rgba(255,255,255,0.05);
+}
+.tcard::before,.tile::before,.fatura-card::before{content:none;}
+.tcard::after,.tile::after,.fatura-card::after{opacity:.3;}
+[data-theme="light"] .tcard,[data-theme="light"] .tile,[data-theme="light"] .fatura-card{
+  background:rgba(255,255,255,0.40);
+  border-color:rgba(0,0,0,0.07);
+  box-shadow:0 6px 16px rgba(40,60,50,0.10),0 1px 3px rgba(0,0,0,0.05);
+  --glass-gloss:rgba(255,255,255,0.22);
+}
 .frow{display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;transition:background .15s;}
 .frow:not(:last-child){border-bottom:1px solid var(--glass-border);}
 .frow:active{background:rgba(255,255,255,0.04);}
@@ -371,6 +397,21 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cctx-meta{font-size:11px;color:var(--text-faint);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cctx-val{font-size:15px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;flex:0 0 auto;}
 .cctx-val.in{color:var(--lime-deep);}
+/* Movimentações (Conta Corrente): sem liquid glass — só o container fica "chapado",
+   o resto da tela (Saldo total, filtros) continua com o vidro normal. Itens mais compactos
+   e separados por uma linha fina e suave (não a --glass-border, que é forte demais sozinha). */
+.cc-list{
+  background:none;border:none;backdrop-filter:none;-webkit-backdrop-filter:none;
+  box-shadow:none;isolation:auto;
+}
+.cc-list::before,.cc-list::after{content:none;}
+.cctx{padding:7px 6px;gap:8px;}
+.cctx:not(:last-child){border-bottom:1px solid var(--hairline);}
+.cctx .cat-ic{width:26px;height:26px;border-radius:8px;}
+.cctx .cat-ic svg{width:12px;height:12px;}
+.cctx-desc{font-size:13px;}
+.cctx-meta{font-size:10.5px;}
+.cctx-val{font-size:13.5px;}
 
 /* sub-abas (parcelas/assinaturas) */
 .subtabs{display:flex;gap:6px;background:var(--track-bg);padding:4px;border-radius:14px;margin-bottom:14px;}
@@ -2145,9 +2186,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(isDesktop){
       w=itemRect.width-8; h=44; // cobre ícone+nome da aba inteira
     } else {
-      // Cápsula vertical seguindo a silhueta da navbar: largura = slot do ícone, altura = quase toda a navbar.
-      w=Math.min(itemRect.width-6, 50);
-      h=navRect.height-12;
+      // Círculo centrado no ícone (mesma largura e altura) — antes era uma cápsula vertical
+      // (largura do slot do ícone, altura quase igual à navbar inteira); agora harmoniza com
+      // o arredondado da navbar.
+      w=h=46;
     }
     var cx=(itemRect.left+itemRect.width/2)-navRect.left;
     var cy=(itemRect.top+itemRect.height/2)-navRect.top;
@@ -2208,10 +2250,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     try{localStorage.setItem(THEME_KEY,novo);}catch(e){}
   });
 
+  /* Posiciona o popover (color-pop/banks-pop) com position:fixed ancorado no botão que abriu —
+     evita que ele fique "atrás" dos cards por causa do overflow:clip do cabeçalho .top. */
+  function posicionarPopover(btn,pop){
+    var r=btn.getBoundingClientRect();
+    pop.style.top=(r.bottom+8)+"px";
+    pop.style.right=Math.max(12,window.innerWidth-r.right)+"px";
+    pop.style.left="auto";
+  }
+
   var colorToggle=$("#colorToggle"), colorPop=$("#colorPop"), colorCustom=$("#colorCustom");
   if(colorToggle&&colorPop){
     colorToggle.addEventListener("click",function(ev){
       ev.stopPropagation();
+      if(!colorPop.classList.contains("show")) posicionarPopover(colorToggle,colorPop);
       colorPop.classList.toggle("show");
     });
     document.addEventListener("click",function(ev){
@@ -2285,6 +2337,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     banksToggle.addEventListener("click",function(ev){
       ev.stopPropagation();
       renderBancos(); // recalcula o "atualizado há Xmin" no momento em que abre
+      if(!banksPop.classList.contains("show")) posicionarPopover(banksToggle,banksPop);
       banksPop.classList.toggle("show");
     });
     document.addEventListener("click",function(ev){
@@ -2293,6 +2346,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       }
     });
   }
+  window.addEventListener("resize",function(){
+    if(colorPop&&colorPop.classList.contains("show")) posicionarPopover(colorToggle,colorPop);
+    if(banksPop&&banksPop.classList.contains("show")) posicionarPopover(banksToggle,banksPop);
+  });
   // "+ Adicionar conta" — abre o fluxo de conexão Open Finance (mesmo onde os bancos atuais foram cadastrados).
   var BANK_CONNECT_URL = "https://app.mcp.ai/connect/mi_tas6SKA8MLwJyC_z?u=usr_54e21k4c6mt2&add=1";
   var banksAddBtn=$("#banksAdd");
