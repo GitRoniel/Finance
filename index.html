@@ -314,6 +314,27 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cc-hero-v{font-size:24px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;}
 .cc-filters{display:flex;gap:8px;margin-bottom:2px;}
 .cc-filter{flex:1;min-width:0;padding:9px 11px;border-radius:11px;border:1px solid var(--glass-border);background:var(--glass-bg);color:var(--text);font-size:12.5px;font-family:var(--font);outline:none;}
+
+/* ── CONTA CORRENTE: sticky header ── */
+.cc-sticky-hdr{
+  position:sticky;top:0;z-index:20;
+  background:var(--bg);
+  padding-bottom:4px;
+  margin:0 -16px;padding-left:16px;padding-right:16px;
+}
+/* ── CARTÕES: sticky header (resumo + carousel + dots) ── */
+.cards-sticky-hdr{
+  position:sticky;top:0;z-index:20;
+  background:var(--bg);
+  padding-bottom:4px;
+  margin:0 -16px;padding-left:16px;padding-right:16px;
+}
+/* Garante que cards-resumo não use sticky próprio (agora está dentro do wrapper) */
+.cards-sticky-hdr .cards-resumo{
+  position:static!important;
+  margin-bottom:8px;
+}
+
 .cc-list{border-radius:var(--radius-sm);overflow:hidden;}
 .cctx{display:flex;align-items:center;gap:9px;padding:8px 12px;}
 .cctx:not(:last-child){border-bottom:1px solid var(--glass-border);}
@@ -442,7 +463,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   border:1px solid var(--glass-border);border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.10);}
 .nav-pill{position:absolute;width:46px;height:46px;top:50%;transform:translateY(-50%);border-radius:999px;
   background:var(--nav-pill);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16);
-  transition:left .4s cubic-bezier(0.34,1.3,0.5,1),top .4s cubic-bezier(0.34,1.3,0.5,1),width .4s cubic-bezier(0.34,1.3,0.5,1),height .4s cubic-bezier(0.34,1.3,0.5,1);z-index:1;pointer-events:none;}
+  transition:left .42s cubic-bezier(.4,0,.2,1),top .42s cubic-bezier(.4,0,.2,1),width .38s cubic-bezier(.4,0,.2,1),height .38s cubic-bezier(.4,0,.2,1);z-index:1;pointer-events:none;}
 .nav-item{flex:1;display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-faint);cursor:pointer;position:relative;z-index:2;transition:color .25s;}
 .nav-ico{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
 .nav-item svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round;transition:transform .42s cubic-bezier(0.34,1.4,0.5,1);}
@@ -1131,9 +1152,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var optsMes='<option value="">Todos os meses</option>'+meses.map(function(m){
       return '<option value="'+m.k+'"'+(contaMesFiltro===m.k?' selected':'')+'>'+MESES_COMPLETO_CAP(m.mes)+' '+m.ano+'</option>';
     }).join("");
-    return '<div class="glass cc-hero"><div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div><div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div></div>'+
+    return '<div class="cc-sticky-hdr">'+
+      '<div class="glass cc-hero"><div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div><div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div></div>'+
       '<div class="cc-filters"><select class="cc-filter" id="ccFiltroBanco">'+optsBanco+'</select>'+
         '<select class="cc-filter" id="ccFiltroMes">'+optsMes+'</select></div>'+
+      '</div>'+
       '<div class="section-head" style="margin-top:6px"><h2 id="ccTitle">Movimentações</h2><span class="cnt" id="ccCount"></span></div>'+
       '<div class="glass cc-list" id="ccList"></div>';
   }
@@ -1354,7 +1377,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '</div></div>';
     }).join("");
     var dots=ativos.map(function(_,i){return '<div class="dot'+(i===cartaoAtivo?' active':'')+'" data-d="'+i+'"></div>';}).join("");
-    return resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div>'+
+    return '<div class="cards-sticky-hdr">'+resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div></div>'+
       '<div class="glass panel" id="chartPanel"></div>'+
       '<div class="section-head"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div>'+
       '<div class="glass tx-list" id="txList"></div>';
@@ -1687,7 +1710,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(cr)  cr.style.display  = entradas ? '' : 'none';
     if(crout) crout.style.display = saidas  ? '' : 'none';
 
-    // Atualiza visual de cada item (riscado ou não)
+    // Atualiza visual de cada item (riscado ou não) — re-lê do localStorage para refletir toggle imediato
+    var recs=lerRecorrentes(); var marcados=lerMarcacoes();
     recs.forEach(function(_,i){
       var el = document.getElementById('rec-item-'+i);
       if(!el) return;
@@ -1746,7 +1770,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<label class="fld"><span>Nome</span><input id="pvNome" type="text" maxlength="30" value="'+escapeHtml(r.nome)+'"></label>'+
         '<div class="fld-row">'+
           '<label class="fld"><span>Valor</span><input id="pvValor" type="number" inputmode="decimal" value="'+r.valor+'"></label>'+
-          '<label class="fld"><span>Tipo</span><select id="pvTipo"><option value="in"'+(r.tipo==='in'?' selected':'')+'>✅ Entrada</option><option value="out"'+(r.tipo==='out'?' selected':'')+'>🔴 Saída</option></select></label>'+
+          '<label class="fld"><span>Tipo</span><select id="pvTipo"><option value="in"'+(r.tipo==='in'?' selected':'')+'>Entrada</option><option value="out"'+(r.tipo==='out'?' selected':'')+'>Saída</option></select></label>'+
         '</div>'+
         '<div class="modal-msg" id="pvMsg"></div>'+
       '</div>'+
@@ -1847,7 +1871,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '</div>'+
     // Seção recorrentes
     '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag">'+mes+'</span></h2>'+
-      (sheetOk?'<span class="rec-sync-badge" id="recSyncBadge">📊 planilha</span>':'<span class="rec-sync-badge local">💾 local</span>')+
+      (sheetOk?'<span class="rec-sync-badge" id="recSyncBadge">planilha</span>':'<span class="rec-sync-badge local">local</span>')+
     '</div>'+
     '<div class="rec-reset-hint">Toque no círculo para marcar como recebido/pago. As marcações resetam no próximo mês automaticamente.</div>'+
     '<div id="recLista">'+recHtml+'</div>'+
@@ -1856,13 +1880,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<input type="text" id="recNome" placeholder="Nome (ex: Salário, Aluguel)" maxlength="30">'+
       '<div class="rec-add-row2">'+
         '<input type="number" id="recValor" placeholder="Valor" inputmode="decimal">'+
-        '<select id="recTipo"><option value="in">✅ Entrada</option><option value="out">🔴 Saída</option></select>'+
+        '<select id="recTipo"><option value="in">Entrada</option><option value="out">Saída</option></select>'+
         '<button class="add-btn" id="recAdd">+</button>'+
       '</div>'+
     '</div>'+
-    (sheetOk?
-      '<div class="banner" style="margin-top:10px">📊 Itens salvos na aba <b>Previsões</b> da planilha. <button class="rec-sheet-sync-btn" id="recSheetSync" style="margin-top:6px;display:block;width:100%">⟳ Sincronizar com a planilha</button></div>':
-      '<div class="banner" style="margin-top:10px">💡 Configure o GAS_EXEC_URL para sincronizar com a planilha. Por enquanto, os dados ficam neste aparelho.</div>');
+    '';
   }
 
   function wirePrevisoes(){
@@ -1880,7 +1902,47 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           var b = document.getElementById('recSyncBadge');
           if(b) b.title = ok?'Salvo na planilha':'Salvo localmente';
         });
-        irPara(4);
+        // Atualiza inline sem re-navegar (sem animação de troca de aba)
+        document.getElementById('recNome').value='';
+        document.getElementById('recValor').value='';
+        renderPrevisoesParcial();
+        // Rebuild lista
+        (function(){
+          var rcs=lerRecorrentes(), mks=lerMarcacoes(), rl=document.getElementById('recLista');
+          if(!rl) return;
+          rl.innerHTML=rcs.length?rcs.map(function(r,i){
+            var feito=!!mks[String(i)];
+            var lblFeito=r.tipo==='in'?'recebido':'pago', lblPend=r.tipo==='in'?'a receber':'a pagar';
+            var clsF=feito?' rec-feito'+(r.tipo==='out'?' rec-feito-out':''):'';
+            return '<div class="rec-item'+clsF+'" id="rec-item-'+i+'">'+
+              '<div class="rec-dot '+r.tipo+'"></div>'+
+              '<div class="rec-main" data-edit="'+i+'"><div class="rec-name">'+escapeHtml(r.nome)+'</div>'+
+              '<div class="rec-check-lbl">'+(feito?lblFeito:lblPend)+'</div></div>'+
+              '<div class="rec-val '+r.tipo+'" data-edit="'+i+'">'+(r.tipo==='in'?'+':'-')+formatBRL(r.valor)+'</div>'+
+              '<label class="rec-toggle'+(feito?' checked':'')+(r.tipo==='out'?' out-toggle':'')+'" title="Marcar como '+lblFeito+'">'+
+              '<input type="checkbox" data-check="'+i+'"'+(feito?' checked':'')+' style="display:none">'+
+              '<div class="rec-toggle-track"></div><div class="rec-toggle-thumb"></div></label>'+
+              '<div class="rec-del" data-del="'+i+'" title="Remover item">×</div></div>';
+          }).join(''):'<div class="empty" style="padding:16px 0 4px"><div class="et">Nenhuma recorrente ainda.</div></div>';
+          // Re-wire events
+          rl.querySelectorAll('[data-check]').forEach(function(inp){
+            inp.addEventListener('change',function(ev){ev.stopPropagation();toggleMarcacao(Number(inp.getAttribute('data-check')));});
+          });
+          rl.querySelectorAll('[data-edit]').forEach(function(el2){
+            el2.addEventListener('click',function(){abrirFormPrevisao(Number(el2.getAttribute('data-edit')));});
+          });
+          rl.querySelectorAll('[data-del]').forEach(function(d){
+            d.addEventListener('click',function(){
+              var ii=Number(d.getAttribute('data-del'));
+              deletarRecorrenteSheet(ii,function(){});
+              var m=lerMarcacoes(),newM={},rc=lerRecorrentes();
+              rc.forEach(function(_,j){if(j<ii&&m[String(j)])newM[String(j)]=true;if(j>ii&&m[String(j)])newM[String(j-1)]=true;});
+              salvarMarcacoes(newM);rc.splice(ii,1);salvarRecorrentes(rc);
+              // Rebuild recursivo
+              arguments.callee.caller&&void 0; irPara(4);
+            });
+          });
+        })();
       });
     }
     // Toggles deslizantes (marcar como feito)
@@ -1912,22 +1974,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         irPara(4);
       });
     });
-    // Sincronizar com planilha
-    var syncBtn = document.getElementById('recSheetSync');
-    if(syncBtn){
-      syncBtn.addEventListener('click', function(){
-        if(recorrentes_sincronizando) return;
-        recorrentes_sincronizando = true;
-        syncBtn.textContent = 'Sincronizando…'; syncBtn.disabled = true;
-        carregarRecorrentesSheet().then(function(){
-          recorrentes_sincronizando = false;
-          irPara(4);
-        }).catch(function(){
-          recorrentes_sincronizando = false;
-          syncBtn.textContent = 'Erro — tente de novo'; syncBtn.disabled = false;
-        });
-      });
-    }
+    // (botão sync da planilha removido)
   }
 
   /* ===== NAVEGAÇÃO ENTRE TELAS ===== */
@@ -2003,7 +2050,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   function wireFaturasClicaveis(){
     document.querySelectorAll('.frow[data-card]').forEach(function(row){
-      row.addEventListener('click',function(){ irPara(1); }); // vai pra Cartões
+      row.addEventListener('click',function(){
+        var cardNome=row.getAttribute('data-card');
+        var ativos=state.cartoes.filter(function(c){return c.ativo!=="Não";});
+        var idx=ativos.findIndex?ativos.findIndex(function(c){return c.nome===cardNome;}):
+          (function(){for(var k=0;k<ativos.length;k++){if(ativos[k].nome===cardNome)return k;}return -1;})();
+        if(idx>=0) cartaoAtivo=idx;
+        irPara(1);
+      });
     });
     document.querySelectorAll('[data-go]').forEach(function(el){
       el.addEventListener('click',function(){
@@ -2373,8 +2427,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* Glass: backdrop-filter aplica o blur/saturate no background */
   backdrop-filter:blur(22px) saturate(145%) contrast(85%)!important;
   -webkit-backdrop-filter:blur(22px) saturate(145%) contrast(85%)!important;
-  /* filter aplica o WebP displacement na saída composta (blur+glass) */
-  filter:url(#lg-pill)!important;
   /* Box-shadow em camadas: fresnel/especular do vidro real */
   box-shadow:
     0 0 0 1px rgba(255,255,255,.22),
@@ -2393,7 +2445,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     width  .38s cubic-bezier(.4,0,.2,1),
     height .38s cubic-bezier(.4,0,.2,1)!important;
   will-change:left,top,width,height;
-  overflow:visible!important;
 }
 
 /* Camada 1 (::before): gradiente diagonal estático — brilho de reflexo */
