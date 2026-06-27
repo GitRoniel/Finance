@@ -257,7 +257,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cc-fatura{font-size:25px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:1px;line-height:1.05;}
 .cc-disp{font-size:14px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
 .cc-glow{position:absolute;right:-30px;bottom:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.22),transparent 70%);pointer-events:none;}
-.dots{display:flex;justify-content:center;gap:6px;margin:2px 0 12px;}
+.dots{display:flex;justify-content:center;gap:6px;margin:1px 0 5px;}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--text-faint);opacity:.4;transition:all .3s;cursor:pointer;}
 .dot.active{opacity:1;width:18px;border-radius:3px;background:var(--lime);}
 /* panel + chart */
@@ -1403,10 +1403,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '</div></div>';
     }).join("");
     var dots=ativos.map(function(_,i){return '<div class="dot'+(i===cartaoAtivo?' active':'')+'" data-d="'+i+'"></div>';}).join("");
-    return '<div class="cards-sticky-hdr">'+resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div></div>'+
-      '<div class="glass panel" id="chartPanel"></div>'+
-      '<div class="cards-tx-sticky"><div class="section-head" style="margin:2px 4px 2px"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div></div>'+
-      '<div class="glass tx-list" id="txList"></div>';
+    return '<div class="cards-sticky-hdr">'+resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div>'+
+      '<div class="section-head" style="margin:4px 4px 2px"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div>'+
+      '</div>'+
+      '<div class="glass tx-list" id="txList"></div>'+
+      '<div class="glass panel" id="chartPanel" style="margin-top:13px"></div>';
   }
   function renderDetalheCartao(card){
     if(!card)return;
@@ -1451,15 +1452,25 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var alvo=cards[cartaoAtivo];
       carousel.scrollLeft = alvo.offsetLeft + alvo.offsetWidth/2 - carousel.offsetWidth/2;
     }
-    var timer;
+    var timer,rafId;
+    function idxMaisProximo(){
+      var center=carousel.scrollLeft+carousel.offsetWidth/2,closest=0,min=Infinity;
+      cards.forEach(function(c,i){var cc=c.offsetLeft+c.offsetWidth/2,d=Math.abs(cc-center);if(d<min){min=d;closest=i;}});
+      return closest;
+    }
+    var dotsEls=document.querySelectorAll('#dots .dot');
     carousel.addEventListener('scroll',function(){
+      if(rafId) cancelAnimationFrame(rafId);
+      rafId=requestAnimationFrame(function(){
+        var idx=idxMaisProximo();
+        dotsEls.forEach(function(d,i){d.classList.toggle('active',i===idx);});
+      });
       clearTimeout(timer);
       timer=setTimeout(function(){
-        var center=carousel.scrollLeft+carousel.offsetWidth/2,closest=0,min=Infinity;
-        cards.forEach(function(c,i){var cc=c.offsetLeft+c.offsetWidth/2,d=Math.abs(cc-center);if(d<min){min=d;closest=i;}});
-        if(closest!==cartaoAtivo){cartaoAtivo=closest;mesSelecionado=null;document.querySelectorAll('#dots .dot').forEach(function(d,i){d.classList.toggle('active',i===cartaoAtivo);});renderDetalheCartao(ativos[cartaoAtivo]);}
-      },90);
-    });
+        var idx=idxMaisProximo();
+        if(idx!==cartaoAtivo){cartaoAtivo=idx;mesSelecionado=null;renderDetalheCartao(ativos[cartaoAtivo]);}
+      },70);
+    },{passive:true});
     document.querySelectorAll('#dots .dot').forEach(function(dot){dot.addEventListener('click',function(){cards[Number(dot.getAttribute('data-d'))].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});});
   }
 
@@ -2556,6 +2567,10 @@ body{text-rendering:optimizeLegibility;}
 .ccard{
   box-shadow:0 16px 38px -8px rgba(0,0,0,.55),0 4px 12px rgba(0,0,0,.32),
     inset 0 1px 0 rgba(255,255,255,.24),inset 0 0 0 1px rgba(255,255,255,.06)!important;
+}
+[data-theme="light"] .ccard{
+  box-shadow:0 10px 22px -12px rgba(35,50,40,.32),0 2px 6px rgba(0,0,0,.05),
+    inset 0 1px 0 rgba(255,255,255,.22)!important;
 }
 /* Modal: overlay e folha mais suaves */
 .modal-ov{backdrop-filter:blur(10px) saturate(120%)!important;-webkit-backdrop-filter:blur(10px) saturate(120%)!important;}
