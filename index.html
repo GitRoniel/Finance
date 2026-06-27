@@ -49,7 +49,7 @@ html{transition:background .4s ease;background:var(--bg);}
   background:var(--bg);pointer-events:none;}
 body{font-family:var(--font);background:var(--bg);color:var(--text);
   min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;
-  padding-bottom:calc(var(--nav-h) + 42px + env(safe-area-inset-bottom,0px));transition:background .4s,color .4s;}
+  padding-bottom:calc(var(--nav-h) + 28px + env(safe-area-inset-bottom,0px));transition:background .4s,color .4s;}
 /* O glow agora é uma camada fixa separada (antes era background-attachment:fixed no body,
    que no iOS standalone às vezes "vazava" tonalidade diferente pra cima da status bar). */
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow);pointer-events:none;}
@@ -654,7 +654,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .banner{padding:11px 14px;border-radius:12px;background:rgba(77,163,255,0.12);border:1px solid rgba(77,163,255,0.25);color:var(--blue);font-size:13px;margin-bottom:13px;line-height:1.5;}
 .cnt{font-size:13px;color:var(--text-faint);font-weight:500;}
 /* navbar */
-.navbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:100;
+.navbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:100;
   width:calc(100% - 40px);max-width:300px;height:var(--nav-h);display:flex;align-items:center;padding:0 6px;
   background:var(--nav-bg);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
   border:1px solid var(--glass-border);border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.10);}
@@ -1690,7 +1690,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return '<div class="cards-sticky-hdr">'+resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div>'+
       '<div class="section-head" style="margin:4px 4px 2px"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div>'+
       '</div>'+
-      '<div class="glass tx-list" id="txList"></div>'+
+      '<div id="txList"></div>'+
       '<div class="glass panel" id="chartPanel" style="margin-top:13px"></div>';
   }
   function renderDetalheCartao(card){
@@ -1715,10 +1715,45 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var tc=document.getElementById('txCount'); if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
     var tl=document.getElementById('txList'); if(!tl)return;
     if(!txs.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; return; }
-    tl.innerHTML=txs.map(function(t){
-      var ent=t.tipo==="Entrada",dia=t.data.getDate(),mes=MESES_ABREV[t.data.getMonth()];
-      var parc=t.parcelamentoId?'<span class="tx-parcela">'+escapeHtml(t.parcelamentoId)+'</span>':'';
-      return '<div class="tx">'+categoriaIconeHtml(t.categoria,ent)+'<div class="tx-main"><div class="tx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+parc+'</div><div class="tx-meta">'+dia+' '+mes+' · '+escapeHtml(sentenceCase(t.categoria)||"Sem categoria")+'</div></div><div class="tx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div></div>';
+
+    // Agrupa por dia — mesma lógica (e mesmo visual) da aba Conta Corrente.
+    var dias=[],diaMap={};
+    txs.forEach(function(t){
+      if(!t.data) return;
+      var key=t.data.getFullYear()+'-'+t.data.getMonth()+'-'+t.data.getDate();
+      if(!diaMap[key]){
+        var d=t.data;
+        var diasSemana=['dom.','seg.','ter.','qua.','qui.','sex.','sáb.'];
+        var label=diasSemana[d.getDay()]+', '+d.getDate()+' de '+MESES_COMPLETO[d.getMonth()];
+        diaMap[key]={key:key,label:label,date:d,txs:[],total:0};
+        dias.push(key);
+      }
+      diaMap[key].txs.push(t);
+      var v=t.tipo==='Entrada'?t.valor:-t.valor;
+      diaMap[key].total+=v;
+    });
+
+    tl.innerHTML=dias.map(function(key){
+      var grupo=diaMap[key];
+      var totalPos=grupo.total>=0;
+      var totalFmt=(totalPos?'+':'')+formatBRL(Math.abs(grupo.total));
+      var txsHtml=grupo.txs.map(function(t){
+        var ent=t.tipo==="Entrada";
+        var parc=t.parcelamentoId?'<span class="tx-parcela">'+escapeHtml(t.parcelamentoId)+'</span>':'';
+        return '<div class="cctx">'+categoriaIconeHtml(t.categoria,ent)+
+          '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+parc+'</div>'+
+          '<div class="cctx-meta">'+escapeHtml(sentenceCase(t.categoria)||"Sem categoria")+'</div></div>'+
+          '<div class="cctx-right">'+
+            '<div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div>'+
+          '</div></div>';
+      }).join("");
+      return '<div class="cc-day-group">'+
+        '<div class="cc-day-hdr">'+
+          '<span class="cc-day-label">'+grupo.label+'</span>'+
+          '<span class="cc-day-total'+(totalPos?' pos':' neg')+'">'+totalFmt+'</span>'+
+        '</div>'+
+        '<div class="cc-day-txs">'+txsHtml+'</div>'+
+      '</div>';
     }).join("");
   }
   function wireCartoes(){
