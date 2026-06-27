@@ -446,7 +446,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   margin:0 -16px;padding-left:16px;padding-right:16px;
 }
 /* blur só cobre o conteúdo real do sticky, sem "fantasma" abaixo */
-.cc-sticky-hdr::before,.cards-sticky-hdr::before,.cards-tx-sticky::before{
+.cards-sticky-hdr::before,.cards-tx-sticky::before{
   content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
   backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
   background:linear-gradient(to bottom,
@@ -456,8 +456,24 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 88%);
   mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 88%);
 }
-/* título "Movimentações" compacto dentro do sticky */
-.cc-sticky-hdr .section-head{margin:4px 4px 0;}
+/* Conta Corrente: zona de transição bem mais estreita e colada na borda inferior —
+   evita que o blur "vaze" sobre o título Movimentações e as primeiras transações. */
+.cc-sticky-hdr::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
+  background:linear-gradient(to bottom,
+    color-mix(in srgb,var(--bg) 90%,transparent) 0%,
+    color-mix(in srgb,var(--bg) 75%,transparent) 84%,
+    transparent 100%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 86%,transparent 95%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 86%,transparent 95%);
+}
+/* título "Movimentações" fora do sticky — rola junto com as transações */
+.cc-movs-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 4px 6px;
+}
+.cc-movs-title{font-size:16px;font-weight:400;font-family:var(--font-display);letter-spacing:-0.01em;color:var(--text);}
 /* ── CARTÕES: sticky header (resumo + carousel + dots) ── */
 .cards-sticky-hdr{
   position:sticky;top:var(--top-bar-h,0px);z-index:20;
@@ -494,17 +510,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 }
 .cc-day-total.pos{color:var(--lime-deep);}
 .cc-day-total.neg{color:var(--text-faint);}
-/* card do dia: sem liquid glass — fundo ultra-sutil estilo tcard */
+/* card do dia: sem liquid glass — apenas um contorno e fundo quase imperceptíveis;
+   a separação real entre lançamentos é a linha super sutil entre os itens. */
 .cc-day-txs{
   border-radius:12px;overflow:hidden;
-  background:rgba(255,255,255,0.045);
-  border:1px solid rgba(255,255,255,0.07);
+  background:rgba(255,255,255,0.018);
+  border:1px solid rgba(255,255,255,0.045);
   backdrop-filter:none;-webkit-backdrop-filter:none;
   box-shadow:none;
 }
 [data-theme="light"] .cc-day-txs{
-  background:rgba(255,255,255,0.52);
-  border-color:rgba(0,0,0,0.05);
+  background:rgba(0,0,0,0.012);
+  border-color:rgba(0,0,0,0.035);
 }
 .cc-day-txs .cctx{
   display:flex;align-items:center;gap:9px;
@@ -1376,8 +1393,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         accountsHtml+
       '</div>'+
       '<div class="cc-filters">'+mesHtml+bancoHtml+'</div>'+
-      '<div class="section-head" style="margin:8px 4px 2px"><h2 id="ccTitle">Movimentações</h2><span class="cnt" id="ccCount"></span></div>'+
       '</div>'+
+      '<div class="cc-movs-head"><span class="cc-movs-title" id="ccTitle">Movimentações</span><span class="cnt" id="ccCount"></span></div>'+
       '<div id="ccList"></div>';
   }
   function atualizarListaContaCorrente(){
@@ -1422,7 +1439,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           '<span class="cc-day-label">'+grupo.label+'</span>'+
           '<span class="cc-day-total'+(totalPos?' pos':' neg')+'">'+totalFmt+'</span>'+
         '</div>'+
-        '<div class="glass cc-day-txs">'+txsHtml+'</div>'+
+        '<div class="cc-day-txs">'+txsHtml+'</div>'+
       '</div>';
     }).join("");
   }
