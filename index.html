@@ -317,14 +317,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
 /* ── CONTA CORRENTE: sticky header ── */
 .cc-sticky-hdr{
-  position:sticky;top:0;z-index:20;
+  position:sticky;top:var(--top-bar-h,0px);z-index:20;
   background:var(--bg);
   padding-bottom:4px;
   margin:0 -16px;padding-left:16px;padding-right:16px;
 }
 /* ── CARTÕES: sticky header (resumo + carousel + dots) ── */
 .cards-sticky-hdr{
-  position:sticky;top:0;z-index:20;
+  position:sticky;top:var(--top-bar-h,0px);z-index:20;
   background:var(--bg);
   padding-bottom:4px;
   margin:0 -16px;padding-left:16px;padding-right:16px;
@@ -1883,6 +1883,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<select id="recTipo"><option value="in">Entrada</option><option value="out">Saída</option></select>'+
         '<button class="add-btn" id="recAdd">+</button>'+
       '</div>'+
+      '<div class="modal-msg" id="prevMsg" style="margin-top:6px"></div>'+
     '</div>'+
     '';
   }
@@ -1892,17 +1893,31 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var add = document.getElementById('recAdd');
     if(add){
       add.addEventListener('click', function(){
+        var btn=add;
+        var msg=document.getElementById('prevMsg');
         var nome  = (document.getElementById('recNome').value||'').trim();
         var valor = parseFloat(document.getElementById('recValor').value);
         var tipo  = document.getElementById('recTipo').value;
-        if(!nome||isNaN(valor)||valor<=0) return;
+        if(!nome||isNaN(valor)||valor<=0){
+          if(msg){msg.textContent='Preencha nome e valor.';msg.className='modal-msg err';}
+          return;
+        }
         var item = {nome:nome, valor:valor, tipo:tipo};
         var recs = lerRecorrentes(); recs.push(item); salvarRecorrentes(recs);
+        // Loading
+        btn.disabled=true; btn.textContent='…';
+        if(msg){msg.textContent='Enviando…';msg.className='modal-msg';}
         gravarRecorrenteSheet(item, function(ok){
+          btn.disabled=false; btn.textContent='+';
+          if(msg){
+            msg.textContent=ok?'Cadastrado na planilha!':'Salvo localmente.';
+            msg.className='modal-msg ok';
+            setTimeout(function(){if(msg)msg.textContent='';},2200);
+          }
           var b = document.getElementById('recSyncBadge');
           if(b) b.title = ok?'Salvo na planilha':'Salvo localmente';
         });
-        // Atualiza inline sem re-navegar (sem animação de troca de aba)
+        // Limpa campos imediatamente
         document.getElementById('recNome').value='';
         document.getElementById('recValor').value='';
         renderPrevisoesParcial();
@@ -2029,6 +2044,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var content=document.getElementById('content');
     content.innerHTML='<div class="screen active">'+tela.render()+'</div>';
     if(tela.wire) tela.wire();
+    if(typeof scanCards==='function') scanCards();
     // Ao entrar em Previsões, tenta sincronizar a lista com a aba da planilha uma vez
     if(i===4 && !irPara._prevSyncDone){
       irPara._prevSyncDone=true;
@@ -2047,6 +2063,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
 
   window.addEventListener('scroll',atualizarCabecalho,{passive:true});
+
+  // Sticky header offset: mede o .top bar e define --top-bar-h para os headers fixos
+  (function(){
+    function setTopH(){
+      var t=document.querySelector('.top');
+      if(t) document.documentElement.style.setProperty('--top-bar-h',t.offsetHeight+'px');
+    }
+    setTopH();
+    window.addEventListener('resize',setTopH,{passive:true});
+  })();
+
 
   function wireFaturasClicaveis(){
     document.querySelectorAll('.frow[data-card]').forEach(function(row){
@@ -2494,8 +2521,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     inset 0 0 0 1px rgba(255,255,255,.07),
     inset 0 -1px 0 rgba(255,255,255,.04)!important;
   transform-style:preserve-3d;transform-origin:center center;
+  /* contain:paint da base bloqueava o 3D tilt — remove paint para liberar */
+  contain:layout style!important;
   transition:transform .38s cubic-bezier(.16,1,.30,1),box-shadow .38s ease!important;
-  will-change:transform;overflow:hidden!important;
+  will-change:transform;
 }
 .glass::before{
   background:linear-gradient(138deg,
