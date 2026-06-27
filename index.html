@@ -104,12 +104,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .custom-swatch{display:flex;align-items:center;justify-content:center;overflow:hidden;
   background:conic-gradient(from 0deg,#ff6060,#ff8a3d,#b4f44a,#4da3ff,#c44bff,#ff4d8d,#ff6060);}
 .custom-swatch input[type="color"]{opacity:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;}
+.banks-divider{height:1px;background:var(--glass-border);margin:10px 0;}
 .banks-stack{display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
 .banks-stack .bs-logo{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);margin-left:-8px;color:#fff;}
 .banks-stack .bs-logo:first-child{margin-left:0;}
 .banks-stack .bs-logo svg{width:60%;height:60%;}
 .banks-stack .bs-logo .txt{font-size:8.5px;font-weight:700;font-family:var(--font-display);}
-.banks-pop{width:240px;}
+.banks-pop{width:260px;}
 .bank-row{display:flex;align-items:center;gap:10px;padding:8px 0;}
 .bank-row:not(:last-child){border-bottom:1px solid var(--glass-border);}
 .bank-row .bic{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 auto;}
@@ -121,7 +122,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .bank-row .bupd .bdot{width:6px;height:6px;border-radius:50%;background:var(--lime);flex:0 0 auto;}
 .banks-add{margin-top:10px;padding:10px;border-radius:12px;background:var(--track-bg);text-align:center;font-size:13px;font-weight:500;color:var(--text-dim);cursor:pointer;}
 .banks-add:active{transform:scale(0.97);}
-.refresh-pop{width:248px;}
+@keyframes spin360{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.ro-ic.spin svg{animation:spin360 .9s linear infinite;}
+.icon-btn.loading{opacity:.55;}
 .refresh-opt{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:13px;cursor:pointer;transition:background .15s;}
 .refresh-opt:active{transform:scale(0.97);}
 .refresh-opt:not(:last-of-type){margin-bottom:3px;}
@@ -348,26 +351,31 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .aval{font-size:20px;font-weight:700;font-family:var(--font-display);text-align:right;}
 .aval .sub{font-size:13px;color:var(--text-faint);font-weight:500;}
 /* investimentos */
-.inv-hero{padding:22px;border-radius:var(--radius-sm);margin-bottom:13px;text-align:center;}
-.inv-hero .k{font-size:16px;color:var(--text-dim);font-weight:400;}
-.inv-hero .big{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin:6px 0 4px;}
+.inv-hero{padding:18px;border-radius:var(--radius-sm);margin-bottom:10px;text-align:center;}
+.inv-hero .k{font-size:13px;color:var(--text-faint);font-weight:500;}
+.inv-hero .big{font-size:24px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin:4px 0 3px;}
 .inv-hero .delta{font-size:13px;font-weight:600;color:var(--lime-deep);}
-.inv-row{display:flex;align-items:center;gap:12px;padding:14px 15px;}
+.ihs-row{display:flex;align-items:stretch;margin-top:14px;padding-top:13px;border-top:1px solid var(--glass-border);}
+.ihs-blk{flex:1;text-align:center;}
+.ihs-k{font-size:11.5px;color:var(--text-faint);font-weight:500;}
+.ihs-v{font-size:15px;font-weight:600;font-family:var(--font-display);margin-top:2px;letter-spacing:-0.01em;}
+.ihs-div{width:1px;background:var(--glass-border);margin:1px 4px;}
+.inv-row{display:flex;align-items:center;gap:11px;padding:11px 14px;}
 .inv-row.inv-manual{cursor:pointer;}
 .inv-row.inv-manual:active{background:var(--track-bg);}
-.inv-tag{font-size:10px;font-weight:600;color:var(--lime-deep);background:rgba(131,214,38,0.16);padding:2px 7px;border-radius:7px;margin-left:5px;vertical-align:middle;text-transform:uppercase;letter-spacing:0.02em;}
-.inv-edit-chev{color:var(--text-faint);font-size:16px;flex:0 0 auto;padding-left:2px;}
+.inv-tag{font-size:9.5px;font-weight:600;color:var(--lime-deep);background:rgba(131,214,38,0.16);padding:2px 6px;border-radius:6px;margin-left:5px;vertical-align:middle;text-transform:uppercase;letter-spacing:0.02em;}
+.inv-edit-chev{color:var(--text-faint);font-size:15px;flex:0 0 auto;padding-left:2px;}
 .btn-danger{flex:1;padding:12px;border-radius:13px;border:1px solid rgba(226,59,59,0.35);background:rgba(226,59,59,0.10);
   color:var(--red);font-size:15px;font-weight:600;font-family:var(--font-display);cursor:pointer;}
 .btn-danger:active{transform:scale(0.98);}
 .inv-row:not(:last-child){border-bottom:1px solid var(--glass-border);}
-.inv-ic{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff;font-weight:700;font-size:12px;font-family:var(--font-display);}
+.inv-ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff;font-weight:700;font-size:12px;font-family:var(--font-display);}
 .inv-main{flex:1;min-width:0;}
-.inv-name{font-size:16px;font-weight:400;}
-.inv-tipo{font-size:13px;color:var(--text-faint);margin-top:1px;}
+.inv-name{font-size:15px;font-weight:500;}
+.inv-taxa{font-size:12.5px;color:var(--text-faint);margin-top:1px;}
 .inv-val{text-align:right;}
-.inv-val .v{font-size:20px;font-weight:700;font-family:var(--font-display);}
-.inv-val .r{font-size:13px;color:var(--lime-deep);font-weight:500;margin-top:1px;}
+.inv-val .v{font-size:17px;font-weight:700;font-family:var(--font-display);}
+.inv-val .r{font-size:12px;color:var(--lime-deep);font-weight:500;margin-top:1px;}
 /* previsões */
 .prev-hero{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px;}
 .prev-box{padding:18px 16px;border-radius:var(--radius-sm);}
@@ -496,8 +504,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .rec-sheet-sync-btn:active{transform:scale(0.97);}
 /* investimentos — label líquido */
 .inv-liq-label{color:var(--lime-deep);}
-.inv-hero-sub{margin:2px 0 4px;}
-.inv-liq-badge{display:inline-block;font-size:13px;font-weight:600;padding:3px 10px;border-radius:8px;background:rgba(180,244,74,0.13);color:var(--lime-deep);border:1px solid rgba(180,244,74,0.22);}
 
 /* cadastro de investimento */
 .inv-add-btn{background:var(--lime);color:#0c1f00;font-weight:600;font-size:14px;font-family:var(--font-display);
@@ -575,24 +581,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           <div class="banks-stack" id="banksStack"></div>
         </div>
         <div class="color-pop banks-pop" id="banksPop">
-          <div class="color-pop-title" style="display:flex;align-items:center;justify-content:space-between">
-            Contas conectadas
-            <span id="banksRefresh" title="Atualizar agora" style="cursor:pointer;color:var(--text-dim);display:flex">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            </span>
-          </div>
+          <div class="color-pop-title">Contas conectadas</div>
           <div id="banksList"></div>
-          <div class="banks-add" id="banksAdd" title="Conexões de banco são configuradas no backend (Apps Script / Open Finance)">+ Adicionar conta</div>
-        </div>
-      </div>
-      <div class="icon-btn-wrap">
-        <div class="icon-btn" id="refreshBtn" title="Atualizar">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        </div>
-        <div class="color-pop refresh-pop" id="refreshPop">
-          <div class="color-pop-title">Atualizar</div>
+          <div class="banks-divider"></div>
           <div class="refresh-opt" id="refreshSync">
-            <div class="ro-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M3 16v5h5M21 8V3h-5"/></svg></div>
+            <div class="ro-ic" id="refreshSyncIc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M3 16v5h5M21 8V3h-5"/></svg></div>
             <div class="ro-txt">
               <div class="ro-t">Sincronizar com o banco</div>
               <div class="ro-s">Busca dados novos via Open Finance (Apps Script)</div>
@@ -606,6 +599,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
             </div>
           </div>
           <div class="refresh-status" id="refreshStatus" style="display:none"></div>
+          <div class="banks-add" id="banksAdd" title="Conectar um novo banco via Open Finance">+ Adicionar conta</div>
         </div>
       </div>
     </div>
@@ -1471,20 +1465,23 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       // Lucro individual = valor líquido − valor aplicado
       var rendInv=(inv.valorLiquido||0)-(inv.valorAplicado||0);
       var ehManual=String(inv.obs||'').toLowerCase().indexOf('manual')!==-1;
-      var titulo=sentenceCase(inv.banco)+(inv.taxa?' - '+inv.taxa:'');
+      var taxaOk=inv.taxa && !(inv.taxa instanceof Date) && !/^date\(/i.test(String(inv.taxa));
       return '<div class="inv-row'+(ehManual?' inv-manual':'')+'" data-idx="'+idx+'"><div class="inv-ic" style="background:'+info.cor1+'">'+initials(inv.banco)+'</div>'+
-        '<div class="inv-main"><div class="inv-name">'+escapeHtml(titulo)+(ehManual?' <span class="inv-tag">manual</span>':'')+'</div></div>'+
+        '<div class="inv-main"><div class="inv-name">'+escapeHtml(sentenceCase(inv.banco))+(ehManual?' <span class="inv-tag">manual</span>':'')+'</div>'+
+        (taxaOk?'<div class="inv-taxa">'+escapeHtml(inv.taxa)+'</div>':'')+'</div>'+
         '<div class="inv-val"><div class="v">'+formatBRL(inv.valorLiquido)+'</div><div class="r inv-liq-label">'+(rendInv>=0?'+':'')+formatBRL(rendInv)+' líq.</div></div>'+
         (ehManual?'<div class="inv-edit-chev">›</div>':'')+'</div>';
     }).join("");
-    return '<div class="glass inv-hero"><div class="k">Valor bruto atual</div><div class="big">'+formatBRL(totalAtual)+'</div>'+
-      '<div class="inv-hero-sub"><span class="inv-liq-badge">Líquido: '+formatBRL(totalLiquido)+'</span></div>'+
-      '<div class="delta">'+(rend>=0?'+':'')+formatBRL(rend)+' ('+pctRend.toFixed(1)+'%) líquido</div></div>'+
-      '<div class="glass tcard" style="min-height:auto;padding:16px 18px;margin-bottom:11px"><div class="split" style="margin-top:0">'+
-        '<div class="blk"><div class="bk">Valor investido</div><div class="bv">'+formatBRL(totalAplicado)+'</div></div>'+
-        '<div class="divider"></div>'+
-        '<div class="blk"><div class="bk">Lucro líquido (saque hoje)</div><div class="bv '+(rend<0?'neg':'pos')+'">'+(rend>=0?'+':'')+formatBRL(rend)+'</div></div>'+
-      '</div></div>'+
+    return '<div class="glass inv-hero">'+
+      '<div class="k">Valor líquido (saque hoje)</div>'+
+      '<div class="big">'+formatBRL(totalLiquido)+'</div>'+
+      '<div class="delta">'+(rend>=0?'+':'')+formatBRL(rend)+' ('+pctRend.toFixed(1)+'%)</div>'+
+      '<div class="ihs-row">'+
+        '<div class="ihs-blk"><div class="ihs-k">Investido</div><div class="ihs-v">'+formatBRL(totalAplicado)+'</div></div>'+
+        '<div class="ihs-div"></div>'+
+        '<div class="ihs-blk"><div class="ihs-k">Bruto atual</div><div class="ihs-v">'+formatBRL(totalAtual)+'</div></div>'+
+      '</div>'+
+    '</div>'+
       '<div class="section-head"><h2>Meus investimentos</h2><span class="link" id="invAddBtn">+ Cadastrar</span></div>'+
       '<div class="glass tx-list">'+lista+'</div>';
   }
@@ -1495,13 +1492,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var ov=document.createElement('div');
     ov.className='modal-ov';
     function g(v){ return (v===undefined||v===null)?'':v; }
+    // Extrai o id estável gravado na Observação ("manual · id:XXXXXXXX · ..."); usado pra editar/excluir
+    // sem depender de banco/produto/taxa (que podem ter sido corrompidos pelo Sheets).
+    function extrairId(obs){ var m=String(obs||'').match(/id:([a-zA-Z0-9_-]+)/); return m?m[1]:''; }
+    var taxaSegura = (editando && inv.taxa && !/^date\(/i.test(String(inv.taxa))) ? inv.taxa : '';
     ov.innerHTML='<div class="modal glass">'+
       '<div class="modal-head"><div class="modal-title">'+(editando?'Editar investimento':'Novo investimento')+'</div><div class="modal-x" id="invClose">✕</div></div>'+
       '<div class="modal-body">'+
         '<label class="fld"><span>Banco</span><input id="fBanco" type="text" placeholder="Ex: Nubank" autocomplete="off" value="'+escapeHtml(g(editando?inv.banco:''))+'"></label>'+
         '<div class="fld-row">'+
           '<label class="fld"><span>Tipo</span><input id="fTipo" type="text" placeholder="CDB, Tesouro…" autocomplete="off" value="'+escapeHtml(g(editando?inv.tipo:''))+'"></label>'+
-          '<label class="fld"><span>Taxa</span><input id="fTaxa" type="text" placeholder="115% CDI" autocomplete="off" value="'+escapeHtml(g(editando?inv.taxa:''))+'"></label>'+
+          '<label class="fld"><span>Taxa</span><input id="fTaxa" type="text" placeholder="115% CDI" autocomplete="off" value="'+escapeHtml(taxaSegura)+'"></label>'+
         '</div>'+
         '<div class="fld-row">'+
           '<label class="fld"><span>Valor aplicado</span><input id="fAplicado" type="text" inputmode="decimal" placeholder="0,00" value="'+(editando&&inv.valorAplicado?String(inv.valorAplicado).replace('.',','):'')+'"></label>'+
@@ -1535,7 +1536,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       // (se estiver editando) ou usa taxa/banco como substituto.
       dados.produto = (editando && inv.produto) ? inv.produto : (dados.taxa || dados.banco || 'Investimento');
       if(editando){
-        // identidade original pra localizar a linha certa mesmo que banco/produto/taxa mudem
+        // ID estável é a forma confiável de achar a linha; banco/produto/taxa ficam só como
+        // fallback pra linhas antigas que ainda não têm ID (criadas antes desta correção).
+        var idEstavel=extrairId(inv.obs);
+        if(idEstavel) dados.id=idEstavel;
         dados.origBanco=g(inv.banco); dados.origProduto=g(inv.produto); dados.origTaxa=g(inv.taxa);
       }
       var msg=ov.querySelector('#invMsg');
@@ -1563,6 +1567,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           delBtn.setAttribute('data-confirm','1'); delBtn.textContent='Confirmar exclusão?'; return;
         }
         var dados={ acao:'excluirInvestimento', banco:g(inv.banco), produto:g(inv.produto), taxa:g(inv.taxa) };
+        var idEstavelDel=extrairId(inv.obs);
+        if(idEstavelDel) dados.id=idEstavelDel;
         btn.disabled=true; btn.textContent='Excluindo…';
         enviarInvestimento(dados).then(function(resp){
           if(resp && resp.ok){ msg.textContent='Excluído! Atualizando…'; msg.className='modal-msg ok'; setTimeout(function(){ fechar(); loadAll(); },700); }
@@ -2149,7 +2155,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       }).join(""):'<div class="empty" style="padding:14px"><div class="et">Nenhuma conta conectada ainda.</div></div>';
     }
   }
-  var banksToggle=$("#banksToggle"), banksPop=$("#banksPop"), banksRefresh=$("#banksRefresh");
+  var banksToggle=$("#banksToggle"), banksPop=$("#banksPop");
   if(banksToggle&&banksPop){
     banksToggle.addEventListener("click",function(ev){
       ev.stopPropagation();
@@ -2161,17 +2167,21 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         banksPop.classList.remove("show");
       }
     });
-    if(banksRefresh){
-      banksRefresh.addEventListener("click",function(ev){
-        ev.stopPropagation();
-        loadAll();
-      });
-    }
+  }
+  // "+ Adicionar conta" — abre o fluxo de conexão Open Finance (mesmo onde os bancos atuais foram cadastrados).
+  var BANK_CONNECT_URL = "https://app.mcp.ai/connect/mi_tas6SKA8MLwJyC_z?u=usr_54e21k4c6mt2&add=1";
+  var banksAddBtn=$("#banksAdd");
+  if(banksAddBtn){
+    banksAddBtn.addEventListener("click",function(ev){
+      ev.stopPropagation();
+      if(banksPop) banksPop.classList.remove("show");
+      window.open(BANK_CONNECT_URL,"_blank");
+    });
   }
 
-  /* ===== atualização (popover: sincronizar com o banco x só recarregar a planilha) ===== */
-  var refreshToggle=$("#refreshBtn"), refreshPop=$("#refreshPop"), refreshStatusEl=$("#refreshStatus");
-  var refreshSync=$("#refreshSync"), refreshPageOpt=$("#refreshPage");
+  /* ===== atualização (dentro da cápsula de bancos: sincronizar com o banco x só recarregar a planilha) ===== */
+  var refreshStatusEl=$("#refreshStatus");
+  var refreshSync=$("#refreshSync"), refreshPageOpt=$("#refreshPage"), refreshSyncIc=$("#refreshSyncIc");
   var syncEmAndamento=false, syncTimerInt=null;
 
   function setRefreshStatus(texto, tipo){
@@ -2181,23 +2191,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     refreshStatusEl.innerHTML="<span class=\"rs-dot\"></span><span>"+escapeHtml(texto)+"</span>";
   }
 
-  if(refreshToggle&&refreshPop){
-    refreshToggle.addEventListener("click",function(ev){
-      ev.stopPropagation();
-      refreshPop.classList.toggle("show");
-    });
-    document.addEventListener("click",function(ev){
-      if(refreshPop.classList.contains("show")&&!refreshPop.contains(ev.target)&&ev.target!==refreshToggle&&!refreshToggle.contains(ev.target)){
-        refreshPop.classList.remove("show");
-      }
-    });
-  }
 
   if(refreshPageOpt){
     refreshPageOpt.addEventListener("click",function(ev){
       ev.stopPropagation();
       if(syncEmAndamento) return;
-      refreshPop.classList.remove("show");
+      if(banksPop) banksPop.classList.remove("show");
       loadAll();
     });
   }
@@ -2207,7 +2206,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // em Xs" e recarrega a planilha automaticamente.
   function sincronizarComBanco(){
     syncEmAndamento=true;
-    refreshToggle.classList.add("spin");
+    if(refreshSyncIc) refreshSyncIc.classList.add("spin");
     var inicio=Date.now();
     setRefreshStatus("Sincronizando… 0s","loading");
     syncTimerInt=setInterval(function(){
@@ -2223,7 +2222,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         clearInterval(syncTimerInt);
         var total=Math.round((Date.now()-inicio)/1000);
         syncEmAndamento=false;
-        refreshToggle.classList.remove("spin");
+        if(refreshSyncIc) refreshSyncIc.classList.remove("spin");
         setRefreshStatus("Concluído em "+total+"s — atualizando…","done");
         loadAll();
         setTimeout(function(){ if(refreshStatusEl) refreshStatusEl.style.display="none"; },4000);
@@ -2231,7 +2230,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       .catch(function(err){
         clearInterval(syncTimerInt);
         syncEmAndamento=false;
-        refreshToggle.classList.remove("spin");
+        if(refreshSyncIc) refreshSyncIc.classList.remove("spin");
         setRefreshStatus("Erro ao sincronizar: "+err.message,"error");
       });
   }
@@ -2250,7 +2249,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   /* ===== load ===== */
   function loadAll(){
-    var btn=$("#refreshBtn"); if(btn) btn.classList.add("spin");
+    var btn=$("#banksToggle"); if(btn) btn.classList.add("loading");
     var nomes=["Contas","Cartões","Categorias","Transações Cartão","Transações Conta","Parcelamentos","Assinaturas","Investimentos","Fatura Em Aberto"];
     Promise.all(nomes.map(function(n){ return fetchSheet(n).catch(function(){ return []; }); }))
       .then(function(r){
@@ -2265,11 +2264,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         state.faturaEmAberto = mapFaturaEmAberto(r[8]);
         ultimaAtualizacao = new Date();
         renderBancos();
-        if(btn) btn.classList.remove("spin");
+        if(btn) btn.classList.remove("loading");
         irPara(telaAtual);
       })
       .catch(function(err){
-        if(btn) btn.classList.remove("spin");
+        if(btn) btn.classList.remove("loading");
         $("#content").innerHTML = "<div class=\'empty\'><div class=\'ei\'>⚠️</div><div class=\'et\'>Erro ao carregar a planilha: "+escapeHtml(err.message)+"<br><br>Verifique se o ID da planilha está correto e se ela está acessível.</div></div>";
       });
   }
