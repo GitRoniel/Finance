@@ -328,9 +328,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .tx-list{border-radius:var(--radius-sm);overflow:hidden;}
 .tx{display:flex;align-items:center;gap:10px;padding:9px 14px;}
 .tx:not(:last-child){border-bottom:1px solid var(--glass-border);}
-.tx-ic{width:38px;height:38px;border-radius:12px;background:var(--track-bg);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px;color:var(--text-dim);}
-.cat-ic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
-.cat-ic svg{width:18px;height:18px;}
+.tx-ic{width:36px;height:36px;border-radius:50%;background:var(--track-bg);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:14px;color:var(--text-dim);}
+.cat-ic{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.cat-ic svg{width:16px;height:16px;}
 .tx-main{flex:1;min-width:0;}
 .tx-desc{font-size:16px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tx-meta{font-size:10.5px;color:var(--text-faint);margin-top:2px;font-weight:500;}
@@ -339,9 +339,19 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .tx-parcela{display:inline-block;background:var(--track-bg);color:var(--text-faint);font-size:9.5px;padding:1px 6px;border-radius:6px;margin-left:6px;}
 
 /* conta corrente */
-.cc-hero{padding:16px;border-radius:var(--radius-sm);margin-bottom:12px;}
-.cc-hero-k{font-size:13px;color:var(--text-faint);font-weight:500;}
-.cc-hero-v{font-size:24px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;}
+.cc-hero{padding:14px 16px 12px;border-radius:var(--radius-sm);margin-bottom:12px;}
+.cc-hero-k{font-size:11.5px;color:var(--text-faint);font-weight:500;text-transform:uppercase;letter-spacing:0.02em;}
+.cc-hero-v{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;}
+/* linha divisória entre saldo total e contas */
+.cc-hero-div{height:1px;background:var(--hairline);margin:10px 0 9px;}
+/* lista de contas dentro do hero */
+.cc-hero-accounts{display:flex;flex-direction:column;gap:6px;}
+.cc-hero-acc{display:flex;align-items:center;gap:8px;}
+.cc-hero-acc-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 auto;font-size:8px;font-weight:700;font-family:var(--font-display);}
+.cc-hero-acc-dot svg{width:58%;height:58%;}
+.cc-hero-acc-dot .txt{font-size:7.5px;font-weight:700;font-family:var(--font-display);}
+.cc-hero-acc-name{flex:1;font-size:12px;color:var(--text-dim);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cc-hero-acc-val{font-size:12.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;flex:0 0 auto;}
 .cc-filters{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
 
 /* ── FILTRO DE MESES: cápsula horizontal com scroll ── */
@@ -467,56 +477,46 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* Blur gradiente nas bordas inferiores dos cabecalhos fixos:
    as transacoes deslizam por baixo e dissolvem com desfoque progressivo (estilo iOS). */
 
-.cc-list{border-radius:var(--radius-sm);overflow:hidden;}
-.cctx{display:flex;align-items:center;gap:9px;padding:8px 12px;}
-.cctx:not(:last-child){border-bottom:1px solid var(--glass-border);}
-.cctx .cat-ic{width:30px;height:30px;border-radius:9px;}
-.cctx .cat-ic svg{width:14px;height:14px;}
-.cctx-main{flex:1;min-width:0;}
-.cctx-desc{font-size:14px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cctx-meta{font-size:11px;color:var(--text-faint);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cctx-val{font-size:15px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;flex:0 0 auto;}
-.cctx-val.in{color:var(--lime-deep);}
-/* Movimentações (Conta Corrente): sem liquid glass — só o container fica "chapado",
-   o resto da tela (Saldo total, filtros) continua com o vidro normal. Itens mais compactos
-   e separados por uma linha fina e suave (não a --glass-border, que é forte demais sozinha). */
-.cc-list{
-  background:none;border:none;backdrop-filter:none;-webkit-backdrop-filter:none;
-  box-shadow:none;isolation:auto;
-}
-.cc-list::before,.cc-list::after{content:none;}
-.cctx{padding:7px 6px;gap:8px;}
-.cctx:not(:last-child){border-bottom:1px solid var(--hairline);}
-.cctx .cat-ic{width:26px;height:26px;border-radius:8px;}
-.cctx .cat-ic svg{width:12px;height:12px;}
-.cctx-desc{font-size:13px;}
-.cctx-meta{font-size:10.5px;}
-.cctx-val{font-size:13.5px;}
-
 /* ── Agrupamento por dia ── */
-.cc-day-group{margin-bottom:16px;}
+.cc-day-group{margin-bottom:14px;}
 .cc-day-hdr{
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 2px 7px;
+  padding:0 2px 5px;
 }
 .cc-day-label{
-  font-size:12px;color:var(--text-faint);font-weight:500;
+  font-size:11px;color:var(--text-faint);font-weight:500;letter-spacing:0.01em;text-transform:capitalize;
 }
 .cc-day-total{
-  font-size:13px;font-weight:700;font-family:var(--font-display);
+  font-size:11px;font-weight:600;font-family:var(--font-display);
 }
 .cc-day-total.pos{color:var(--lime-deep);}
-.cc-day-total.neg{color:var(--text-dim);}
-.cc-day-txs{border-radius:var(--radius-sm);overflow:hidden;}
-.cc-day-txs .cctx{padding:10px 14px;gap:10px;}
-.cc-day-txs .cctx .cat-ic{width:40px;height:40px;border-radius:12px;flex:0 0 40px;}
-.cc-day-txs .cctx .cat-ic svg{width:18px;height:18px;}
-.cc-day-txs .cctx-desc{font-size:14.5px;font-weight:400;}
-.cc-day-txs .cctx-meta{font-size:11.5px;color:var(--text-faint);}
-.cctx-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:0 0 auto;}
-.cc-day-txs .cctx-val{font-size:16px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;}
-.cctx-tipo{font-size:11px;color:var(--text-faint);font-weight:400;}
+.cc-day-total.neg{color:var(--text-faint);}
+/* card do dia: sem glass, só borda hairline ultra-suave */
+.cc-day-txs{
+  border-radius:14px;overflow:hidden;
+  background:var(--glass-bg);
+  border:1px solid var(--hairline);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  box-shadow:none;
+}
+[data-theme="light"] .cc-day-txs{
+  background:rgba(255,255,255,0.55);
+  border-color:rgba(0,0,0,0.06);
+}
+.cc-day-txs .cctx{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 12px;
+}
 .cc-day-txs .cctx:not(:last-child){border-bottom:1px solid var(--hairline);}
+.cc-day-txs .cctx .cat-ic{width:32px;height:32px;border-radius:50%;flex:0 0 32px;}
+.cc-day-txs .cctx .cat-ic svg{width:14px;height:14px;}
+.cctx-main{flex:1;min-width:0;}
+.cctx-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:0 0 auto;}
+.cctx-desc{font-size:12.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cctx-meta{font-size:10px;color:var(--text-faint);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cctx-val{font-size:12.5px;font-weight:600;font-family:var(--font-display);letter-spacing:-0.01em;}
+.cctx-val.in{color:var(--lime-deep);}
+.cctx-tipo{font-size:9.5px;color:var(--text-faint);font-weight:400;}
 
 /* sub-abas (parcelas/assinaturas) */
 .subtabs{display:flex;gap:6px;background:var(--track-bg);padding:4px;border-radius:14px;margin-bottom:14px;}
@@ -1312,12 +1312,30 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function renderContaCorrente(){
     var bancos=bancosNasTransacoes();
     var meses=mesesNasTransacoes();
-    if(!bancos.length && !state.contas.filter(function(c){return c.ativa!=="Não";}).length){
+    var contasAtivas=state.contas.filter(function(c){return c.ativa!=="Não";});
+    if(!bancos.length && !contasAtivas.length){
       return '<div class="empty"><div class="ei">🏦</div><div class="et">Nenhuma conta na planilha.</div></div>';
     }
     if(contaFiltro && bancos.map(function(b){return b.chave;}).indexOf(contaFiltro)===-1) contaFiltro='';
     if(contaMesFiltro && meses.map(function(m){return m.k;}).indexOf(contaMesFiltro)===-1) contaMesFiltro='';
     var saldoMostrado = saldoDaContaFiltro();
+
+    // ── Breakdown por conta ──
+    var accountsHtml='';
+    if(contasAtivas.length){
+      accountsHtml='<div class="cc-hero-div"></div><div class="cc-hero-accounts">'+
+        contasAtivas.map(function(c){
+          var info=bancoDe(c.instituicao||c.nome);
+          var inner=(info.logo==='txt-i')?'<span class="txt">i</span>':(info.logo==='txt-c')?'<span class="txt">'+initials(c.nome)+'</span>':'<svg><use href="#'+info.logo+'"/></svg>';
+          var pos=(c.saldo||0)>=0;
+          return '<div class="cc-hero-acc">'+
+            '<div class="cc-hero-acc-dot" style="background:'+info.cor1+'">'+inner+'</div>'+
+            '<span class="cc-hero-acc-name">'+escapeHtml(c.nome)+'</span>'+
+            '<span class="cc-hero-acc-val" style="color:'+(pos?'var(--lime-deep)':'var(--red)')+'">'+formatBRL(c.saldo||0)+'</span>'+
+          '</div>';
+        }).join("")+
+      '</div>';
+    }
 
     // ── Cápsula de meses ──
     var mesHtml = '<div class="cc-month-strip">'+
@@ -1346,7 +1364,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '</div>';
 
     return '<div class="cc-sticky-hdr">'+
-      '<div class="glass cc-hero"><div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div><div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div></div>'+
+      '<div class="glass cc-hero">'+
+        '<div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div>'+
+        '<div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div>'+
+        accountsHtml+
+      '</div>'+
       '<div class="cc-filters">'+mesHtml+bancoHtml+'</div>'+
       '<div class="section-head" style="margin:8px 4px 2px"><h2 id="ccTitle">Movimentações</h2><span class="cnt" id="ccCount"></span></div>'+
       '</div>'+
@@ -1407,7 +1429,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       if(val) val.textContent=formatBRL(saldoDaContaFiltro());
       atualizarListaContaCorrente();
     }
-
     // Pills de mês
     var scroll=document.getElementById('ccMonthScroll');
     if(scroll){
