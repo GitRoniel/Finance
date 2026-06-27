@@ -338,6 +338,29 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   position:static!important;
   margin-bottom:8px;
 }
+/* Titulo "Transacoes" (Cartoes): sticky empilhado logo abaixo do cabecalho dos cartoes */
+.cards-tx-sticky{
+  position:sticky;top:calc(var(--top-bar-h,0px) + var(--cards-hdr-h,0px));z-index:18;
+  background:var(--bg);
+  padding-bottom:2px;
+  margin:0 -16px;padding-left:16px;padding-right:16px;
+}
+/* Blur gradiente nas bordas inferiores dos cabecalhos fixos:
+   as transacoes deslizam por baixo e dissolvem com desfoque progressivo (estilo iOS). */
+.cc-sticky-hdr::before,.cards-sticky-hdr::before,.cards-tx-sticky::before,
+.cc-sticky-hdr::after,.cards-sticky-hdr::after,.cards-tx-sticky::after{
+  content:"";position:absolute;left:0;right:0;top:100%;height:46px;pointer-events:none;display:block;
+}
+.cc-sticky-hdr::before,.cards-sticky-hdr::before,.cards-tx-sticky::before{
+  z-index:2;backdrop-filter:blur(11px) saturate(170%);-webkit-backdrop-filter:blur(11px) saturate(170%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 48%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 8%,transparent 48%);
+}
+.cc-sticky-hdr::after,.cards-sticky-hdr::after,.cards-tx-sticky::after{
+  z-index:1;backdrop-filter:blur(3.5px) saturate(150%);-webkit-backdrop-filter:blur(3.5px) saturate(150%);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 30%,transparent 100%);
+}
 
 .cc-list{border-radius:var(--radius-sm);overflow:hidden;}
 .cctx{display:flex;align-items:center;gap:9px;padding:8px 12px;}
@@ -1160,8 +1183,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<div class="glass cc-hero"><div class="cc-hero-k">Saldo'+(contaFiltro?'':' total')+'</div><div class="cc-hero-v">'+formatBRL(saldoMostrado)+'</div></div>'+
       '<div class="cc-filters"><select class="cc-filter" id="ccFiltroBanco">'+optsBanco+'</select>'+
         '<select class="cc-filter" id="ccFiltroMes">'+optsMes+'</select></div>'+
+      '<div class="section-head" style="margin:8px 4px 2px"><h2 id="ccTitle">Movimentações</h2><span class="cnt" id="ccCount"></span></div>'+
       '</div>'+
-      '<div class="section-head" style="margin-top:6px"><h2 id="ccTitle">Movimentações</h2><span class="cnt" id="ccCount"></span></div>'+
       '<div class="glass cc-list" id="ccList"></div>';
   }
   function atualizarListaContaCorrente(){
@@ -1383,7 +1406,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var dots=ativos.map(function(_,i){return '<div class="dot'+(i===cartaoAtivo?' active':'')+'" data-d="'+i+'"></div>';}).join("");
     return '<div class="cards-sticky-hdr">'+resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div></div>'+
       '<div class="glass panel" id="chartPanel"></div>'+
-      '<div class="section-head"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div>'+
+      '<div class="cards-tx-sticky"><div class="section-head" style="margin:2px 4px 2px"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div></div>'+
       '<div class="glass tx-list" id="txList"></div>';
   }
   function renderDetalheCartao(card){
@@ -2048,6 +2071,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var content=document.getElementById('content');
     content.innerHTML='<div class="screen active">'+tela.render()+'</div>';
     if(tela.wire) tela.wire();
+    if(window.requestAnimationFrame){requestAnimationFrame(medirStickies);}else{medirStickies();}
     // Ao entrar em Previsões, tenta sincronizar a lista com a aba da planilha uma vez
     if(i===4 && !irPara._prevSyncDone){
       irPara._prevSyncDone=true;
@@ -2067,15 +2091,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   window.addEventListener('scroll',atualizarCabecalho,{passive:true});
 
-  // Sticky header offset: mede o .top bar e define --top-bar-h para os headers fixos
-  (function(){
-    function setTopH(){
-      var t=document.querySelector('.top');
-      if(t) document.documentElement.style.setProperty('--top-bar-h',t.offsetHeight+'px');
-    }
-    setTopH();
-    window.addEventListener('resize',setTopH,{passive:true});
-  })();
+  // Sticky header offsets: mede o .top -> --top-bar-h e o cabecalho dos cartoes -> --cards-hdr-h
+  function medirStickies(){
+    var t=document.querySelector('.top');
+    if(t) document.documentElement.style.setProperty('--top-bar-h',t.offsetHeight+'px');
+    var c=document.querySelector('.cards-sticky-hdr');
+    document.documentElement.style.setProperty('--cards-hdr-h', c?c.offsetHeight+'px':'0px');
+  }
+  medirStickies();
+  window.addEventListener('resize',medirStickies,{passive:true});
 
 
   function wireFaturasClicaveis(){
