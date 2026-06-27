@@ -16,11 +16,10 @@
   --glass-highlight:rgba(255,255,255,0.5);--glass-gloss:rgba(255,255,255,0.09);--glass-blur:14px;
   --text:#f5f5f7;--text-dim:#a6a7af;--text-faint:#6a6b74;
   --lime:#b4f44a;--lime-deep:#83d626;--orange:#ff8a3d;--pink:#ff4d8d;--magenta:#c44bff;--red:#ff6060;--blue:#4da3ff;
-  --nav-bg:rgba(18,18,22,0.55);--nav-pill:rgba(255,255,255,0.09);--icon-bg:var(--glass-bg);
-  --pill-blur:24px;--pill-glow:rgba(255,255,255,0.30);/* tuning da pílula líquida da navbar */
+  --nav-bg:rgba(20,20,23,0.64);--nav-pill:rgba(255,255,255,0.13);--icon-bg:var(--glass-bg);
   --track-bg:rgba(255,255,255,0.09);--card-shadow:none;--chart-bar:rgba(255,255,255,0.10);
   --radius:22px;--radius-sm:16px;--radius-xs:11px;
-  --font-display:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:70px;
+  --font-display:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:64px;
 }
 [data-theme="light"]{
   --bg:#eef0ea;
@@ -31,7 +30,6 @@
   --text:#1c1d22;--text-dim:#5c5d66;--text-faint:#8d8e98;
   --lime:#7ec61c;--lime-deep:#5fa015;--orange:#f0791f;--pink:#ec3b7c;--magenta:#a93be0;--red:#e23b3b;--blue:#2b7fd4;
   --nav-bg:rgba(255,255,255,0.72);--nav-pill:rgba(0,0,0,0.07);--icon-bg:rgba(255,255,255,0.7);
-  --pill-blur:18px;--pill-glow:rgba(255,255,255,0.78);/* tuning da pílula líquida da navbar */
   --track-bg:rgba(0,0,0,0.08);--card-shadow:0 4px 20px rgba(60,70,40,0.08);--chart-bar:rgba(0,0,0,0.07);
 }
 html{transition:background .4s ease;background:var(--bg);}
@@ -42,7 +40,7 @@ html{transition:background .4s ease;background:var(--bg);}
   background:var(--bg);pointer-events:none;}
 body{font-family:var(--font);background:var(--bg);color:var(--text);
   min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;
-  padding-bottom:calc(var(--nav-h) + 28px + env(safe-area-inset-bottom,0px));transition:background .4s,color .4s;}
+  padding-bottom:calc(var(--nav-h) + 42px + env(safe-area-inset-bottom,0px));transition:background .4s,color .4s;}
 /* O glow agora é uma camada fixa separada (antes era background-attachment:fixed no body,
    que no iOS standalone às vezes "vazava" tonalidade diferente pra cima da status bar). */
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow);pointer-events:none;}
@@ -438,44 +436,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .banner{padding:11px 14px;border-radius:12px;background:rgba(77,163,255,0.12);border:1px solid rgba(77,163,255,0.25);color:var(--blue);font-size:13px;margin-bottom:13px;line-height:1.5;}
 .cnt{font-size:13px;color:var(--text-faint);font-weight:500;}
 /* navbar */
-.navbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:100;
+.navbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:100;
   width:calc(100% - 40px);max-width:300px;height:var(--nav-h);display:flex;align-items:center;padding:0 6px;
   background:var(--nav-bg);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
   border:1px solid var(--glass-border);border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.10);}
-/* ===== pílula da navbar — "Liquid Glass" =====
-   Arquitetura (ver JS "movePill"/"pillTick" para a física de movimento):
-     #navPill     → motor de posição/tamanho. left/top/width/height são sempre o valor FINAL,
-                    aplicado na hora (sem transition); quem "anima" é só o transform (mola física).
-       .pill-goo    → halo borrado (feGaussianBlur+feColorMatrix) = contorno orgânico/viscoso
-       .pill-glass  → superfície de vidro real (backdrop-filter + leve refração feDisplacementMap)
-         .pill-sheen  → brilho interno que acompanha a direção do movimento
-         .pill-noise  → microtextura feTurbulence (grão de vidro premium)
-       .pill-ripple → onde nascem as ondulações ao trocar de aba                                  */
 .nav-pill{position:absolute;width:46px;height:46px;top:50%;transform:translateY(-50%);border-radius:999px;
-  transform-origin:center center;z-index:1;pointer-events:none;
-  will-change:transform;backface-visibility:hidden;}
-.pill-goo{position:absolute;inset:-40%;border-radius:999px;z-index:0;pointer-events:none;opacity:.65;
-  background:radial-gradient(circle,var(--pill-glow),transparent 68%);
-  filter:url(#navLiquidGoo);}
-.pill-glass{position:absolute;inset:0;border-radius:inherit;overflow:hidden;isolation:isolate;z-index:1;
-  background:var(--nav-pill);border:1px solid rgba(255,255,255,0.12);
-  -webkit-backdrop-filter:blur(var(--pill-blur)) saturate(200%) brightness(1.08);backdrop-filter:blur(var(--pill-blur)) saturate(200%) brightness(1.08);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),inset 0 -4px 10px rgba(0,0,0,0.10);
-  filter:url(#navLiquidRefraction);}
-.pill-glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:3;
-  background:linear-gradient(135deg,var(--glass-highlight),transparent 40%,transparent 64%,rgba(255,255,255,0.10));
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.6;}
-.pill-sheen{position:absolute;left:50%;top:50%;width:140%;height:140%;margin:-70% 0 0 -70%;border-radius:50%;
-  z-index:1;pointer-events:none;mix-blend-mode:screen;will-change:transform;
-  background:radial-gradient(circle at 38% 32%,var(--pill-glow),transparent 65%);}
-.pill-noise{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.10;mix-blend-mode:overlay;
-  filter:url(#navLiquidNoise);}
-.pill-ripple{position:absolute;inset:0;z-index:2;overflow:visible;pointer-events:none;}
-.ripple-circle{position:absolute;left:50%;top:50%;width:70%;height:70%;margin:-35% 0 0 -35%;border-radius:50%;
-  background:radial-gradient(circle,var(--pill-glow),transparent 70%);will-change:transform,opacity;
-  animation:navPillRipple .68s cubic-bezier(.22,.95,.32,1) forwards;}
-@keyframes navPillRipple{0%{transform:scale(.2);opacity:.6;}100%{transform:scale(2.3);opacity:0;}}
-@media(prefers-reduced-motion:reduce){.ripple-circle{animation-duration:.32s;}}
+  background:var(--nav-pill);box-shadow:inset 0 1px 0 rgba(255,255,255,0.16);
+  transition:left .4s cubic-bezier(0.34,1.3,0.5,1),top .4s cubic-bezier(0.34,1.3,0.5,1),width .4s cubic-bezier(0.34,1.3,0.5,1),height .4s cubic-bezier(0.34,1.3,0.5,1);z-index:1;pointer-events:none;}
 .nav-item{flex:1;display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-faint);cursor:pointer;position:relative;z-index:2;transition:color .25s;}
 .nav-ico{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
 .nav-item svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round;transition:transform .42s cubic-bezier(0.34,1.4,0.5,1);}
@@ -484,12 +451,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .nav-label{display:none;font-size:13px;font-weight:500;white-space:nowrap;}
 .nav-dot{position:absolute;top:-2px;right:-2px;width:6px;height:6px;border-radius:50%;background:var(--red);display:none;z-index:3;}
 .nav-item.has-alert .nav-dot{display:block;}
-/* Navbar expande ao pressionar e volta ao soltar */
-.navbar{transition:transform .18s cubic-bezier(0.34,1.4,0.5,1), box-shadow .18s ease;}
-.navbar.nav-pressed{transform:translateX(-50%) scale(1.045);box-shadow:0 12px 40px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.14);}
-@media(min-width:760px){
-  .navbar.nav-pressed{transform:none scale(1.045);}
-}
 @media(min-width:760px){
   body{padding-bottom:0;padding-left:220px;}
   .app{max-width:720px;padding-top:6px;}
@@ -654,38 +615,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   <div id="content"><div class="loading">Carregando seus dados…</div></div>
 </div>
 
-<!-- Filtros SVG da pílula líquida da navbar (consumidos via CSS filter:url(#id) em .pill-goo/.pill-glass/.pill-noise).
-     width/height=0: não ocupam espaço, só definem os filtros. -->
-<svg width="0" height="0" style="position:absolute;overflow:hidden;pointer-events:none;" aria-hidden="true" focusable="false">
-  <defs>
-    <!-- Goo: borra e re-endurece o alpha → vira um contorno orgânico/líquido em vez de uma silhueta geométrica -->
-    <filter id="navLiquidGoo" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="linearRGB">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="navGooBlur"/>
-      <feColorMatrix in="navGooBlur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="navGoo"/>
-      <feComposite in="navGoo" in2="navGoo" operator="atop"/>
-    </filter>
-    <!-- Refração: desloca a própria superfície de vidro com um ruído leve, simulando a curvatura do líquido -->
-    <filter id="navLiquidRefraction" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="linearRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.04" numOctaves="3" seed="5" result="navWarp"/>
-      <feDisplacementMap in="SourceGraphic" in2="navWarp" scale="3" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-    <!-- Microtextura: ruído fino (grão) pra simular vidro premium -->
-    <filter id="navLiquidNoise" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="linearRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" seed="11" stitchTiles="stitch" result="navNoise"/>
-      <feColorMatrix in="navNoise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.45 0"/>
-    </filter>
-  </defs>
-</svg>
-
 <nav class="navbar" id="navbar">
-  <div class="nav-pill" id="navPill">
-    <div class="pill-goo" aria-hidden="true"></div>
-    <div class="pill-glass" aria-hidden="true">
-      <div class="pill-sheen"></div>
-      <div class="pill-noise"></div>
-    </div>
-    <div class="pill-ripple" id="navPillRipple" aria-hidden="true"></div>
-  </div>
+  <div class="nav-pill" id="navPill"></div>
   <div class="nav-item active" data-i="0" title="Visão Geral" aria-label="Visão Geral"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/></svg></span><span class="nav-label">Visão Geral</span></div>
   <div class="nav-item" data-i="5" title="Conta Corrente" aria-label="Conta Corrente"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6"/><path d="M5 10v9M19 10v9M9 10v9M15 10v9"/><path d="M3 21h18"/></svg></span><span class="nav-label">Conta Corrente</span></div>
   <div class="nav-item" data-i="1" title="Cartões" aria-label="Cartões"><span class="nav-ico"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg></span><span class="nav-label">Cartões</span></div>
@@ -2084,169 +2015,34 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
 
 
-  /* ===== navbar — pílula líquida (Liquid Glass), física de mola =====
-     Em vez de animar left/top/width/height com transition CSS (sempre uma curva de
-     tempo fixa, "fake elastic"), a pílula agora:
-       1) calcula e aplica o box final (left/top/width/height) IMEDIATAMENTE — exatamente
-          a mesma lógica de centralização de sempre, via getBoundingClientRect();
-       2) recebe por cima um transform (translate3d + scale) que a faz, visualmente,
-          continuar onde estava antes (técnica FLIP) e deixa uma mola física (spring),
-          rodando em requestAnimationFrame, devolver esse valor a zero/um sozinha.
-     Resultado: 60fps (só `transform`, sempre na GPU), overshoot elástico real (física,
-     não cubic-bezier) e squash & stretch — a pílula se alonga na direção da velocidade
-     instantânea da mola e volta ao formato circular por conta própria. */
-
-  var pillReduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-
-  // Constantes da mola (K = "dureza"; C = amortecimento — quanto menor, mais "boing").
-  var PILL_K_POS   = pillReduceMotion ? 420 : 230;
-  var PILL_C_POS   = pillReduceMotion ? 60  : 21;
-  var PILL_K_SCALE = pillReduceMotion ? 420 : 260;
-  var PILL_C_SCALE = pillReduceMotion ? 60  : 24;
-  var PILL_STRETCH_MAX  = pillReduceMotion ? 0 : 0.34;   // alongamento máximo do squash & stretch
-  var PILL_STRETCH_SENS = 0.0016;                         // sensibilidade do alongamento à velocidade
-
-  // Estado vivo: ox/oy = deslocamento residual de posição (px, em relação ao box final);
-  // osx/osy = "escala - 1" residual (em relação ao tamanho final). Tudo tende a 0.
-  var pillFX = {ox:0,oy:0,osx:0,osy:0, vx:0,vy:0,vsx:0,vsy:0, angle:0, raf:false, lastT:null, firstRun:true};
-
-  function pillClamp(v,min,max){ return v<min?min:(v>max?max:v); }
-
-  function pillSpringStep(dt){
-    var ax=-PILL_K_POS*pillFX.ox - PILL_C_POS*pillFX.vx;
-    var ay=-PILL_K_POS*pillFX.oy - PILL_C_POS*pillFX.vy;
-    pillFX.vx+=ax*dt; pillFX.vy+=ay*dt;
-    pillFX.ox+=pillFX.vx*dt; pillFX.oy+=pillFX.vy*dt;
-
-    var asx=-PILL_K_SCALE*pillFX.osx - PILL_C_SCALE*pillFX.vsx;
-    var asy=-PILL_K_SCALE*pillFX.osy - PILL_C_SCALE*pillFX.vsy;
-    pillFX.vsx+=asx*dt; pillFX.vsy+=asy*dt;
-    pillFX.osx+=pillFX.vsx*dt; pillFX.osy+=pillFX.vsy*dt;
-  }
-
-  function pillRender(){
-    var pill=$("#navPill"); if(!pill) return;
-    var speed=Math.hypot(pillFX.vx,pillFX.vy);
-    if(speed>3) pillFX.angle=Math.atan2(pillFX.vy,pillFX.vx)*180/Math.PI; // só re-orienta se há movimento de fato
-    var stretch=pillClamp(speed*PILL_STRETCH_SENS,0,PILL_STRETCH_MAX);
-    var sx=1+pillFX.osx, sy=1+pillFX.osy;
-    // ordem: posiciona (FLIP) → roda p/ alinhar com a velocidade → estica/comprime → desfaz a rotação → aplica a escala do FLIP
-    pill.style.transform=
-      "translate3d("+pillFX.ox.toFixed(2)+"px,"+pillFX.oy.toFixed(2)+"px,0) "+
-      "rotate("+pillFX.angle.toFixed(2)+"deg) "+
-      "scale("+(1+stretch).toFixed(4)+","+(1-stretch*0.55).toFixed(4)+") "+
-      "rotate("+(-pillFX.angle).toFixed(2)+"deg) "+
-      "scale("+sx.toFixed(4)+","+sy.toFixed(4)+")";
-    // brilho interno acompanha o movimento (luz incidindo no vidro enquanto ele se desloca)
-    var sheen=pill.querySelector(".pill-sheen");
-    if(sheen){
-      var sxOff=pillClamp(pillFX.vx*0.012,-1,1)*16;
-      var syOff=pillClamp(pillFX.vy*0.012,-1,1)*16;
-      sheen.style.transform="translate3d("+sxOff.toFixed(1)+"px,"+syOff.toFixed(1)+"px,0)";
-    }
-  }
-
-  function pillTick(t){
-    if(!pillFX.raf) return;
-    if(pillFX.lastT==null) pillFX.lastT=t;
-    var dt=Math.min((t-pillFX.lastT)/1000,0.034); // clamp evita "saltos" se a aba ficou em segundo plano
-    pillFX.lastT=t;
-    pillSpringStep(dt);
-    pillRender();
-    var resting = Math.abs(pillFX.ox)<0.05 && Math.abs(pillFX.oy)<0.05 &&
-                  Math.abs(pillFX.vx)<0.05 && Math.abs(pillFX.vy)<0.05 &&
-                  Math.abs(pillFX.osx)<0.003 && Math.abs(pillFX.osy)<0.003 &&
-                  Math.abs(pillFX.vsx)<0.01 && Math.abs(pillFX.vsy)<0.01;
-    if(resting){
-      pillFX.ox=pillFX.oy=pillFX.osx=pillFX.osy=pillFX.vx=pillFX.vy=pillFX.vsx=pillFX.vsy=0;
-      pillRender();
-      pillFX.raf=false; pillFX.lastT=null;
-      return; // para o loop quando estável — poupa CPU/bateria em dispositivos móveis
-    }
-    requestAnimationFrame(pillTick);
-  }
-
-  function pillStart(){
-    if(pillFX.raf) return;
-    pillFX.raf=true; pillFX.lastT=null;
-    requestAnimationFrame(pillTick);
-  }
-
-  function spawnPillRipple(){
-    var wrap=$("#navPillRipple"); if(!wrap) return;
-    var c=document.createElement("span");
-    c.className="ripple-circle";
-    wrap.appendChild(c);
-    c.addEventListener("animationend",function(){ c.remove(); });
-  }
-
-  /* Centraliza a pílula no centro real do item (via getBoundingClientRect, relativo à navbar) —
-     mesma lógica de sempre — mas a caixa final é aplicada na hora; a "animação" é só o transform. */
+  /* ===== navbar pill =====
+     Centraliza a pílula no centro real do item (via getBoundingClientRect, relativo à navbar),
+     em vez de depender de offsetLeft/offsetWidth — isso é o que causava o desalinhamento. */
   function movePill(el){
     var pill=$("#navPill"), navbar=$("#navbar");
     if(!pill||!navbar||!el) return;
     var isDesktop=window.matchMedia("(min-width:760px)").matches;
-
-    var beforeRect=pill.getBoundingClientRect(); // caixa visual ANTES (já inclui transform em andamento)
-
     var navRect=navbar.getBoundingClientRect(), itemRect=el.getBoundingClientRect();
     var w,h;
     if(isDesktop){
       w=itemRect.width-8; h=44; // cobre ícone+nome da aba inteira
     } else {
-      // Cápsula HORIZONTAL: larga o suficiente para o ícone não ser cortado, mais baixa que a navbar.
-      // Largura = slot do ícone com alguma folga; altura = proporcional ao ícone (não toda a navbar).
-      w=Math.min(itemRect.width+2, 54);
-      h=Math.round(navRect.height * 0.72); // 72% da altura da navbar → cápsula horizontal
-      h=Math.max(h, 46); // mínimo 46px para não ficar achatada demais
+      // Cápsula vertical seguindo a silhueta da navbar: largura = slot do ícone, altura = quase toda a navbar.
+      w=Math.min(itemRect.width-6, 50);
+      h=navRect.height-12;
     }
     var cx=(itemRect.left+itemRect.width/2)-navRect.left;
     var cy=(itemRect.top+itemRect.height/2)-navRect.top;
-
     pill.style.width=w+"px";
     pill.style.height=h+"px";
     pill.style.left=(cx-w/2)+"px";
     pill.style.top=(cy-h/2)+"px";
-
-    var afterRect=pill.getBoundingClientRect(); // caixa final DEPOIS de aplicada
-
-    // Técnica FLIP: calcula o quanto a pílula precisa "fingir" estar deslocada/redimensionada em
-    // relação à nova caixa para continuar exibida exatamente onde estava — a mola devolve isso a 0/1.
-    if(pillFX.firstRun){
-      pillFX.firstRun=false;
-      pillFX.osx=-0.35; pillFX.osy=-0.35; // primeiro load: nasce com um leve "pop" elástico, não um salto seco
-    } else if(beforeRect.width>0 && beforeRect.height>0 && afterRect.width>0 && afterRect.height>0){
-      var beforeCx=beforeRect.left+beforeRect.width/2, beforeCy=beforeRect.top+beforeRect.height/2;
-      var afterCx=afterRect.left+afterRect.width/2, afterCy=afterRect.top+afterRect.height/2;
-      pillFX.ox=beforeCx-afterCx;
-      pillFX.oy=beforeCy-afterCy;
-      pillFX.osx=(beforeRect.width/afterRect.width)-1;
-      pillFX.osy=(beforeRect.height/afterRect.height)-1;
-      // vx/vy/vsx/vsy são preservadas de propósito: trocar de aba rapidamente "redireciona" a mola
-      // em pleno movimento, em vez de travar ou resetar a animação.
-    }
-    pillRender();
-    pillStart();
-    spawnPillRipple(); // ondulação líquida a cada troca de aba
+    pill.style.transform="none";
   }
   document.querySelectorAll(".nav-item").forEach(function(it){
     it.addEventListener("click",function(){ irPara(Number(it.getAttribute("data-i"))); });
   });
   window.addEventListener("resize",function(){ movePill(document.querySelector(".nav-item.active")); });
-
-  /* ===== navbar: expande ao pressionar e encolhe ao soltar ===== */
-  (function(){
-    var navbar=document.getElementById("navbar");
-    if(!navbar) return;
-    function onPress(){ navbar.classList.add("nav-pressed"); }
-    function onRelease(){ navbar.classList.remove("nav-pressed"); }
-    navbar.addEventListener("touchstart", onPress, {passive:true});
-    navbar.addEventListener("touchend",   onRelease, {passive:true});
-    navbar.addEventListener("touchcancel",onRelease, {passive:true});
-    navbar.addEventListener("mousedown",  onPress);
-    navbar.addEventListener("mouseup",    onRelease);
-    navbar.addEventListener("mouseleave", onRelease);
-  })();
 
   /* ===== tema + cor de destaque ===== */
   var THEME_KEY="financeiro-theme";
@@ -2415,24 +2211,19 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // Chama o Web App do Apps Script (doGet -> syncCompleto). Mede o tempo decorrido em tempo
   // real (atualiza o status a cada segundo) e, quando o Apps Script responde, mostra "Concluído
   // em Xs" e recarrega a planilha automaticamente.
-  // action: '' = syncCompleto normal | 'forcarSync' = força refresh do Pluggy antes de sincronizar
   function sincronizarComBanco(action){
-    action = action || '';
+    action=action||'';
     syncEmAndamento=true;
     var icForce=document.getElementById("refreshForceIc");
-    if(action==='forcarSync'){
-      if(icForce) icForce.classList.add("spin");
-    } else {
-      if(refreshSyncIc) refreshSyncIc.classList.add("spin");
-    }
-    var labelBase = action==='forcarSync' ? "Forçando atualização do banco… " : "Sincronizando… ";
+    if(action==='forcarSync'){if(icForce)icForce.classList.add("spin");}
+    else{if(refreshSyncIc)refreshSyncIc.classList.add("spin");}
+    var labelBase=action==='forcarSync'?"Forçando sync… ":"Sincronizando… ";
     var inicio=Date.now();
     setRefreshStatus(labelBase+"0s","loading");
     syncTimerInt=setInterval(function(){
       setRefreshStatus(labelBase+Math.floor((Date.now()-inicio)/1000)+"s","loading");
     },1000);
-
-    var url = GAS_EXEC_URL + (action ? '?action='+encodeURIComponent(action) : '');
+    var url=GAS_EXEC_URL+(action?'?action='+encodeURIComponent(action):'');
     fetch(url,{method:"GET"})
       .then(function(res){
         if(!res.ok) throw new Error("HTTP "+res.status);
@@ -2442,8 +2233,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         clearInterval(syncTimerInt);
         var total=Math.round((Date.now()-inicio)/1000);
         syncEmAndamento=false;
-        if(icForce) icForce.classList.remove("spin");
-        if(refreshSyncIc) refreshSyncIc.classList.remove("spin");
+        if(refreshSyncIc)refreshSyncIc.classList.remove("spin");
+        if(typeof icForce!=="undefined"&&icForce)icForce.classList.remove("spin");
         setRefreshStatus("Concluído em "+total+"s — atualizando…","done");
         loadAll();
         setTimeout(function(){ if(refreshStatusEl) refreshStatusEl.style.display="none"; },4000);
@@ -2451,23 +2242,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       .catch(function(err){
         clearInterval(syncTimerInt);
         syncEmAndamento=false;
-        if(icForce) icForce.classList.remove("spin");
-        if(refreshSyncIc) refreshSyncIc.classList.remove("spin");
+        if(refreshSyncIc)refreshSyncIc.classList.remove("spin");
+        if(typeof icForce!=="undefined"&&icForce)icForce.classList.remove("spin");
         setRefreshStatus("Erro ao sincronizar: "+err.message,"error");
       });
-  }
-
-  var refreshForceBtn=document.getElementById("refreshForce");
-  if(refreshForceBtn){
-    refreshForceBtn.addEventListener("click",function(ev){
-      ev.stopPropagation();
-      if(syncEmAndamento) return;
-      if(!GAS_EXEC_URL || GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){
-        setRefreshStatus("Configure GAS_EXEC_URL com o link /exec da implantação do Apps Script.","error");
-        return;
-      }
-      sincronizarComBanco('forcarSync');
-    });
   }
 
   if(refreshSync){
@@ -2478,7 +2256,19 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         setRefreshStatus("Configure GAS_EXEC_URL com o link /exec da implantação do Apps Script.","error");
         return;
       }
-      sincronizarComBanco('');
+      sincronizarComBanco();
+    });
+  }
+  var refreshForceBtn=document.getElementById("refreshForce");
+  if(refreshForceBtn){
+    refreshForceBtn.addEventListener("click",function(ev){
+      ev.stopPropagation();
+      if(syncEmAndamento) return;
+      if(!GAS_EXEC_URL || GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){
+        setRefreshStatus("Configure GAS_EXEC_URL com o link /exec da implantação do Apps Script.","error");
+        return;
+      }
+      sincronizarComBanco('forcarSync');
     });
   }
 
@@ -2516,5 +2306,125 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
 })();
 </script>
+
+<!-- LIQUID GLASS ENGINE Apple VisionOS/iOS 26 -->
+<svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden;pointer-events:none;left:-9999px" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="lg-card-refract" x="-6%" y="-6%" width="112%" height="112%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013 0.019" numOctaves="2" seed="42" stitchTiles="stitch" result="turb"/>
+      <feDisplacementMap in="SourceGraphic" in2="turb" scale="5" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
+      <feGaussianBlur in="displaced" stdDeviation="0.25"/>
+    </filter>
+    <filter id="lg-grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.68" numOctaves="4" stitchTiles="stitch" result="grain"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.07 0" result="wg"/>
+      <feComposite in="wg" in2="SourceGraphic" operator="in"/>
+    </filter>
+  </defs>
+</svg>
+<style id="lg-styles">
+.navbar{background:rgba(12,12,14,.52)!important;backdrop-filter:blur(32px) saturate(185%)!important;-webkit-backdrop-filter:blur(32px) saturate(185%)!important;border:1px solid rgba(255,255,255,.13)!important;box-shadow:0 20px 56px rgba(0,0,0,.55),0 4px 16px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -.5px 0 rgba(255,255,255,.04)!important;}
+[data-theme="light"] .navbar{background:rgba(255,255,255,.62)!important;border:1px solid rgba(255,255,255,.90)!important;box-shadow:0 20px 56px rgba(60,70,40,.20),0 4px 16px rgba(0,0,0,.07),inset 0 1px 0 rgba(255,255,255,.98)!important;}
+#navPill{background:rgba(255,255,255,.07)!important;backdrop-filter:blur(24px) saturate(135%) contrast(84%)!important;-webkit-backdrop-filter:blur(24px) saturate(135%) contrast(84%)!important;box-shadow:0 0 0 1px rgba(255,255,255,.24),0 8px 32px rgba(0,0,0,.32),0 2px 8px rgba(0,0,0,.18),inset 0 1.5px 0 rgba(255,255,255,.72),inset 0 .5px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(255,255,255,.07),inset 1.5px 0 0 rgba(255,255,255,.16),inset -1.5px 0 0 rgba(255,255,255,.09),inset 0 0 22px rgba(255,255,255,.05)!important;transition:left .46s cubic-bezier(.22,1.65,.50,1),top .46s cubic-bezier(.22,1.65,.50,1),width .42s cubic-bezier(.22,1.65,.50,1),height .42s cubic-bezier(.22,1.65,.50,1),scale .52s cubic-bezier(.30,1.80,.48,1)!important;scale:var(--lg-sx,1) var(--lg-sy,1);will-change:left,top,width,height,scale;overflow:visible!important;}
+#navPill::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(148deg,rgba(255,255,255,.52) 0%,rgba(255,255,255,.15) 22%,transparent 44%,transparent 68%,rgba(255,255,255,.06) 84%,rgba(255,255,255,.22) 100%);pointer-events:none;z-index:2;}
+#navPill::after{content:'';position:absolute;inset:-1px;border-radius:inherit;background:radial-gradient(ellipse 80% 65% at var(--lg-hx,50%) var(--lg-hy,28%),rgba(255,255,255,.28) 0%,rgba(255,255,255,.10) 38%,transparent 68%);pointer-events:none;z-index:3;transition:background .12s linear;}
+[data-theme="light"] #navPill{background:rgba(255,255,255,.52)!important;backdrop-filter:blur(24px) saturate(155%) contrast(92%)!important;-webkit-backdrop-filter:blur(24px) saturate(155%) contrast(92%)!important;box-shadow:0 0 0 1px rgba(255,255,255,.92),0 8px 28px rgba(80,100,60,.20),0 2px 7px rgba(0,0,0,.09),inset 0 1.5px 0 rgba(255,255,255,.98),inset 0 -1px 0 rgba(0,0,0,.04),inset 0 0 18px rgba(255,255,255,.28)!important;}
+@keyframes lg-ripple{0%{transform:scale(0);opacity:.55}100%{transform:scale(4);opacity:0}}
+.lg-ripple{position:absolute;width:28px;height:28px;margin-left:-14px;margin-top:-14px;border-radius:50%;background:rgba(255,255,255,.38);pointer-events:none;z-index:10;animation:lg-ripple .65s cubic-bezier(.14,1,.30,1) forwards;}
+@supports (backdrop-filter: url(#lg-card-refract)){.glass{backdrop-filter:url(#lg-card-refract) blur(var(--glass-blur)) saturate(175%);}}
+.glass{box-shadow:var(--card-shadow,none),0 1px 0 rgba(255,255,255,.09),inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -1px 0 rgba(255,255,255,.04)!important;transform-style:preserve-3d;transform-origin:center center;transition:transform .38s cubic-bezier(.16,1,.30,1),box-shadow .38s ease!important;will-change:transform;overflow:hidden!important;}
+.glass::before{background:linear-gradient(138deg,rgba(255,255,255,.58) 0%,rgba(255,255,255,.20) 18%,transparent 38%,transparent 66%,rgba(255,255,255,.07) 85%,rgba(255,255,255,.22) 100%)!important;opacity:.78!important;}
+.glass::after{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04) 38%,transparent)!important;opacity:.72!important;height:52%!important;}
+.tcard.glass:hover,.tile.glass:hover{box-shadow:0 22px 64px rgba(0,0,0,.42),0 8px 24px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.24),inset 0 -1px 0 rgba(255,255,255,.06)!important;}
+.lg-dyn-hl{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:4;opacity:0;transition:opacity .25s ease;}
+.glass:hover .lg-dyn-hl{opacity:1;}
+.lg-inner-glow{position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse 100% 50% at 50% 0%,rgba(255,255,255,.13) 0%,transparent 62%);pointer-events:none;z-index:3;opacity:0;transition:opacity .4s ease;}
+.glass:hover .lg-inner-glow{opacity:1;}
+@keyframes lg-grain-breathe{0%,100%{opacity:.04}50%{opacity:.08}}
+.lg-grain{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:5;filter:url(#lg-grain);background:white;opacity:.055;animation:lg-grain-breathe 4.5s ease-in-out infinite;}
+.lg-pressed{transform:scale3d(.972,.972,1)!important;filter:brightness(.93)!important;transition:transform .11s cubic-bezier(.34,1.4,.5,1),filter .11s ease!important;}
+@keyframes lg-elastic-return{0%{transform:scale3d(.972,.972,1)}55%{transform:scale3d(1.010,1.010,1)}80%{transform:scale3d(.997,.997,1)}100%{transform:scale3d(1,1,1)}}
+.lg-elastic{animation:lg-elastic-return .55s cubic-bezier(.34,1.4,.5,1) forwards;}
+.tile.glass:active{transform:scale3d(.978,.978,1)!important;}
+.icon-btn{backdrop-filter:blur(20px) saturate(145%)!important;-webkit-backdrop-filter:blur(20px) saturate(145%)!important;box-shadow:0 4px 18px rgba(0,0,0,.24),inset 0 1.5px 0 rgba(255,255,255,.28),inset 0 -.5px 0 rgba(255,255,255,.06),0 0 0 1px rgba(255,255,255,.10)!important;transition:box-shadow .22s ease,transform .22s ease!important;}
+.icon-btn:active{transform:scale(.91)!important;}
+.color-pop{backdrop-filter:blur(28px) saturate(180%)!important;-webkit-backdrop-filter:blur(28px) saturate(180%)!important;box-shadow:0 20px 56px rgba(0,0,0,.48),0 4px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.22),0 0 0 1px rgba(255,255,255,.10)!important;}
+</style>
+<script id="lg-script">
+(function(){
+'use strict';
+var RAF=window.requestAnimationFrame||function(fn){setTimeout(fn,16);};
+function lerp(a,b,t){return a+(b-a)*t;}
+var pill=document.getElementById('navPill');
+if(pill){
+  pill.style.setProperty('--lg-sx','1');pill.style.setProperty('--lg-sy','1');
+  pill.style.setProperty('--lg-hx','50%');pill.style.setProperty('--lg-hy','28%');
+  var sqPrev=null,sqT1=null,sqT2=null;
+  new MutationObserver(function(muts){
+    for(var i=0;i<muts.length;i++){
+      if(muts[i].attributeName!=='style')continue;
+      var cur=parseFloat(pill.style.left)||0;
+      if(sqPrev===null){sqPrev=cur;continue;}
+      var d=cur-sqPrev;if(Math.abs(d)<4){sqPrev=cur;continue;}
+      var sx=1+Math.min(Math.abs(d)/150,.28),sy=1-Math.min(Math.abs(d)/310,.14);
+      pill.style.setProperty('--lg-sx',sx.toFixed(3));pill.style.setProperty('--lg-sy',sy.toFixed(3));
+      clearTimeout(sqT1);clearTimeout(sqT2);
+      (function(sx,sy){sqT1=setTimeout(function(){
+        pill.style.setProperty('--lg-sx',(1/sx*1.04).toFixed(3));pill.style.setProperty('--lg-sy',(sy*1.03).toFixed(3));
+        sqT2=setTimeout(function(){pill.style.setProperty('--lg-sx','1');pill.style.setProperty('--lg-sy','1');},190);
+      },115);})(sx,sy);
+      sqPrev=cur;
+    }
+  }).observe(pill,{attributes:true,attributeFilter:['style']});
+  var nb=document.getElementById('navbar'),hovNav=false;
+  if(nb){
+    nb.addEventListener('mouseenter',function(){hovNav=true;});
+    nb.addEventListener('mouseleave',function(){hovNav=false;pill.style.setProperty('--lg-hx','50%');pill.style.setProperty('--lg-hy','28%');});
+    nb.addEventListener('mousemove',function(e){var r=pill.getBoundingClientRect();if(!r.width)return;pill.style.setProperty('--lg-hx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');pill.style.setProperty('--lg-hy',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');},{passive:true});
+  }
+  document.querySelectorAll('.nav-item').forEach(function(it){
+    it.addEventListener('click',function(){setTimeout(function(){var r=pill.getBoundingClientRect();var sp=document.createElement('span');sp.className='lg-ripple';sp.style.left=(r.width/2)+'px';sp.style.top=(r.height/2)+'px';pill.appendChild(sp);setTimeout(function(){sp.remove();},750);},60);});
+  });
+  var shimT=0;
+  (function loop(){shimT+=.007;if(!hovNav){pill.style.setProperty('--lg-hx',(50+Math.sin(shimT*.65)*18).toFixed(1)+'%');pill.style.setProperty('--lg-hy',(28+Math.sin(shimT)*11).toFixed(1)+'%');}RAF(loop);})();
+}
+function injectLayers(c){
+  if(c.querySelector('.lg-dyn-hl'))return;
+  var hl=document.createElement('div');hl.className='lg-dyn-hl';
+  var gw=document.createElement('div');gw.className='lg-inner-glow';
+  var gr=document.createElement('div');gr.className='lg-grain';
+  c.appendChild(hl);c.appendChild(gw);c.appendChild(gr);
+}
+function initCard(card){
+  injectLayers(card);
+  var hl=card.querySelector('.lg-dyn-hl');
+  var rx=0,ry=0,tx=0,ty=0,rafId=null,active=false,down=false;
+  card.addEventListener('mouseenter',function(){active=true;run();},{passive:true});
+  card.addEventListener('mousemove',function(e){
+    if(!active)return;
+    var r=card.getBoundingClientRect();
+    tx=-(e.clientY-r.top-r.height/2)/(r.height/2)*7;ty=(e.clientX-r.left-r.width/2)/(r.width/2)*7;
+    if(hl){var hx=((e.clientX-r.left)/r.width*100).toFixed(1),hy=((e.clientY-r.top)/r.height*100).toFixed(1);hl.style.background='radial-gradient(ellipse 58% 42% at '+hx+'% '+hy+'%,rgba(255,255,255,.20) 0%,rgba(255,255,255,.07) 38%,transparent 68%)';}
+  },{passive:true});
+  card.addEventListener('mouseleave',function(){active=false;tx=0;ty=0;card.classList.remove('lg-pressed');},{passive:true});
+  card.addEventListener('mousedown',function(){down=true;card.classList.remove('lg-elastic');card.classList.add('lg-pressed');});
+  function release(){if(!down)return;down=false;card.classList.remove('lg-pressed');void card.offsetWidth;card.classList.add('lg-elastic');setTimeout(function(){card.classList.remove('lg-elastic');},600);}
+  card.addEventListener('mouseup',release);card.addEventListener('touchend',release,{passive:true});
+  card.addEventListener('touchstart',function(){card.classList.add('lg-pressed');},{passive:true});
+  function run(){if(rafId)cancelAnimationFrame(rafId);function step(){rx=lerp(rx,tx,.105);ry=lerp(ry,ty,.105);if(!active&&Math.abs(rx-tx)<.015&&Math.abs(ry-ty)<.015){card.style.transform='';rafId=null;return;}var sc=active?1.013:1;card.style.transform='perspective(700px) rotateX('+rx.toFixed(3)+'deg) rotateY('+ry.toFixed(3)+'deg) scale3d('+sc+','+sc+',1)';rafId=RAF(step);}step();}
+}
+function scanCards(){document.querySelectorAll('.glass').forEach(function(c){if(c.dataset.lgInit)return;c.dataset.lgInit='1';initCard(c);});}
+var ce=document.getElementById('content');
+if(ce)new MutationObserver(scanCards).observe(ce,{childList:true,subtree:true});
+scanCards();
+document.querySelectorAll('.icon-btn').forEach(function(btn){
+  btn.addEventListener('mousemove',function(e){var r=btn.getBoundingClientRect();var nx=(e.clientX-r.left-r.width/2)/(r.width/2),ny=(e.clientY-r.top-r.height/2)/(r.height/2);btn.style.transform='scale(1.06) perspective(300px) rotateX('+(-ny*5).toFixed(1)+'deg) rotateY('+(nx*5).toFixed(1)+'deg)';},{passive:true});
+  btn.addEventListener('mouseleave',function(){btn.style.transform='';});
+  btn.addEventListener('mousedown',function(){btn.style.transform='scale(.92)';});
+  btn.addEventListener('mouseup',function(){btn.style.transform='';});
+});
+})();
+</script>
+
 </body>
 </html>
