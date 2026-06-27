@@ -16,11 +16,11 @@
   --glass-highlight:rgba(255,255,255,0.5);--glass-gloss:rgba(255,255,255,0.09);--glass-blur:14px;
   --text:#f5f5f7;--text-dim:#a6a7af;--text-faint:#6a6b74;
   --lime:#b4f44a;--lime-deep:#83d626;--orange:#ff8a3d;--pink:#ff4d8d;--magenta:#c44bff;--red:#ff6060;--blue:#4da3ff;
-  --nav-bg:rgba(20,20,23,0.64);--nav-pill:rgba(255,255,255,0.13);--icon-bg:var(--glass-bg);
-  --pill-blur:20px;--pill-glow:rgba(255,255,255,0.38);/* tuning da pílula líquida da navbar */
+  --nav-bg:rgba(18,18,22,0.55);--nav-pill:rgba(255,255,255,0.09);--icon-bg:var(--glass-bg);
+  --pill-blur:24px;--pill-glow:rgba(255,255,255,0.30);/* tuning da pílula líquida da navbar */
   --track-bg:rgba(255,255,255,0.09);--card-shadow:none;--chart-bar:rgba(255,255,255,0.10);
   --radius:22px;--radius-sm:16px;--radius-xs:11px;
-  --font-display:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:64px;
+  --font-display:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--font:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--nav-h:70px;
 }
 [data-theme="light"]{
   --bg:#eef0ea;
@@ -42,7 +42,7 @@ html{transition:background .4s ease;background:var(--bg);}
   background:var(--bg);pointer-events:none;}
 body{font-family:var(--font);background:var(--bg);color:var(--text);
   min-height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em;
-  padding-bottom:calc(var(--nav-h) + 42px + env(safe-area-inset-bottom,0px));transition:background .4s,color .4s;}
+  padding-bottom:calc(var(--nav-h) + 28px + env(safe-area-inset-bottom,0px));transition:background .4s,color .4s;}
 /* O glow agora é uma camada fixa separada (antes era background-attachment:fixed no body,
    que no iOS standalone às vezes "vazava" tonalidade diferente pra cima da status bar). */
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow);pointer-events:none;}
@@ -438,7 +438,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .banner{padding:11px 14px;border-radius:12px;background:rgba(77,163,255,0.12);border:1px solid rgba(77,163,255,0.25);color:var(--blue);font-size:13px;margin-bottom:13px;line-height:1.5;}
 .cnt{font-size:13px;color:var(--text-faint);font-weight:500;}
 /* navbar */
-.navbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom,0px));z-index:100;
+.navbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:100;
   width:calc(100% - 40px);max-width:300px;height:var(--nav-h);display:flex;align-items:center;padding:0 6px;
   background:var(--nav-bg);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);
   border:1px solid var(--glass-border);border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.10);}
@@ -454,21 +454,21 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .nav-pill{position:absolute;width:46px;height:46px;top:50%;transform:translateY(-50%);border-radius:999px;
   transform-origin:center center;z-index:1;pointer-events:none;
   will-change:transform;backface-visibility:hidden;}
-.pill-goo{position:absolute;inset:-40%;border-radius:999px;z-index:0;pointer-events:none;opacity:.85;
+.pill-goo{position:absolute;inset:-40%;border-radius:999px;z-index:0;pointer-events:none;opacity:.65;
   background:radial-gradient(circle,var(--pill-glow),transparent 68%);
   filter:url(#navLiquidGoo);}
 .pill-glass{position:absolute;inset:0;border-radius:inherit;overflow:hidden;isolation:isolate;z-index:1;
-  background:var(--nav-pill);border:1px solid var(--glass-border);
-  -webkit-backdrop-filter:blur(var(--pill-blur)) saturate(180%);backdrop-filter:blur(var(--pill-blur)) saturate(180%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,0.18),inset 0 -6px 14px rgba(0,0,0,0.16);
+  background:var(--nav-pill);border:1px solid rgba(255,255,255,0.12);
+  -webkit-backdrop-filter:blur(var(--pill-blur)) saturate(200%) brightness(1.08);backdrop-filter:blur(var(--pill-blur)) saturate(200%) brightness(1.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),inset 0 -4px 10px rgba(0,0,0,0.10);
   filter:url(#navLiquidRefraction);}
 .pill-glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:3;
-  background:linear-gradient(135deg,var(--glass-highlight),transparent 40%,transparent 64%,rgba(255,255,255,0.12));
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;}
+  background:linear-gradient(135deg,var(--glass-highlight),transparent 40%,transparent 64%,rgba(255,255,255,0.10));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.6;}
 .pill-sheen{position:absolute;left:50%;top:50%;width:140%;height:140%;margin:-70% 0 0 -70%;border-radius:50%;
   z-index:1;pointer-events:none;mix-blend-mode:screen;will-change:transform;
-  background:radial-gradient(circle at 38% 32%,var(--pill-glow),transparent 60%);}
-.pill-noise{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.16;mix-blend-mode:overlay;
+  background:radial-gradient(circle at 38% 32%,var(--pill-glow),transparent 65%);}
+.pill-noise{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.10;mix-blend-mode:overlay;
   filter:url(#navLiquidNoise);}
 .pill-ripple{position:absolute;inset:0;z-index:2;overflow:visible;pointer-events:none;}
 .ripple-circle{position:absolute;left:50%;top:50%;width:70%;height:70%;margin:-35% 0 0 -35%;border-radius:50%;
@@ -484,6 +484,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .nav-label{display:none;font-size:13px;font-weight:500;white-space:nowrap;}
 .nav-dot{position:absolute;top:-2px;right:-2px;width:6px;height:6px;border-radius:50%;background:var(--red);display:none;z-index:3;}
 .nav-item.has-alert .nav-dot{display:block;}
+/* Navbar expande ao pressionar e volta ao soltar */
+.navbar{transition:transform .18s cubic-bezier(0.34,1.4,0.5,1), box-shadow .18s ease;}
+.navbar.nav-pressed{transform:translateX(-50%) scale(1.045);box-shadow:0 12px 40px rgba(0,0,0,0.55),inset 0 1px 0 rgba(255,255,255,0.14);}
+@media(min-width:760px){
+  .navbar.nav-pressed{transform:none scale(1.045);}
+}
 @media(min-width:760px){
   body{padding-bottom:0;padding-left:220px;}
   .app{max-width:720px;padding-top:6px;}
@@ -653,20 +659,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 <svg width="0" height="0" style="position:absolute;overflow:hidden;pointer-events:none;" aria-hidden="true" focusable="false">
   <defs>
     <!-- Goo: borra e re-endurece o alpha → vira um contorno orgânico/líquido em vez de uma silhueta geométrica -->
-    <filter id="navLiquidGoo" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="navGooBlur"/>
-      <feColorMatrix in="navGooBlur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="navGoo"/>
+    <filter id="navLiquidGoo" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="linearRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="navGooBlur"/>
+      <feColorMatrix in="navGooBlur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="navGoo"/>
       <feComposite in="navGoo" in2="navGoo" operator="atop"/>
     </filter>
     <!-- Refração: desloca a própria superfície de vidro com um ruído leve, simulando a curvatura do líquido -->
-    <filter id="navLiquidRefraction" x="-25%" y="-25%" width="150%" height="150%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.05" numOctaves="2" seed="3" result="navWarp"/>
-      <feDisplacementMap in="SourceGraphic" in2="navWarp" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+    <filter id="navLiquidRefraction" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="linearRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.009 0.04" numOctaves="3" seed="5" result="navWarp"/>
+      <feDisplacementMap in="SourceGraphic" in2="navWarp" scale="3" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
     <!-- Microtextura: ruído fino (grão) pra simular vidro premium -->
-    <filter id="navLiquidNoise" x="-20%" y="-20%" width="140%" height="140%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" stitchTiles="stitch" result="navNoise"/>
-      <feColorMatrix in="navNoise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0"/>
+    <filter id="navLiquidNoise" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="linearRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" seed="11" stitchTiles="stitch" result="navNoise"/>
+      <feColorMatrix in="navNoise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.45 0"/>
     </filter>
   </defs>
 </svg>
@@ -2188,9 +2194,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(isDesktop){
       w=itemRect.width-8; h=44; // cobre ícone+nome da aba inteira
     } else {
-      // Cápsula vertical seguindo a silhueta da navbar: largura = slot do ícone, altura = quase toda a navbar.
-      w=Math.min(itemRect.width-6, 50);
-      h=navRect.height-12;
+      // Cápsula HORIZONTAL: larga o suficiente para o ícone não ser cortado, mais baixa que a navbar.
+      // Largura = slot do ícone com alguma folga; altura = proporcional ao ícone (não toda a navbar).
+      w=Math.min(itemRect.width+2, 54);
+      h=Math.round(navRect.height * 0.72); // 72% da altura da navbar → cápsula horizontal
+      h=Math.max(h, 46); // mínimo 46px para não ficar achatada demais
     }
     var cx=(itemRect.left+itemRect.width/2)-navRect.left;
     var cy=(itemRect.top+itemRect.height/2)-navRect.top;
@@ -2225,6 +2233,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     it.addEventListener("click",function(){ irPara(Number(it.getAttribute("data-i"))); });
   });
   window.addEventListener("resize",function(){ movePill(document.querySelector(".nav-item.active")); });
+
+  /* ===== navbar: expande ao pressionar e encolhe ao soltar ===== */
+  (function(){
+    var navbar=document.getElementById("navbar");
+    if(!navbar) return;
+    function onPress(){ navbar.classList.add("nav-pressed"); }
+    function onRelease(){ navbar.classList.remove("nav-pressed"); }
+    navbar.addEventListener("touchstart", onPress, {passive:true});
+    navbar.addEventListener("touchend",   onRelease, {passive:true});
+    navbar.addEventListener("touchcancel",onRelease, {passive:true});
+    navbar.addEventListener("mousedown",  onPress);
+    navbar.addEventListener("mouseup",    onRelease);
+    navbar.addEventListener("mouseleave", onRelease);
+  })();
 
   /* ===== tema + cor de destaque ===== */
   var THEME_KEY="financeiro-theme";
