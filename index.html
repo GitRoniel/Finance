@@ -2044,7 +2044,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var content=document.getElementById('content');
     content.innerHTML='<div class="screen active">'+tela.render()+'</div>';
     if(tela.wire) tela.wire();
-    if(typeof scanCards==='function') scanCards();
     // Ao entrar em Previsões, tenta sincronizar a lista com a aba da planilha uma vez
     if(i===4 && !irPara._prevSyncDone){
       irPara._prevSyncDone=true;
@@ -2406,24 +2405,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         xChannelSelector="R" yChannelSelector="G"/>
     </filter>
 
-    <!-- CARDS: refração via feTurbulence (não precisa do WebP, escala livre) -->
-    <filter id="lg-card-refract" x="-6%" y="-6%" width="112%" height="112%"
-      color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.013 0.019"
-        numOctaves="2" seed="42" stitchTiles="stitch" result="turb"/>
-      <feDisplacementMap in="SourceGraphic" in2="turb" scale="5"
-        xChannelSelector="R" yChannelSelector="G" result="disp"/>
-      <feGaussianBlur in="disp" stdDeviation="0.25"/>
-    </filter>
 
-    <!-- GRAIN: micro-ruído de vidro real -->
-    <filter id="lg-grain" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.68"
-        numOctaves="4" stitchTiles="stitch" result="grain"/>
-      <feColorMatrix type="matrix"
-        values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.07 0" result="wg"/>
-      <feComposite in="wg" in2="SourceGraphic" operator="in"/>
-    </filter>
 
   </defs>
 </svg>
@@ -2510,55 +2492,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   border-radius:50%;background:rgba(255,255,255,.38);pointer-events:none;z-index:10;
   animation:lg-ripple .65s cubic-bezier(.14,1,.30,1) forwards;}
 
-/* ── GLASS CARDS ─────────────────────────────────────────────── */
-@supports (backdrop-filter: url(#lg-card-refract)){
-  .glass{backdrop-filter:url(#lg-card-refract) blur(var(--glass-blur)) saturate(175%);}
-}
-.glass{
-  box-shadow:var(--card-shadow,none),
-    0 1px 0 rgba(255,255,255,.09),
-    inset 0 1px 0 rgba(255,255,255,.18),
-    inset 0 0 0 1px rgba(255,255,255,.07),
-    inset 0 -1px 0 rgba(255,255,255,.04)!important;
-  transform-style:preserve-3d;transform-origin:center center;
-  /* contain:paint da base bloqueava o 3D tilt — remove paint para liberar */
-  contain:layout style!important;
-  transition:transform .38s cubic-bezier(.16,1,.30,1),box-shadow .38s ease!important;
-  will-change:transform;
-}
-.glass::before{
-  background:linear-gradient(138deg,
-    rgba(255,255,255,.58) 0%,rgba(255,255,255,.20) 18%,transparent 38%,
-    transparent 66%,rgba(255,255,255,.07) 85%,rgba(255,255,255,.22) 100%)!important;
-  opacity:.78!important;
-}
-.glass::after{
-  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04) 38%,transparent)!important;
-  opacity:.72!important;height:52%!important;
-}
-.tcard.glass:hover,.tile.glass:hover{
-  box-shadow:0 22px 64px rgba(0,0,0,.42),0 8px 24px rgba(0,0,0,.24),
-    inset 0 1px 0 rgba(255,255,255,.24),inset 0 -1px 0 rgba(255,255,255,.06)!important;
-}
-.lg-dyn-hl{position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  z-index:4;opacity:0;transition:opacity .25s ease;will-change:background,opacity;}
-.glass:hover .lg-dyn-hl{opacity:1;}
-.lg-inner-glow{position:absolute;inset:0;border-radius:inherit;
-  background:radial-gradient(ellipse 100% 50% at 50% 0%,rgba(255,255,255,.13) 0%,transparent 62%);
-  pointer-events:none;z-index:3;opacity:0;transition:opacity .4s ease;}
-.glass:hover .lg-inner-glow{opacity:1;}
-@keyframes lg-grain-breathe{0%,100%{opacity:.04}50%{opacity:.08}}
-.lg-grain{position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  z-index:5;filter:url(#lg-grain);background:white;opacity:.055;
-  animation:lg-grain-breathe 4.5s ease-in-out infinite;}
-/* Pressão líquida */
-.lg-pressed{transform:scale3d(.972,.972,1)!important;filter:brightness(.93)!important;
-  transition:transform .11s ease,filter .11s ease!important;}
-@keyframes lg-elastic-return{
-  0%{transform:scale3d(.972,.972,1)}55%{transform:scale3d(1.010,1.010,1)}
-  80%{transform:scale3d(.997,.997,1)}100%{transform:scale3d(1,1,1)}}
-.lg-elastic{animation:lg-elastic-return .55s cubic-bezier(.34,1.4,.5,1) forwards;}
-.tile.glass:active{transform:scale3d(.978,.978,1)!important;}
+/* card LG overrides removidos — usa estilos originais */
 /* ── ICON BUTTONS ──────────────────────────────────────────── */
 .icon-btn{
   backdrop-filter:blur(20px) saturate(145%)!important;
@@ -2633,72 +2567,7 @@ if(pill){
   })();
 }
 
-/* ── GLASS CARDS: 3D Parallax + Highlight Dinâmico + Pressão ── */
-function injectLayers(c){
-  if(c.querySelector('.lg-dyn-hl'))return;
-  var hl=document.createElement('div');hl.className='lg-dyn-hl';
-  var gw=document.createElement('div');gw.className='lg-inner-glow';
-  var gr=document.createElement('div');gr.className='lg-grain';
-  c.appendChild(hl);c.appendChild(gw);c.appendChild(gr);
-}
-
-function initCard(card){
-  injectLayers(card);
-  var hl=card.querySelector('.lg-dyn-hl');
-  var rx=0,ry=0,tx=0,ty=0,rafId=null,active=false,down=false;
-
-  card.addEventListener('mouseenter',function(){active=true;run();},{passive:true});
-  card.addEventListener('mousemove',function(e){
-    if(!active)return;
-    var r=card.getBoundingClientRect();
-    tx=-(e.clientY-r.top-r.height/2)/(r.height/2)*7;
-    ty=(e.clientX-r.left-r.width/2)/(r.width/2)*7;
-    if(hl){
-      var hx=((e.clientX-r.left)/r.width*100).toFixed(1);
-      var hy=((e.clientY-r.top)/r.height*100).toFixed(1);
-      hl.style.background='radial-gradient(ellipse 58% 42% at '+hx+'% '+hy+'%,rgba(255,255,255,.20) 0%,rgba(255,255,255,.07) 38%,transparent 68%)';
-    }
-  },{passive:true});
-  card.addEventListener('mouseleave',function(){
-    active=false;tx=0;ty=0;card.classList.remove('lg-pressed');
-  },{passive:true});
-  card.addEventListener('mousedown',function(){
-    down=true;card.classList.remove('lg-elastic');card.classList.add('lg-pressed');
-  });
-  function release(){
-    if(!down)return;down=false;
-    card.classList.remove('lg-pressed');
-    void card.offsetWidth;
-    card.classList.add('lg-elastic');
-    setTimeout(function(){card.classList.remove('lg-elastic');},600);
-  }
-  card.addEventListener('mouseup',release);
-  card.addEventListener('touchend',release,{passive:true});
-  card.addEventListener('touchstart',function(){card.classList.add('lg-pressed');},{passive:true});
-
-  function run(){
-    if(rafId)cancelAnimationFrame(rafId);
-    function step(){
-      rx=lerp(rx,tx,.105);ry=lerp(ry,ty,.105);
-      if(!active&&Math.abs(rx-tx)<.015&&Math.abs(ry-ty)<.015){
-        card.style.transform='';rafId=null;return;
-      }
-      var sc=active?1.013:1;
-      card.style.transform='perspective(700px) rotateX('+rx.toFixed(3)+'deg) rotateY('+ry.toFixed(3)+'deg) scale3d('+sc+','+sc+',1)';
-      rafId=RAF(step);
-    }
-    step();
-  }
-}
-
-function scanCards(){
-  document.querySelectorAll('.glass').forEach(function(c){
-    if(c.dataset.lgInit)return;c.dataset.lgInit='1';initCard(c);
-  });
-}
-var ce=document.getElementById('content');
-if(ce)new MutationObserver(scanCards).observe(ce,{childList:true,subtree:true});
-scanCards();
+// card LG JS removido
 
 /* Icon buttons micro-tilt */
 document.querySelectorAll('.icon-btn').forEach(function(btn){
