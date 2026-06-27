@@ -56,7 +56,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   background:linear-gradient(180deg,var(--glass-gloss),transparent);opacity:.55;}
 .glass>*{position:relative;z-index:3;}
 .top{display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 14px;margin:0 -16px;
-  position:sticky;top:0;z-index:90;}
+  position:sticky;top:0;z-index:90;overflow:clip;}
 .top>*{position:relative;z-index:1;}
 /* Fade em degradê: várias camadas de blur cada vez mais intenso perto do topo,
    mascaradas para diluir gradualmente. SEM transition de opacity (era a causa do "delay" ao rolar
