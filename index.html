@@ -301,13 +301,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .panel .big.anim{animation:popIn .3s cubic-bezier(0.16,1,0.3,1);}
 /* Timeline "Evolução da fatura": cards verticais altos, a curva Bézier atravessa por dentro deles,
    nome no topo, ponto sobre a curva, valor embaixo. Mês selecionado = card com borda azul e fundo azul. */
-.ftl-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:0 -6px;padding:0 6px 2px;scroll-behavior:smooth;}
+.ftl-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:0 -6px;padding:0 6px 2px;}
 .ftl-scroll::-webkit-scrollbar{display:none;}
 .ftl-scroll{scrollbar-width:none;}
 .ftl{position:relative;margin-top:10px;height:120px;}
 .ftl-svg{position:absolute;left:0;top:0;width:100%;height:120px;display:block;overflow:visible;pointer-events:none;z-index:1;}
 .ftl-dots{position:absolute;left:0;top:0;width:100%;height:120px;pointer-events:none;z-index:3;}
-.ftl-row{display:flex;gap:6px;height:100%;position:relative;z-index:2;}
+.ftl-row{display:flex;gap:8px;height:100%;position:relative;z-index:2;}
 .ftl-col{flex:1;min-width:0;border-radius:13px;border:1.5px solid transparent;cursor:pointer;position:relative;
   display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 3px 9px;
   transition:border-color .3s,background .3s,transform .3s;}
@@ -696,7 +696,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* previsões — hero fixo no topo ao rolar (3 informações: Saldo + Faturas + Previsão) */
 .prev-sticky{position:sticky;top:var(--top-bar-h,0px);z-index:20;background:var(--bg);
   margin:0 -16px;padding:6px 16px 4px;}
-.prev-month-strip{margin-bottom:9px;}
+.prev-month-strip{margin-top:0;margin-bottom:2px;}
 .prev-duo.prev-trio3{padding:13px 14px;}
 .prev-trio3 .prev-duo-blk{text-align:center;}
 .prev-trio3 .prev-duo-blk:first-child{text-align:left;}
@@ -1743,7 +1743,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="ftl-val">R$ '+(Number(m.total)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
       '</div>';
     }).join("");
-    return '<div class="ftl-scroll"><div class="ftl" style="min-width:'+(n*62)+'px">'+svg+'<div class="ftl-dots">'+dots+'</div><div class="ftl-row">'+cols+'</div></div></div>';
+    return '<div class="ftl-scroll"><div class="ftl" style="min-width:'+(n*84)+'px">'+svg+'<div class="ftl-dots">'+dots+'</div><div class="ftl-row">'+cols+'</div></div></div>';
   }
 
   function renderCartoes(){
@@ -2127,19 +2127,37 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function lerRecorrentes(){ try{ return JSON.parse(localStorage.getItem(REC_KEY))||[]; }catch(e){ return []; } }
   function salvarRecorrentes(arr){ try{ localStorage.setItem(REC_KEY, JSON.stringify(arr)); }catch(e){} }
 
-  // Cálculo ÚNICO da previsão de fim de mês, usado tanto na Visão Geral quanto na aba Previsões,
-  // pra os dois números sempre baterem. Item recorrente já marcado (= já aconteceu) não entra na conta.
+  // ── Modelo mês a mês ──────────────────────────────────────────────
+  // Cada recorrente novo guarda { mesInicio:"AAAA-MM", repeticoes:N }.
+  // Itens antigos (sem mesInicio) continuam valendo TODO mês (compatibilidade).
+  function mesKeyOffset(f){
+    var d=new Date(); d=new Date(d.getFullYear(), d.getMonth()+f, 1);
+    return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
+  }
+  function mesesEntreKeys(a,b){ // b - a, em meses
+    var pa=String(a).split('-'), pb=String(b).split('-');
+    return (parseInt(pb[0],10)-parseInt(pa[0],10))*12 + (parseInt(pb[1],10)-parseInt(pa[1],10));
+  }
+  function recAtivaNoMes(r, f){
+    if(!r || !r.mesInicio) return true; // legado: vale todo mês
+    var diff = mesesEntreKeys(r.mesInicio, mesKeyOffset(f));
+    var n = (r.repeticoes && r.repeticoes>0) ? r.repeticoes : 1;
+    return diff>=0 && diff < n;
+  }
+  // ──────────────────────────────────────────────────────────────────
+
+  // Cálculo da previsão de fim de mês (mês ATUAL). Item já marcado (= já aconteceu) não entra.
   function calcularPrevisao(){
     var saldo    = saldoTotalContas();
     var faturas  = totalFaturasAbertas();
     var recs     = lerRecorrentes();
     var marcados = lerMarcacoes();
-    var entradas = recs.reduce(function(s,r,i){ return r.tipo==='in'  && !marcados[String(i)] ? s+r.valor : s; }, 0);
-    var saidas   = recs.reduce(function(s,r,i){ return r.tipo==='out' && !marcados[String(i)] ? s+r.valor : s; }, 0);
+    var entradas = recs.reduce(function(s,r,i){ return (r.tipo==='in'  && recAtivaNoMes(r,0) && !marcados[String(i)]) ? s+r.valor : s; }, 0);
+    var saidas   = recs.reduce(function(s,r,i){ return (r.tipo==='out' && recAtivaNoMes(r,0) && !marcados[String(i)]) ? s+r.valor : s; }, 0);
     return { saldo:saldo, faturas:faturas, entradas:entradas, saidas:saidas, previsao: saldo + entradas - saidas - faturas };
   }
-  // Previsão para o mês "f" à frente (0 = mês atual). Os meses futuros usam as recorrentes
-  // (todas) e as faturas PROJETADAS pelas parcelas, acumulando o saldo de um mês pro outro.
+  // Previsão para o mês "f" à frente (0 = atual). Usa só as recorrentes ATIVAS naquele mês +
+  // as faturas projetadas pelas parcelas, acumulando o saldo de um mês pro outro.
   function calcularPrevisaoMes(f){
     if(f<=0){
       var c=calcularPrevisao();
@@ -2147,8 +2165,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     var prev=calcularPrevisaoMes(f-1);
     var recs=lerRecorrentes();
-    var entradas=recs.reduce(function(s,r){return r.tipo==='in'?s+r.valor:s;},0);
-    var saidas=recs.reduce(function(s,r){return r.tipo==='out'?s+r.valor:s;},0);
+    var entradas=recs.reduce(function(s,r){return (r.tipo==='in'  && recAtivaNoMes(r,f))?s+r.valor:s;},0);
+    var saidas=recs.reduce(function(s,r){return (r.tipo==='out' && recAtivaNoMes(r,f))?s+r.valor:s;},0);
     var faturas=faturasProjetadasMes(f);
     var saldoInicial=prev.previsao;
     return { saldoInicial:saldoInicial, entradas:entradas, saidas:saidas, faturas:faturas, previsao:saldoInicial+entradas-saidas-faturas };
@@ -2269,7 +2287,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function gravarRecorrenteSheet(item, callback){
     if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
     var url = GAS_EXEC_URL+'?action=addPrevisao&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor)+
-      '&lembrete='+(item.lembrete?'1':'0')+'&lembreteDia='+encodeURIComponent(item.lembreteDia||'');
+      '&lembrete='+(item.lembrete?'1':'0')+'&lembreteDia='+encodeURIComponent(item.lembreteDia||'')+'&mesInicio='+encodeURIComponent(item.mesInicio||'')+'&repeticoes='+encodeURIComponent(item.repeticoes||1);
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
   function deletarRecorrenteSheet(idx, callback){
@@ -2281,7 +2299,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
     var url = GAS_EXEC_URL+'?action=editPrevisao&idx='+idx+'&origNome='+encodeURIComponent(origNome)+
       '&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor)+
-      '&lembrete='+(item.lembrete?'1':'0')+'&lembreteDia='+encodeURIComponent(item.lembreteDia||'');
+      '&lembrete='+(item.lembrete?'1':'0')+'&lembreteDia='+encodeURIComponent(item.lembreteDia||'')+'&mesInicio='+encodeURIComponent(item.mesInicio||'')+'&repeticoes='+encodeURIComponent(item.repeticoes||1);
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
 
@@ -2301,6 +2319,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="fld-row">'+
           '<label class="fld"><span>Valor</span><input id="pvValor" type="number" inputmode="decimal" placeholder="0,00" value="'+r.valor+'"></label>'+
           '<label class="fld"><span>Tipo</span><select id="pvTipo"><option value="in"'+(r.tipo==='in'?' selected':'')+'>Entrada</option><option value="out"'+(r.tipo==='out'?' selected':'')+'>Saída</option></select></label>'+
+        '</div>'+
+        '<div class="rem-row" id="pvRepRow"><div class="rem-row-txt"><div class="rem-row-title">Repetir em vários meses</div><div class="rem-row-sub">Lança a partir do mês selecionado</div></div>'+
+          '<span class="rem-switch'+((r.repeticoes&&r.repeticoes>1)?' on':'')+'" id="pvRepSwitch" role="switch" aria-checked="'+((r.repeticoes&&r.repeticoes>1)?'true':'false')+'"><span class="rem-knob"></span></span>'+
+        '</div>'+
+        '<div class="rem-day'+((r.repeticoes&&r.repeticoes>1)?' open':'')+'" id="pvRepWrap">'+
+          '<label class="fld"><span>Repetir por quantos meses?</span><input id="pvRepN" type="number" min="2" max="60" inputmode="numeric" value="'+((r.repeticoes&&r.repeticoes>1)?r.repeticoes:12)+'"></label>'+
+          '<div class="rem-hint" id="pvRepHint"></div>'+
         '</div>'+
         '<div class="rem-row" id="pvRemRow"><div class="rem-row-txt"><div class="rem-row-title">Enviar lembrete no WhatsApp</div><div class="rem-row-sub">Aviso mensal pra pagar ou cobrar</div></div>'+
           '<span class="rem-switch'+(r.lembrete?' on':'')+'" id="pvRemSwitch" role="switch" aria-checked="'+(r.lembrete?'true':'false')+'"><span class="rem-knob"></span></span>'+
@@ -2352,6 +2377,29 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(remDia) remDia.addEventListener('change', atualizarRemHint);
     if(tipoSel) tipoSel.addEventListener('change', atualizarRemHint);
     atualizarRemHint();
+    // ── Repetir em vários meses ───────────────────────────────────────
+    var repSwitch = ov.querySelector('#pvRepSwitch');
+    var repWrap   = ov.querySelector('#pvRepWrap');
+    var repN      = ov.querySelector('#pvRepN');
+    var repHint   = ov.querySelector('#pvRepHint');
+    function atualizarRepHint(){
+      if(!repHint) return;
+      var on = repSwitch && repSwitch.classList.contains('on');
+      if(!on){ repHint.textContent=''; return; }
+      var n = Math.max(2, parseInt(repN&&repN.value,10)||2);
+      repHint.textContent = 'Vai aparecer em '+n+' meses seguidos, a partir do mês selecionado.';
+    }
+    if(repSwitch){
+      repSwitch.addEventListener('click',function(){
+        var on=!repSwitch.classList.contains('on');
+        repSwitch.classList.toggle('on', on);
+        repSwitch.setAttribute('aria-checked', on?'true':'false');
+        if(repWrap) repWrap.classList.toggle('open', on);
+        atualizarRepHint();
+      });
+    }
+    if(repN) repN.addEventListener('input', atualizarRepHint);
+    atualizarRepHint();
     // ──────────────────────────────────────────────────────────────────
 
     ov.querySelector('#pvSave').addEventListener('click',function(){
@@ -2361,7 +2409,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var tipo=ov.querySelector('#pvTipo').value;
       if(!nome||isNaN(valor)||valor<=0){ msg.textContent='Preencha nome e valor corretamente.'; msg.className='modal-msg err'; return; }
       var remOn = remSwitch && remSwitch.classList.contains('on');
-      var novo={nome:nome,valor:valor,tipo:tipo,lembrete:!!remOn,lembreteDia:remOn?parseInt(remDia.value,10):null};
+      var repOn = repSwitch && repSwitch.classList.contains('on');
+      var repeticoes = repOn ? Math.max(2, parseInt(repN.value,10)||2) : 1;
+      var mesInicio = (editando && r.mesInicio) ? r.mesInicio : mesKeyOffset(prevMesOffset);
+      var novo={nome:nome,valor:valor,tipo:tipo,lembrete:!!remOn,lembreteDia:remOn?parseInt(remDia.value,10):null,mesInicio:mesInicio,repeticoes:repeticoes};
       if(editando){
         btn.disabled=true; btn.textContent='Salvando…';
         var recsAtual=lerRecorrentes(); var origNome=recsAtual[idx]?recsAtual[idx].nome:r.nome;
@@ -2410,8 +2461,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
     var mes = (new Date()).toLocaleString('pt-BR',{month:'long',year:'numeric'});
 
-    // Lista de recorrentes com checkbox "já aconteceu"
-    var recHtml = recs.length ? recs.map(function(r,i){
+    // Lista de recorrentes do mês selecionado (mantém o índice original p/ editar/excluir/marcar)
+    var recsAtivos = recs.map(function(r,i){return {r:r,i:i};}).filter(function(x){return recAtivaNoMes(x.r, prevMesOffset);});
+    var recHtml = recsAtivos.length ? recsAtivos.map(function(x){
+      var r=x.r, i=x.i;
       var feito = !!marcados[String(i)];
       var lblFeito = r.tipo==='in' ? 'recebido' : 'pago';
       var lblPend  = r.tipo==='in' ? 'a receber' : 'a pagar';
@@ -2432,17 +2485,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="rec-del" data-del="'+i+'" title="Remover item">×</div>'+
       '</div>';
     }).join('') :
-    '<div class="empty" style="padding:16px 0 4px"><div class="et">Nenhuma recorrente ainda. Adicione salário, aluguel, etc.</div></div>';
+    '<div class="empty" style="padding:16px 0 4px"><div class="et">Nada cadastrado para este mês. Toque em “+ Cadastrar”.</div></div>';
 
     return ''+
     // Hero fixo no topo: filtro de mês + 3 informações (Saldo + Faturas + Previsão)
     '<div class="prev-sticky">'+
-    '<div class="cc-month-strip prev-month-strip"><div class="cc-month-strip-scroll" id="prevMonthScroll">'+
-      mesesP.map(function(m){
-        return '<button class="cc-month-pill'+(m.f===prevMesOffset?' active':'')+'" data-mesoff="'+m.f+'">'+
-          MESES_ABREV[m.mes]+(m.f===0?'':' '+String(m.ano).slice(2))+'</button>';
-      }).join('')+
-    '</div></div>'+
     '<div class="prev-duo prev-trio3 glass">'+
       '<div class="prev-duo-blk">'+
         '<div class="pd-k" id="prev-saldo-k">'+saldoLbl+'</div>'+
@@ -2459,6 +2506,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="pd-v '+(previsao<0?'neg':'pos')+'" id="prev-previsao-val">'+formatBRL(previsao)+'</div>'+
       '</div>'+
     '</div>'+
+    '<div class="cc-month-strip prev-month-strip"><div class="cc-month-strip-scroll" id="prevMonthScroll">'+
+      mesesP.map(function(m){
+        return '<button class="cc-month-pill'+(m.f===prevMesOffset?' active':'')+'" data-mesoff="'+m.f+'">'+
+          MESES_ABREV[m.mes]+(m.f===0?'':' '+String(m.ano).slice(2))+'</button>';
+      }).join('')+
+    '</div></div>'+
     '</div>'+
     // Cálculo
     '<div class="glass calc-card">'+
