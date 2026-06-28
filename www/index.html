@@ -2257,22 +2257,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(cr)  cr.style.display  = entradas ? '' : 'none';
     if(crout) crout.style.display = saidas  ? '' : 'none';
 
-    // Atualiza visual de cada item (riscado ou não) — re-lê do localStorage para refletir toggle imediato
-    var recs=lerRecorrentes(); var marcados=lerMarcacoes();
-    recs.forEach(function(_,i){
-      var el = document.getElementById('rec-item-'+i);
-      if(!el) return;
-      var feito = !!marcados[String(i)];
-      var r = recs[i];
-      var lblFeito = r.tipo==='in' ? 'recebido' : 'pago';
-      var lblPend  = r.tipo==='in' ? 'a receber' : 'a pagar';
-      el.classList.toggle('rec-feito', feito);
-      el.classList.toggle('rec-feito-out', feito && r.tipo==='out');
-      var tog = el.querySelector('.rec-toggle');
-      if(tog) tog.classList.toggle('checked', feito);
-      var lbl = el.querySelector('.rec-check-lbl');
-      if(lbl) lbl.textContent = feito ? lblFeito : lblPend;
-    });
+    // Atualiza o rótulo "Recorrentes <mês>" para o mês do FILTRO selecionado (não o mês real de hoje)
+    var tagEl = document.getElementById('recMesTag');
+    if(tagEl) tagEl.textContent = MESES_COMPLETO[mesesP[prevMesOffset].mes]+' de '+mesesP[prevMesOffset].ano;
+
+    // Reconstrói a lista de recorrentes do zero para o mês selecionado — é isso que faltava:
+    // antes, só os números do topo recalculavam; a lista continuava com os itens do mês
+    // em que a tela tinha sido aberta originalmente (ex: item de Junho aparecendo em Agosto).
+    var recLista = document.getElementById('recLista');
+    if(recLista){
+      recLista.innerHTML = gerarRecListaHtml(prevMesOffset);
+      wireRecLista();
+    }
   }
 
   // Lê a aba "Previsões" da planilha. A partir desta versão, a PLANILHA é a fonte
@@ -2484,25 +2480,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
   }
 
-  function renderPrevisoes(){
+  // Monta o HTML da lista de recorrentes ATIVOS no mês "offset" (0=mês atual do filtro real-hoje,
+  // 1..=meses futuros). Usada tanto no render completo (renderPrevisoes) quanto na troca de
+  // filtro de mês (renderPrevisoesParcial), pra garantir que a lista SEMPRE reflita o mês
+  // selecionado — e não fique "presa" no mês em que a tela foi aberta.
+  function gerarRecListaHtml(offset){
     var recs     = lerRecorrentes();
     var marcados = lerMarcacoes();
-    var pf       = calcularPrevisaoMes(prevMesOffset);
-    var saldo    = pf.saldoInicial;
-    var faturas  = pf.faturas;
-    var entradas = pf.entradas;
-    var saidas   = pf.saidas;
-    var previsao = pf.previsao;
-    var ehAtual  = (prevMesOffset===0);
-    var saldoLbl = ehAtual ? 'Saldo em conta' : 'Saldo inicial';
-    var fatLbl   = ehAtual ? 'Faturas em aberto' : 'Faturas previstas';
-    var mesesP   = mesesPrevisao(6);
-
-    var mes = (new Date()).toLocaleString('pt-BR',{month:'long',year:'numeric'});
-
-    // Lista de recorrentes do mês selecionado (mantém o índice original p/ editar/excluir/marcar)
-    var recsAtivos = recs.map(function(r,i){return {r:r,i:i};}).filter(function(x){return recAtivaNoMes(x.r, prevMesOffset);});
-    var recHtml = recsAtivos.length ? recsAtivos.map(function(x){
+    var recsAtivos = recs.map(function(r,i){return {r:r,i:i};}).filter(function(x){return recAtivaNoMes(x.r, offset);});
+    if(!recsAtivos.length){
+      return '<div class="empty" style="padding:16px 0 4px"><div class="et">Nada cadastrado para este mês. Toque em “+ Cadastrar”.</div></div>';
+    }
+    return recsAtivos.map(function(x){
       var r=x.r, i=x.i;
       var feito = !!marcados[String(i)];
       var lblFeito = r.tipo==='in' ? 'recebido' : 'pago';
@@ -2523,8 +2512,26 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '</label>'+
         '<div class="rec-del" data-del="'+i+'" title="Remover item">×</div>'+
       '</div>';
-    }).join('') :
-    '<div class="empty" style="padding:16px 0 4px"><div class="et">Nada cadastrado para este mês. Toque em “+ Cadastrar”.</div></div>';
+    }).join('');
+  }
+
+  function renderPrevisoes(){
+    var pf       = calcularPrevisaoMes(prevMesOffset);
+    var saldo    = pf.saldoInicial;
+    var faturas  = pf.faturas;
+    var entradas = pf.entradas;
+    var saidas   = pf.saidas;
+    var previsao = pf.previsao;
+    var ehAtual  = (prevMesOffset===0);
+    var saldoLbl = ehAtual ? 'Saldo em conta' : 'Saldo inicial';
+    var fatLbl   = ehAtual ? 'Faturas em aberto' : 'Faturas previstas';
+    var mesesP   = mesesPrevisao(6);
+
+    // Rótulo da seção "Recorrentes" = mês SELECIONADO no filtro (antes usava sempre a data
+    // real de hoje, por isso ficava mostrando "junho de 2026" mesmo com Agosto selecionado).
+    var mes = MESES_COMPLETO[mesesP[prevMesOffset].mes]+' de '+mesesP[prevMesOffset].ano;
+
+    var recHtml = gerarRecListaHtml(prevMesOffset);
 
     return ''+
     // Hero fixo no topo: filtro de mês + 3 informações (Saldo + Faturas + Previsão)
@@ -2561,42 +2568,28 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<div class="calc-total-row '+(previsao<0?'neg':'pos')+'" id="calc-total-row"><span class="lbl-total"><span id="calc-total-k">'+(ehAtual?'Previsão fim do mês':'Previsão de '+MESES_COMPLETO[mesesP[prevMesOffset].mes])+'</span><small>com recorrentes e faturas</small></span><span class="amt amt-total '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
     '</div>'+
     // Seção recorrentes
-    '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag">'+mes+'</span></h2>'+
+    '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag" id="recMesTag">'+mes+'</span></h2>'+
       '<span class="link" id="recAddBtn">+ Cadastrar</span>'+
     '</div>'+
     '<div id="recLista">'+recHtml+'</div>'+
     '';
   }
 
-  function wirePrevisoes(){
-    // Botão "+ Cadastrar" — abre o modal de nova recorrente (igual ao de investimentos)
-    var addBtn = document.getElementById('recAddBtn');
-    if(addBtn){
-      addBtn.addEventListener('click', function(){ abrirFormPrevisao(); });
-    }
-    // Filtro de mês (atual + futuros) — recalcula a previsão sem recriar a lista
-    document.querySelectorAll('#prevMonthScroll .cc-month-pill').forEach(function(pill){
-      pill.addEventListener('click', function(){
-        prevMesOffset = parseInt(pill.getAttribute('data-mesoff'),10) || 0;
-        document.querySelectorAll('#prevMonthScroll .cc-month-pill').forEach(function(p){p.classList.remove('active');});
-        pill.classList.add('active');
-        renderPrevisoesParcial();
-        try{ pill.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }catch(e){}
-      });
-    });
-    // Toggles deslizantes (marcar como feito)
-    document.querySelectorAll('[data-check]').forEach(function(inp){
+  // Liga os eventos dos itens da lista de recorrentes (marcar como feito, editar, excluir).
+  // Reutilizada tanto no wire completo (wirePrevisoes) quanto sempre que #recLista é
+  // reconstruído pela troca do filtro de mês (renderPrevisoesParcial) — sem isso, os itens
+  // do mês recém-renderizado ficariam sem clique/toggle funcionando.
+  function wireRecLista(){
+    document.querySelectorAll('#recLista [data-check]').forEach(function(inp){
       inp.addEventListener('change', function(ev){
         ev.stopPropagation();
         toggleMarcacao(Number(inp.getAttribute('data-check')));
       });
     });
-    // Abrir edição (clique no nome ou no valor do item)
-    document.querySelectorAll('[data-edit]').forEach(function(el){
+    document.querySelectorAll('#recLista [data-edit]').forEach(function(el){
       el.addEventListener('click', function(){ abrirFormPrevisao(Number(el.getAttribute('data-edit'))); });
     });
-    // Deletar item
-    document.querySelectorAll('[data-del]').forEach(function(d){
+    document.querySelectorAll('#recLista [data-del]').forEach(function(d){
       d.addEventListener('click', function(){
         var i = Number(d.getAttribute('data-del'));
         var recs0 = lerRecorrentes();
@@ -2615,6 +2608,25 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         irPara(4);
       });
     });
+  }
+
+  function wirePrevisoes(){
+    // Botão "+ Cadastrar" — abre o modal de nova recorrente (igual ao de investimentos)
+    var addBtn = document.getElementById('recAddBtn');
+    if(addBtn){
+      addBtn.addEventListener('click', function(){ abrirFormPrevisao(); });
+    }
+    // Filtro de mês (atual + futuros) — recalcula a previsão E reconstrói a lista pro mês escolhido
+    document.querySelectorAll('#prevMonthScroll .cc-month-pill').forEach(function(pill){
+      pill.addEventListener('click', function(){
+        prevMesOffset = parseInt(pill.getAttribute('data-mesoff'),10) || 0;
+        document.querySelectorAll('#prevMonthScroll .cc-month-pill').forEach(function(p){p.classList.remove('active');});
+        pill.classList.add('active');
+        renderPrevisoesParcial();
+        try{ pill.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }catch(e){}
+      });
+    });
+    wireRecLista();
     // (botão sync da planilha removido)
   }
 
