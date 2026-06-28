@@ -768,10 +768,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .modal-body{display:flex;flex-direction:column;gap:11px;}
 .fld{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0;}
 .fld>span{font-size:12px;color:var(--text-faint);font-weight:500;padding-left:2px;}
-.fld input{width:100%;padding:11px 13px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass-bg);
-  color:var(--text);font-size:15px;font-family:var(--font);outline:none;transition:border-color .2s;}
-.fld input:focus{border-color:var(--lime);}
-.fld-row{display:flex;gap:10px;}
+.fld input,.fld select{width:100%;padding:11px 13px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass-bg);
+  color:var(--text);font-size:15px;font-family:var(--font);outline:none;transition:border-color .2s;box-sizing:border-box;}
+.fld input:focus,.fld select:focus{border-color:var(--lime);}
+.fld select{-webkit-appearance:none;-moz-appearance:none;appearance:none;cursor:pointer;line-height:1.3;
+  padding-right:34px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23999' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;background-size:12px 8px;}
+.fld-row{display:flex;gap:7px;}
 /* Lembretes (WhatsApp) no modal de recorrência */
 .rem-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;
   padding:11px 13px;border-radius:13px;border:1px solid var(--glass-border);background:var(--glass-bg);}
@@ -2271,13 +2275,34 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     });
   }
 
-  // Lê a aba "Previsões" da planilha e mescla com o localStorage (planilha tem prioridade)
+  // Lê a aba "Previsões" da planilha e mescla com o localStorage.
+  // A planilha manda nome/tipo/valor; os campos de mês (mesInicio/repeticoes) e de
+  // lembrete ficam só no app, então são PRESERVADOS do local (casando pelo nome) para
+  // não se perderem a cada sincronização.
   function carregarRecorrentesSheet(){
     return fetchSheet('Previsões').then(function(rows){
       if(!rows||!rows.length) return lerRecorrentes();
+      var locais = lerRecorrentes();
+      var usados = {};
+      function acharLocal(nome){
+        var alvo = normalizarNomeCartao(nome);
+        for(var k=0;k<locais.length;k++){
+          if(usados[k]) continue;
+          if(normalizarNomeCartao(locais[k].nome)===alvo){ usados[k]=true; return locais[k]; }
+        }
+        return null;
+      }
       var arr = rows.map(function(c){
         var tipo = strVal(c,2);
-        return { nome:strVal(c,1), valor:numVal(c,3), tipo:(tipo==='Entrada'?'in':'out') };
+        var base = { nome:strVal(c,1), valor:numVal(c,3), tipo:(tipo==='Entrada'?'in':'out') };
+        var loc = acharLocal(base.nome);
+        if(loc){
+          if(loc.mesInicio)   base.mesInicio   = loc.mesInicio;
+          if(loc.repeticoes)  base.repeticoes  = loc.repeticoes;
+          if(loc.lembrete!=null)    base.lembrete    = loc.lembrete;
+          if(loc.lembreteDia!=null) base.lembreteDia = loc.lembreteDia;
+        }
+        return base;
       }).filter(function(x){ return x.nome && x.valor>0; });
       salvarRecorrentes(arr);
       return arr;
@@ -2317,7 +2342,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<div class="modal-body">'+
         '<label class="fld"><span>Nome</span><input id="pvNome" type="text" maxlength="30" placeholder="Ex: Salário, Aluguel" autocomplete="off" value="'+escapeHtml(r.nome)+'"></label>'+
         '<div class="fld-row">'+
-          '<label class="fld"><span>Valor</span><input id="pvValor" type="number" inputmode="decimal" placeholder="0,00" value="'+r.valor+'"></label>'+
+          '<label class="fld"><span>Valor</span><input id="pvValor" type="text" inputmode="numeric" placeholder="R$ 0,00" value="'+(r.valor?('R$ '+Number(r.valor).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})):'')+'"></label>'+
           '<label class="fld"><span>Tipo</span><select id="pvTipo"><option value="in"'+(r.tipo==='in'?' selected':'')+'>Entrada</option><option value="out"'+(r.tipo==='out'?' selected':'')+'>Saída</option></select></label>'+
         '</div>'+
         '<div class="rem-row" id="pvRepRow"><div class="rem-row-txt"><div class="rem-row-title">Repetir em vários meses</div><div class="rem-row-sub">Lança a partir do mês selecionado</div></div>'+
@@ -2349,6 +2374,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     ov.addEventListener('click',function(e){ if(e.target===ov) fechar(); });
     ov.querySelector('#pvClose').addEventListener('click',fechar);
     var cancelBtn=ov.querySelector('#pvCancel'); if(cancelBtn) cancelBtn.addEventListener('click',fechar);
+
+    // ── Máscara de moeda no campo Valor (vai assumindo R$ 0,00 conforme digita) ──
+    function moedaParse_(str){ var d=String(str).replace(/\D/g,''); return d? (parseInt(d,10)/100) : NaN; }
+    function moedaFmt_(str){
+      var d=String(str).replace(/\D/g,'');
+      if(!d) return '';
+      return 'R$ '+(parseInt(d,10)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+    var valorInput=ov.querySelector('#pvValor');
+    if(valorInput){
+      valorInput.addEventListener('input',function(){ this.value=moedaFmt_(this.value); });
+    }
 
     // ── Lembretes (WhatsApp) ──────────────────────────────────────────
     var remSwitch = ov.querySelector('#pvRemSwitch');
@@ -2405,7 +2442,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     ov.querySelector('#pvSave').addEventListener('click',function(){
       var btn=this, msg=ov.querySelector('#pvMsg');
       var nome=(ov.querySelector('#pvNome').value||'').trim();
-      var valor=parseFloat(ov.querySelector('#pvValor').value);
+      var valor=moedaParse_(ov.querySelector('#pvValor').value);
       var tipo=ov.querySelector('#pvTipo').value;
       if(!nome||isNaN(valor)||valor<=0){ msg.textContent='Preencha nome e valor corretamente.'; msg.className='modal-msg err'; return; }
       var remOn = remSwitch && remSwitch.classList.contains('on');
