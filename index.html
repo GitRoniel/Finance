@@ -113,11 +113,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .banks-stack .bs-logo:first-child{margin-left:0;}
 .banks-stack .bs-logo svg{width:60%;height:60%;}
 .banks-stack .bs-logo .txt{font-size:8.5px;font-weight:700;font-family:var(--font-display);}
-/* Placeholder de carregamento (pulsa suavemente até os bancos chegarem) */
-.banks-stack .bs-skel{width:19px;height:19px;border-radius:50%;margin-left:-8px;background:var(--track-bg);animation:bsPulse 1.15s ease-in-out infinite;}
-.banks-stack .bs-skel:nth-child(2){animation-delay:.2s;}
-.banks-stack .bs-skel:first-child{margin-left:0;}
-@keyframes bsPulse{0%,100%{opacity:.3;}50%{opacity:.75;}}
+/* Entrada suave dos avatares quando os bancos terminam de carregar */
+.banks-stack .bs-logo{animation:bsIn .32s ease both;}
+@keyframes bsIn{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:none;}}
 .banks-pop{width:260px;}
 .bank-row{display:flex;align-items:center;gap:10px;padding:8px 0;}
 .bank-row:not(:last-child){border-bottom:1px solid var(--glass-border);}
@@ -226,7 +224,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
    discreta e brilho/realce reduzidos — pra ficar com a sutileza do exemplo de referência.
    O anel de brilho do ::before (gradiente diagonal) foi desativado aqui: ele desenhava uma 2ª linha
    de contorno por cima da border normal, dando a impressão de borda duplicada/desalinhada. */
-.tcard,.tile,.fatura-card{
+.tcard,.tile,.fatura-card,.cc-hero,.cards-resumo,.prev-duo,.calc-card,.parc-stats{
   background:rgba(255,255,255,0.07);
   border-color:rgba(255,255,255,0.09);
   backdrop-filter:blur(6px) saturate(140%);
@@ -234,9 +232,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   box-shadow:0 8px 20px rgba(0,0,0,0.22),0 2px 6px rgba(0,0,0,0.16);
   --glass-gloss:rgba(255,255,255,0.05);
 }
-.tcard::before,.tile::before,.fatura-card::before{content:none;}
-.tcard::after,.tile::after,.fatura-card::after{opacity:.3;}
-[data-theme="light"] .tcard,[data-theme="light"] .tile,[data-theme="light"] .fatura-card{
+.tcard::before,.tile::before,.fatura-card::before,.cc-hero::before,.cards-resumo::before,.prev-duo::before,.calc-card::before,.parc-stats::before{content:none;}
+.tcard::after,.tile::after,.fatura-card::after,.cc-hero::after,.cards-resumo::after,.prev-duo::after,.calc-card::after,.parc-stats::after{opacity:.3;}
+[data-theme="light"] .tcard,[data-theme="light"] .tile,[data-theme="light"] .fatura-card,[data-theme="light"] .cc-hero,[data-theme="light"] .cards-resumo,[data-theme="light"] .prev-duo,[data-theme="light"] .calc-card,[data-theme="light"] .parc-stats{
   background:rgba(255,255,255,0.40);
   border-color:rgba(0,0,0,0.07);
   box-shadow:0 6px 16px rgba(40,60,50,0.10),0 1px 3px rgba(0,0,0,0.05);
@@ -262,7 +260,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .fchev{color:var(--text-faint);font-size:16px;flex:0 0 auto;}
 /* resumo dos cartões */
 .cards-resumo{display:flex;align-items:stretch;padding:13px 8px;border-radius:var(--radius-sm);margin-bottom:11px;position:sticky;top:58px;z-index:30;
-  backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--nav-bg);}
+  backdrop-filter:none;-webkit-backdrop-filter:none;}
 .cr-blk{flex:1;text-align:center;display:flex;flex-direction:column;gap:3px;min-width:0;}
 .cr-blk .bk{font-size:12px;color:var(--text-faint);font-weight:500;}
 .cr-blk .bv{font-size:15px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -274,7 +272,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .carousel::-webkit-scrollbar{display:none;}
 .ccard{flex:0 0 85%;scroll-snap-align:center;border-radius:18px;padding:15px 17px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 8px 22px rgba(0,0,0,0.28);will-change:transform;transform:translateZ(0);}
 .cc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.cc-bank{display:flex;align-items:center;gap:9px;min-width:0;}
+.cc-bank{display:flex;align-items:center;gap:9px;min-width:0;flex:1 1 auto;}
+.cc-bank-txt{min-width:0;flex:1 1 auto;}
 .cc-logo{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.18);flex:0 0 auto;}
 .cc-logo svg{width:58%;height:58%;color:#fff;}
 .cc-logo .txt{font-weight:700;font-size:14px;font-family:var(--font-display);}
@@ -317,10 +316,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .ftl-col.sel.aberto .ftl-lbl{color:var(--blue);}
 .ftl-col.sel.pago .ftl-lbl{color:var(--lime-deep);}
 .ftl-dotzone{flex:1;width:100%;}
-.ftl-val{font-size:12.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.01em;color:var(--text-dim);
-  text-align:center;line-height:1.15;z-index:3;transition:color .3s,font-size .3s;}
-.ftl-col.sel.aberto .ftl-val{color:var(--blue);font-size:13.5px;}
-.ftl-col.sel.pago .ftl-val{color:var(--lime-deep);font-size:13.5px;}
+.ftl-val{font-size:11.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;color:var(--text-dim);
+  text-align:center;line-height:1.15;z-index:3;transition:color .3s,font-size .3s;white-space:nowrap;}
+.ftl-col.sel.aberto .ftl-val{color:var(--blue);font-size:12.5px;}
+.ftl-col.sel.pago .ftl-val{color:var(--lime-deep);font-size:12.5px;}
 .ftl-dot{position:absolute;width:9px;height:9px;border-radius:50%;
   border:2.5px solid var(--bg);transform:translate(-50%,-50%);box-sizing:content-box;z-index:4;transition:background .3s;}
 .ftl-dot.pago{background:var(--lime-deep);}
@@ -456,17 +455,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   padding-bottom:2px;
   margin:0 -16px;padding-left:16px;padding-right:16px;
 }
-/* blur só cobre o conteúdo real do sticky, sem "fantasma" abaixo (Cartões) */
-.cards-sticky-hdr::before,.cards-tx-sticky::before{
-  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
-  background:linear-gradient(to bottom,
-    color-mix(in srgb,var(--bg) 90%,transparent) 0%,
-    color-mix(in srgb,var(--bg) 75%,transparent) 60%,
-    transparent 100%);
-  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 88%);
-  mask-image:linear-gradient(to bottom,#000 0%,#000 60%,transparent 88%);
-}
+/* (blur gradiente removido a pedido — cabeçalhos dos Cartões usam fundo sólido) */
+.cards-sticky-hdr::before,.cards-tx-sticky::before{content:none;}
 /* título "Movimentações" agora dentro do .cc-sticky-hdr — fica fixo junto com o resto */
 .cc-movs-head{
   display:flex;align-items:center;justify-content:space-between;
@@ -476,8 +466,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* ── CARTÕES: sticky header (resumo + carousel + dots) ── */
 .cards-sticky-hdr{
   position:sticky;top:var(--top-bar-h,0px);z-index:20;
-  background:transparent;
-  padding-bottom:14px;
+  background:var(--bg);
+  padding-bottom:10px;
   margin:0 -16px;padding-left:16px;padding-right:16px;
 }
 /* Garante que cards-resumo não use sticky próprio (agora está dentro do wrapper) */
@@ -488,80 +478,90 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* Titulo "Transacoes" (Cartoes): sticky empilhado logo abaixo do cabecalho dos cartoes */
 .cards-tx-sticky{
   position:sticky;top:calc(var(--top-bar-h,0px) + var(--cards-hdr-h,0px));z-index:18;
-  background:transparent;
-  padding-bottom:12px;
+  background:var(--bg);
+  padding-bottom:8px;
   margin:0 -16px;padding-left:16px;padding-right:16px;
 }
 /* Blur gradiente nas bordas inferiores dos cabecalhos fixos:
    as transacoes deslizam por baixo e dissolvem com desfoque progressivo (estilo iOS). */
 
 /* ── Agrupamento por dia ── */
-.cc-day-group{margin-bottom:14px;}
+.cc-day-group{margin-bottom:16px;}
 .cc-day-hdr{
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 2px 5px;
+  padding:0 4px 7px;
 }
 .cc-day-label{
-  font-size:11px;color:var(--text-faint);font-weight:500;letter-spacing:0.01em;text-transform:capitalize;
+  font-size:11.5px;color:var(--text-faint);font-weight:600;letter-spacing:0.02em;text-transform:capitalize;
 }
 .cc-day-total{
-  font-size:11px;font-weight:600;font-family:var(--font-display);
+  font-size:11.5px;font-weight:700;font-family:var(--font-display);
+  padding:3px 9px;border-radius:999px;background:var(--track-bg);color:var(--text-dim);
 }
-.cc-day-total.pos{color:var(--lime-deep);}
-.cc-day-total.neg{color:var(--text-faint);}
-/* card do dia: sem liquid glass — apenas um contorno e fundo quase imperceptíveis;
-   a separação real entre lançamentos é a linha super sutil entre os itens. */
+.cc-day-total.pos{color:var(--lime-deep);background:color-mix(in srgb,var(--lime) 13%,transparent);}
+.cc-day-total.neg{color:var(--text-dim);}
+/* card do dia: cartão moderno, cantos arredondados, separação sutil entre lançamentos */
 .cc-day-txs{
-  border-radius:12px;overflow:hidden;
-  background:rgba(255,255,255,0.018);
-  border:1px solid rgba(255,255,255,0.045);
-  backdrop-filter:none;-webkit-backdrop-filter:none;
-  box-shadow:none;
+  border-radius:16px;overflow:hidden;
+  background:rgba(255,255,255,0.038);
+  border:1px solid rgba(255,255,255,0.06);
+  box-shadow:0 4px 14px rgba(0,0,0,0.14);
 }
 [data-theme="light"] .cc-day-txs{
-  background:rgba(0,0,0,0.012);
-  border-color:rgba(0,0,0,0.035);
+  background:rgba(255,255,255,0.55);
+  border-color:rgba(0,0,0,0.05);
+  box-shadow:0 3px 10px rgba(40,60,50,0.07);
 }
 .cc-day-txs .cctx{
-  display:flex;align-items:center;gap:9px;
-  padding:8px 12px;
+  display:flex;align-items:center;gap:11px;
+  padding:10px 13px;transition:background .15s;
 }
 .cc-day-txs .cctx:not(:last-child){border-bottom:1px solid var(--hairline);}
-.cc-day-txs .cctx .cat-ic{width:32px;height:32px;border-radius:50%;flex:0 0 32px;}
-.cc-day-txs .cctx .cat-ic svg{width:14px;height:14px;}
+.cc-day-txs .cctx:active{background:rgba(255,255,255,0.035);}
+.cc-day-txs .cctx .cat-ic{width:36px;height:36px;border-radius:12px;flex:0 0 36px;}
+.cc-day-txs .cctx .cat-ic svg{width:16px;height:16px;}
 .cctx-main{flex:1;min-width:0;}
 .cctx-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:0 0 auto;}
-.cctx-desc{font-size:12.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cctx-meta{font-size:10px;color:var(--text-faint);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cctx-val{font-size:12.5px;font-weight:600;font-family:var(--font-display);letter-spacing:-0.01em;}
+.cctx-desc{font-size:13.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cctx-meta{font-size:11px;color:var(--text-faint);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cctx-val{font-size:14px;font-weight:600;font-family:var(--font-display);letter-spacing:-0.01em;}
 .cctx-val.in{color:var(--lime-deep);}
-.cctx-tipo{font-size:9.5px;color:var(--text-faint);font-weight:400;}
+.cctx-tipo{font-size:10px;color:var(--text-faint);font-weight:400;}
 
 /* sub-abas (parcelas/assinaturas) */
-.subtabs{display:flex;gap:6px;background:var(--track-bg);padding:4px;border-radius:14px;margin-bottom:14px;}
-.subtab{flex:1;text-align:center;padding:9px;border-radius:11px;font-size:14px;font-weight:600;font-family:var(--font-display);color:var(--text-faint);cursor:pointer;transition:all .25s;}
+.parc-sticky-hdr{position:sticky;top:var(--top-bar-h,0px);z-index:20;background:var(--bg);margin:0 -16px;padding:6px 16px 8px;}
+.subtabs{display:flex;gap:5px;background:var(--track-bg);padding:4px;border-radius:14px;margin-bottom:0;}
+.subtab{flex:1;text-align:center;padding:8px;border-radius:11px;font-size:13.5px;font-weight:600;font-family:var(--font-display);color:var(--text-faint);cursor:pointer;transition:all .25s;}
 .subtab.active{background:var(--glass-bg);color:var(--text);box-shadow:var(--card-shadow);}
 [data-theme="light"] .subtab.active{background:#fff;}
+/* faixa de totais fixa (Qtd. ativas / total por mês) */
+.parc-stats{display:flex;align-items:center;padding:11px 16px;border-radius:15px;margin-top:9px;}
+.ps-blk{flex:1;text-align:center;min-width:0;}
+.ps-k{font-size:11px;color:var(--text-faint);font-weight:500;}
+.ps-v{font-size:18px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ps-v.pos{color:var(--lime-deep);}
+.ps-u{font-size:11.5px;color:var(--text-faint);font-weight:500;letter-spacing:0;}
+.ps-div{width:1px;height:26px;background:var(--glass-border);margin:0 10px;flex:0 0 1px;}
 .subpane{display:none;}
 .subpane.active{display:block;animation:fadeUp .35s ease both;}
-/* item de parcelamento */
-.pcard{padding:11px 14px;border-radius:var(--radius-sm);margin-bottom:7px;}
-.pcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;}
-.pcard-name{font-size:16px;font-weight:400;font-family:var(--font-display);line-height:1.25;}
-.pcard-card{font-size:13px;color:var(--text-faint);margin-top:0;}
-.pcard-val{font-size:20px;font-weight:700;font-family:var(--font-display);text-align:right;}
-.pcard-val .sub{font-size:13px;color:var(--text-faint);font-weight:500;}
-.pprog{height:5px;border-radius:5px;background:var(--track-bg);overflow:hidden;margin-bottom:4px;}
-.pprog-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));}
-.pcard-meta{display:flex;justify-content:space-between;font-size:13px;color:var(--text-faint);font-weight:500;}
-/* assinatura */
-.acard{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:7px;}
-.aic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:16px;background:var(--track-bg);}
+/* item de parcelamento — compacto e moderno */
+.pcard{padding:11px 13px;border-radius:16px;margin-bottom:8px;}
+.pcard-top{display:flex;align-items:center;justify-content:space-between;gap:11px;margin-bottom:9px;}
+.pcard-name{font-size:14.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcard-card{font-size:12px;color:var(--text-faint);margin-top:2px;}
+.pcard-val{font-size:17px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
+.pcard-val .sub{font-size:11.5px;color:var(--text-faint);font-weight:500;margin-top:1px;}
+.pprog{height:6px;border-radius:6px;background:var(--track-bg);overflow:hidden;margin-bottom:7px;}
+.pprog-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));transition:width .5s cubic-bezier(0.16,1,0.3,1);}
+.pcard-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text-faint);font-weight:500;}
+/* assinatura — compacto e moderno */
+.acard{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:16px;margin-bottom:8px;}
+.aic{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px;background:var(--track-bg);}
 .amain{flex:1;min-width:0;}
-.aname{font-size:16px;font-weight:400;font-family:var(--font-display);line-height:1.25;}
-.afreq{font-size:13px;color:var(--text-faint);margin-top:0;}
-.aval{font-size:20px;font-weight:700;font-family:var(--font-display);text-align:right;}
-.aval .sub{font-size:13px;color:var(--text-faint);font-weight:500;}
+.aname{font-size:14.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.afreq{font-size:12px;color:var(--text-faint);margin-top:2px;}
+.aval{font-size:17px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
+.aval .sub{font-size:11.5px;color:var(--text-faint);font-weight:500;margin-top:1px;}
 /* investimentos */
 .inv-hero{padding:18px;border-radius:var(--radius-sm);margin-bottom:10px;text-align:center;}
 .inv-hero .k{font-size:13px;color:var(--text-faint);font-weight:500;}
@@ -615,6 +615,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .rec-main{flex:1;min-width:0;cursor:pointer;}
 .rec-val{cursor:pointer;}
 .rec-name{font-size:15px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rec-bell{font-size:10.5px;opacity:.85;margin-left:2px;}
 .rec-check-lbl{font-size:11px;color:var(--text-faint);font-weight:500;margin-top:1px;transition:color .2s;}
 .rec-val{font-size:17px;font-weight:700;font-family:var(--font-display);flex:0 0 auto;transition:opacity .3s;}
 .rec-val.in{color:var(--lime-deep);}
@@ -693,8 +694,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .prev-trio3 .pd-v{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .prev-trio3 .prev-duo-div{margin:0 9px;height:32px;}
 /* calc card — breakdown moderno da previsão */
-.calc-card{padding:4px 16px 14px;border-radius:var(--radius-sm);margin-bottom:13px;}
-.calc-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;font-size:13.5px;}
+.calc-card{padding:9px 16px 14px;border-radius:var(--radius-sm);margin-bottom:13px;}
+.calc-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13.5px;}
 .calc-row:not(:last-of-type){border-bottom:1px solid var(--hairline);}
 .calc-row .lbl{display:flex;align-items:center;gap:9px;color:var(--text-dim);font-weight:400;}
 .calc-row .cr-dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px;background:var(--text-faint);}
@@ -760,6 +761,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   color:var(--text);font-size:15px;font-family:var(--font);outline:none;transition:border-color .2s;}
 .fld input:focus{border-color:var(--lime);}
 .fld-row{display:flex;gap:10px;}
+/* Lembretes (WhatsApp) no modal de recorrência */
+.rem-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;
+  padding:11px 13px;border-radius:13px;border:1px solid var(--glass-border);background:var(--glass-bg);}
+.rem-row-title{font-size:14px;font-weight:500;color:var(--text);}
+.rem-row-sub{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
+.rem-switch{width:46px;height:28px;border-radius:999px;background:var(--track-bg);position:relative;flex:0 0 auto;cursor:pointer;
+  transition:background .25s;border:1px solid var(--glass-border);}
+.rem-switch .rem-knob{position:absolute;top:2.5px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  box-shadow:0 2px 5px rgba(0,0,0,0.3);transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
+.rem-switch.on{background:linear-gradient(135deg,var(--lime),var(--lime-deep));border-color:transparent;}
+.rem-switch.on .rem-knob{transform:translateX(18px);}
+.rem-day{max-height:0;overflow:hidden;opacity:0;transition:max-height .3s ease,opacity .25s ease,margin .3s ease;margin-top:0;}
+.rem-day.open{max-height:160px;opacity:1;margin-top:12px;}
+.rem-hint{font-size:11.5px;color:var(--text-faint);margin-top:8px;line-height:1.45;padding-left:2px;}
 .modal-msg{font-size:13px;min-height:18px;font-weight:500;}
 .modal-msg.err{color:var(--red);}
 .modal-msg.ok{color:var(--lime-deep);}
@@ -850,7 +865,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       </div>
       <div class="icon-btn-wrap">
         <div class="icon-btn pill" id="banksToggle" title="Bancos conectados">
-          <div class="banks-stack" id="banksStack"><span class="bs-skel"></span><span class="bs-skel"></span></div>
+          <div class="banks-stack" id="banksStack"></div>
         </div>
       </div>
     </div>
@@ -1678,7 +1693,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       return '<div class="ftl-col'+(i===idxSel?' sel':'')+(aberto?' aberto':' pago')+'" data-i="'+i+'">'+
         '<div class="ftl-lbl">'+MESES_ABREV[m.mes]+'</div>'+
         '<div class="ftl-dotzone"></div>'+
-        '<div class="ftl-val">'+formatBRLInt(m.total)+'</div>'+
+        '<div class="ftl-val">'+(Number(m.total)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
       '</div>';
     }).join("");
     return '<div class="ftl">'+svg+'<div class="ftl-dots">'+dots+'</div><div class="ftl-row">'+cols+'</div></div>';
@@ -1702,7 +1717,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var info=bancoDe(card.nome),fat=faturaAtual(card),disp=card.limite-fat;
       var venc=card.vencimento?('Venc. dia '+card.vencimento):'';
       return '<div class="ccard" style="background:linear-gradient(140deg,'+info.cor1+','+info.cor2+')"><div class="cc-glow"></div>'+
-        '<div class="cc-top"><div class="cc-bank"><div class="cc-logo">'+logoHtml(info)+'</div><div><div class="cc-name">'+escapeHtml(card.nome)+'</div><div class="cc-flag">'+info.flag+'</div></div></div>'+
+        '<div class="cc-top"><div class="cc-bank"><div class="cc-logo">'+logoHtml(info)+'</div><div class="cc-bank-txt"><div class="cc-name">'+escapeHtml(card.nome)+'</div><div class="cc-flag">'+info.flag+'</div></div></div>'+
           (venc?'<div class="cc-venc">'+venc+'</div>':'')+'</div>'+
         '<div class="cc-bottom">'+
           '<div class="cc-bot-main"><div class="cc-label">Fatura em aberto</div><div class="cc-fatura">'+formatBRL(fat)+'</div></div>'+
@@ -1710,11 +1725,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '</div></div>';
     }).join("");
     var dots=ativos.map(function(_,i){return '<div class="dot'+(i===cartaoAtivo?' active':'')+'" data-d="'+i+'"></div>';}).join("");
-    return '<div class="cards-sticky-hdr">'+resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div>'+
-      '<div class="section-head" style="margin:4px 4px 2px"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div>'+
-      '</div>'+
-      '<div id="txList"></div>'+
-      '<div class="glass panel" id="chartPanel" style="margin-top:13px"></div>';
+    return '<div class="cards-sticky-hdr">'+resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div></div>'+
+      '<div class="glass panel" id="chartPanel" style="margin-top:6px"></div>'+
+      '<div class="cards-tx-sticky"><div class="section-head" style="margin:6px 4px 2px"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div></div>'+
+      '<div id="txList"></div>';
   }
   function renderDetalheCartao(card){
     if(!card)return;
@@ -1817,19 +1831,40 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
 
   /* ===== TELA 3: PARCELAMENTOS / ASSINATURAS ===== */
+  function parcStatsData(){
+    var ativos=parcelamentosAtivos();
+    var total=ativos.reduce(function(s,p){return s+p.valorParcela;},0);
+    return { n:ativos.length, total:total };
+  }
+  function assinStatsData(){
+    var ativas=state.assinaturas.filter(function(a){return a.ativa!=="Não";});
+    var mensal=ativas.reduce(function(s,a){return s+(a.frequencia==="Anual"?a.valor/12:a.valor);},0);
+    return { n:ativas.length, total:mensal };
+  }
+  function parcStatsHtml(which){
+    var d = which==='assin' ? assinStatsData() : parcStatsData();
+    return '<div class="ps-blk"><div class="ps-k">'+(which==='assin'?'Assinaturas':'Parcelamentos')+'</div>'+
+        '<div class="ps-v">'+d.n+' <span class="ps-u">'+(which==='assin'?'ativas':'ativos')+'</span></div></div>'+
+      '<div class="ps-div"></div>'+
+      '<div class="ps-blk"><div class="ps-k">Total por mês</div><div class="ps-v pos">'+formatBRL(d.total)+'</div></div>';
+  }
   function renderParcelas(){
     var ativo = (subtabAlvo==='assin') ? 'assin' : 'parc';
     subtabAlvo = null; // consumido — não deve afetar a próxima visita manual à tela
-    return '<div class="subtabs"><div class="subtab'+(ativo==='parc'?' active':'')+'" data-sub="parc">Parcelamentos</div><div class="subtab'+(ativo==='assin'?' active':'')+'" data-sub="assin">Assinaturas</div></div>'+
+    return '<div class="parc-sticky-hdr">'+
+        '<div class="subtabs">'+
+          '<div class="subtab'+(ativo==='parc'?' active':'')+'" data-sub="parc">Parcelamentos</div>'+
+          '<div class="subtab'+(ativo==='assin'?' active':'')+'" data-sub="assin">Assinaturas</div>'+
+        '</div>'+
+        '<div class="glass parc-stats" id="parcStats">'+parcStatsHtml(ativo)+'</div>'+
+      '</div>'+
       '<div class="subpane'+(ativo==='parc'?' active':'')+'" id="paneParc">'+renderListaParcelamentos()+'</div>'+
       '<div class="subpane'+(ativo==='assin'?' active':'')+'" id="paneAssin">'+renderListaAssinaturas()+'</div>';
   }
   function renderListaParcelamentos(){
     var ativos=parcelamentosAtivos();
     if(!ativos.length) return '<div class="empty"><div class="ei">📦</div><div class="et">Nenhum parcelamento ativo.</div></div>';
-    var total=ativos.reduce(function(s,p){return s+p.valorParcela;},0);
-    var head='<div class="section-head" style="margin-top:0"><h2>'+ativos.length+' ativos</h2><span class="cnt">'+formatBRL(total)+' / mês</span></div>';
-    return head+ativos.map(function(p){
+    return ativos.map(function(p){
       var pagas=clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
       var pct=clamp((pagas/p.nParcelas)*100,0,100);
       return '<div class="glass pcard"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(sentenceCase(p.descricao))+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
@@ -1840,9 +1875,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function renderListaAssinaturas(){
     var ativas=state.assinaturas.filter(function(a){return a.ativa!=="Não";});
     if(!ativas.length) return '<div class="empty"><div class="ei">🔁</div><div class="et">Nenhuma assinatura cadastrada.</div></div>';
-    var mensal=ativas.reduce(function(s,a){return s+(a.frequencia==="Anual"?a.valor/12:a.valor);},0);
-    var head='<div class="section-head" style="margin-top:0"><h2>'+ativas.length+' ativas</h2><span class="cnt">'+formatBRL(mensal)+' / mês</span></div>';
-    return head+ativas.map(function(a){
+    return ativas.map(function(a){
       return '<div class="glass acard"><div class="aic">🔁</div><div class="amain"><div class="aname">'+escapeHtml(sentenceCase(a.nome))+'</div><div class="afreq">'+escapeHtml(a.frequencia||"Mensal")+(a.categoria?' · '+escapeHtml(sentenceCase(a.categoria)):'')+'</div></div><div class="aval">'+formatBRL(a.valor)+'<div class="sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div></div>';
     }).join("");
   }
@@ -1854,6 +1887,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         var sub=st.getAttribute('data-sub');
         document.getElementById('paneParc').classList.toggle('active',sub==='parc');
         document.getElementById('paneAssin').classList.toggle('active',sub==='assin');
+        var stats=document.getElementById('parcStats'); if(stats) stats.innerHTML=parcStatsHtml(sub);
+        if(window.requestAnimationFrame){requestAnimationFrame(medirStickies);}
       });
     });
   }
@@ -2125,7 +2160,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   function gravarRecorrenteSheet(item, callback){
     if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
-    var url = GAS_EXEC_URL+'?action=addPrevisao&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor);
+    var url = GAS_EXEC_URL+'?action=addPrevisao&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor)+
+      '&lembrete='+(item.lembrete?'1':'0')+'&lembreteDia='+encodeURIComponent(item.lembreteDia||'');
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
   function deletarRecorrenteSheet(idx, callback){
@@ -2136,7 +2172,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function editarRecorrenteSheet(idx, origNome, item, callback){
     if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
     var url = GAS_EXEC_URL+'?action=editPrevisao&idx='+idx+'&origNome='+encodeURIComponent(origNome)+
-      '&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor);
+      '&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor)+
+      '&lembrete='+(item.lembrete?'1':'0')+'&lembreteDia='+encodeURIComponent(item.lembreteDia||'');
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
 
@@ -2157,6 +2194,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           '<label class="fld"><span>Valor</span><input id="pvValor" type="number" inputmode="decimal" placeholder="0,00" value="'+r.valor+'"></label>'+
           '<label class="fld"><span>Tipo</span><select id="pvTipo"><option value="in"'+(r.tipo==='in'?' selected':'')+'>Entrada</option><option value="out"'+(r.tipo==='out'?' selected':'')+'>Saída</option></select></label>'+
         '</div>'+
+        '<div class="rem-row" id="pvRemRow"><div class="rem-row-txt"><div class="rem-row-title">Enviar lembrete no WhatsApp</div><div class="rem-row-sub">Aviso mensal pra pagar ou cobrar</div></div>'+
+          '<span class="rem-switch'+(r.lembrete?' on':'')+'" id="pvRemSwitch" role="switch" aria-checked="'+(r.lembrete?'true':'false')+'"><span class="rem-knob"></span></span>'+
+        '</div>'+
+        '<div class="rem-day'+(r.lembrete?' open':'')+'" id="pvRemDayWrap">'+
+          '<label class="fld"><span>Lembrar todo dia</span><select id="pvRemDia">'+
+            (function(){var o='';for(var d=1;d<=31;d++){o+='<option value="'+d+'"'+(((r.lembreteDia||5)==d)?' selected':'')+'>dia '+d+'</option>';}return o;})()+
+          '</select></label>'+
+          '<div class="rem-hint" id="pvRemHint"></div>'+
+        '</div>'+
         '<div class="modal-msg" id="pvMsg"></div>'+
       '</div>'+
       '<div class="modal-foot">'+
@@ -2171,13 +2217,43 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     ov.querySelector('#pvClose').addEventListener('click',fechar);
     var cancelBtn=ov.querySelector('#pvCancel'); if(cancelBtn) cancelBtn.addEventListener('click',fechar);
 
+    // ── Lembretes (WhatsApp) ──────────────────────────────────────────
+    var remSwitch = ov.querySelector('#pvRemSwitch');
+    var remWrap   = ov.querySelector('#pvRemDayWrap');
+    var remDia    = ov.querySelector('#pvRemDia');
+    var remHint   = ov.querySelector('#pvRemHint');
+    var tipoSel   = ov.querySelector('#pvTipo');
+    function atualizarRemHint(){
+      if(!remHint) return;
+      var on = remSwitch && remSwitch.classList.contains('on');
+      if(!on){ remHint.textContent=''; return; }
+      var dia = remDia ? remDia.value : '';
+      var acao = (tipoSel && tipoSel.value==='in') ? 'cobrar este recebimento' : 'efetuar este pagamento';
+      remHint.textContent = 'Todo dia '+dia+' você receberá um lembrete para '+acao+'.';
+    }
+    function setRem(on){
+      if(!remSwitch) return;
+      remSwitch.classList.toggle('on', !!on);
+      remSwitch.setAttribute('aria-checked', on?'true':'false');
+      if(remWrap) remWrap.classList.toggle('open', !!on);
+      atualizarRemHint();
+    }
+    if(remSwitch){
+      remSwitch.addEventListener('click',function(){ setRem(!remSwitch.classList.contains('on')); });
+    }
+    if(remDia) remDia.addEventListener('change', atualizarRemHint);
+    if(tipoSel) tipoSel.addEventListener('change', atualizarRemHint);
+    atualizarRemHint();
+    // ──────────────────────────────────────────────────────────────────
+
     ov.querySelector('#pvSave').addEventListener('click',function(){
       var btn=this, msg=ov.querySelector('#pvMsg');
       var nome=(ov.querySelector('#pvNome').value||'').trim();
       var valor=parseFloat(ov.querySelector('#pvValor').value);
       var tipo=ov.querySelector('#pvTipo').value;
       if(!nome||isNaN(valor)||valor<=0){ msg.textContent='Preencha nome e valor corretamente.'; msg.className='modal-msg err'; return; }
-      var novo={nome:nome,valor:valor,tipo:tipo};
+      var remOn = remSwitch && remSwitch.classList.contains('on');
+      var novo={nome:nome,valor:valor,tipo:tipo,lembrete:!!remOn,lembreteDia:remOn?parseInt(remDia.value,10):null};
       if(editando){
         btn.disabled=true; btn.textContent='Salvando…';
         var recsAtual=lerRecorrentes(); var origNome=recsAtual[idx]?recsAtual[idx].nome:r.nome;
@@ -2231,8 +2307,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       return '<div class="rec-item'+clsFeito+'" id="rec-item-'+i+'">'+
         '<div class="rec-dot '+r.tipo+'"></div>'+
         '<div class="rec-main" data-edit="'+i+'">'+
-          '<div class="rec-name">'+escapeHtml(r.nome)+'</div>'+
-          '<div class="rec-check-lbl">'+(feito ? lblFeito : lblPend)+'</div>'+
+          '<div class="rec-name">'+escapeHtml(r.nome)+(r.lembrete?' <span class="rec-bell" title="Lembrete todo dia '+(r.lembreteDia||'')+'">🔔</span>':'')+'</div>'+
+          '<div class="rec-check-lbl">'+(feito ? lblFeito : lblPend)+(r.lembrete?' · lembrete dia '+(r.lembreteDia||''):'')+'</div>'+
         '</div>'+
         '<div class="rec-val '+r.tipo+'" data-edit="'+i+'">'+(r.tipo==='in'?'+'+formatBRLOuOculto(r.valor):'-'+formatBRL(r.valor))+'</div>'+
         // Toggle deslizante — fica no canto direito
@@ -2278,7 +2354,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag">'+mes+'</span></h2>'+
       '<span class="link" id="recAddBtn">+ Cadastrar</span>'+
     '</div>'+
-    '<div class="rec-reset-hint">Toque no círculo para marcar como recebido/pago. As marcações resetam no próximo mês automaticamente.</div>'+
     '<div id="recLista">'+recHtml+'</div>'+
     '';
   }
