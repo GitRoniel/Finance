@@ -1,0 +1,33 @@
+{
+  "appId": "com.roniell.financeiro",
+  "appName": "Financeiro",
+  "webDir": "www",
+  "backgroundColor": "#08080b",
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#08080b",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "server": {
+    "iosScheme": "app"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "launchAutoHide": false,
+      "backgroundColor": "#08080b",
+      "showSpinner": false,
+      "iosSpinnerStyle": "small"
+    },
+    "Keyboard": {
+      "resize": "native",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    },
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK",
+      "backgroundColor": "#08080b"
+    }
+  }
+}
