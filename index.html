@@ -301,31 +301,40 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .panel .big.anim{animation:popIn .3s cubic-bezier(0.16,1,0.3,1);}
 /* Timeline "Evolução da fatura": cards verticais altos, a curva Bézier atravessa por dentro deles,
    nome no topo, ponto sobre a curva, valor embaixo. Mês selecionado = card com borda azul e fundo azul. */
-.ftl{position:relative;margin-top:14px;height:148px;}
-.ftl-svg{position:absolute;left:0;top:0;width:100%;height:148px;display:block;overflow:visible;pointer-events:none;z-index:1;}
-.ftl-dots{position:absolute;left:0;top:0;width:100%;height:148px;pointer-events:none;z-index:3;}
-.ftl-row{display:flex;gap:8px;height:100%;position:relative;z-index:2;}
-.ftl-col{flex:1;min-width:0;border-radius:16px;border:1.5px solid transparent;cursor:pointer;position:relative;
-  display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:11px 4px 12px;
+.ftl-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:0 -6px;padding:0 6px 2px;scroll-behavior:smooth;}
+.ftl-scroll::-webkit-scrollbar{display:none;}
+.ftl-scroll{scrollbar-width:none;}
+.ftl{position:relative;margin-top:10px;height:120px;}
+.ftl-svg{position:absolute;left:0;top:0;width:100%;height:120px;display:block;overflow:visible;pointer-events:none;z-index:1;}
+.ftl-dots{position:absolute;left:0;top:0;width:100%;height:120px;pointer-events:none;z-index:3;}
+.ftl-row{display:flex;gap:6px;height:100%;position:relative;z-index:2;}
+.ftl-col{flex:1;min-width:0;border-radius:13px;border:1.5px solid transparent;cursor:pointer;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 3px 9px;
   transition:border-color .3s,background .3s,transform .3s;}
 .ftl-col:active{transform:scale(0.97);}
-/* Mês selecionado: card "em aberto" (atual) destaca azul; card pago destaca verde. */
+/* Mês selecionado: aberto=azul, pago=verde, futuro=neutro tracejado. */
 .ftl-col.sel.aberto{border-color:var(--blue);background:rgba(77,163,255,0.12);}
 .ftl-col.sel.pago{border-color:var(--lime-deep);background:rgba(131,214,38,0.12);}
-.ftl-lbl{font-size:13px;font-weight:600;color:var(--text-faint);text-transform:capitalize;line-height:1;z-index:3;}
+.ftl-col.futuro{border-style:dashed;border-color:rgba(255,255,255,0.10);}
+.ftl-col.sel.futuro{border-color:var(--text-dim);border-style:dashed;background:rgba(255,255,255,0.05);}
+.ftl-col.futuro .ftl-lbl,.ftl-col.futuro .ftl-val{opacity:.78;}
+.ftl-lbl{font-size:12px;font-weight:600;color:var(--text-faint);text-transform:capitalize;line-height:1;z-index:3;}
 .ftl-col.sel.aberto .ftl-lbl{color:var(--blue);}
 .ftl-col.sel.pago .ftl-lbl{color:var(--lime-deep);}
+.ftl-col.sel.futuro .ftl-lbl{color:var(--text-dim);}
 .ftl-dotzone{flex:1;width:100%;}
-.ftl-val{font-size:11.5px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;color:var(--text-dim);
+.ftl-val{font-size:11px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;color:var(--text-dim);
   text-align:center;line-height:1.15;z-index:3;transition:color .3s,font-size .3s;white-space:nowrap;}
-.ftl-col.sel.aberto .ftl-val{color:var(--blue);font-size:12.5px;}
-.ftl-col.sel.pago .ftl-val{color:var(--lime-deep);font-size:12.5px;}
-.ftl-dot{position:absolute;width:9px;height:9px;border-radius:50%;
+.ftl-col.sel.aberto .ftl-val{color:var(--blue);}
+.ftl-col.sel.pago .ftl-val{color:var(--lime-deep);}
+.ftl-dot{position:absolute;width:8px;height:8px;border-radius:50%;
   border:2.5px solid var(--bg);transform:translate(-50%,-50%);box-sizing:content-box;z-index:4;transition:background .3s;}
 .ftl-dot.pago{background:var(--lime-deep);}
 .ftl-dot.aberto{background:var(--bg);border-color:var(--blue);}
 .ftl-dot.aberto.sel{background:var(--blue);}
 .ftl-dot.pago.sel{background:var(--lime-deep);}
+.ftl-dot.futuro{background:var(--bg);border-color:var(--text-faint);}
+.ftl-dot.futuro.sel{background:var(--text-dim);border-color:var(--text-dim);}
 @keyframes ftlFade{from{opacity:0;}to{opacity:1;}}
 .ftl-line,.ftl-area{animation:ftlFade .4s ease;}
 /* transações */
@@ -545,23 +554,24 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .subpane{display:none;}
 .subpane.active{display:block;animation:fadeUp .35s ease both;}
 /* item de parcelamento — compacto e moderno */
-.pcard{padding:11px 13px;border-radius:16px;margin-bottom:8px;}
-.pcard-top{display:flex;align-items:center;justify-content:space-between;gap:11px;margin-bottom:9px;}
-.pcard-name{font-size:14.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pcard-card{font-size:12px;color:var(--text-faint);margin-top:2px;}
-.pcard-val{font-size:17px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
-.pcard-val .sub{font-size:11.5px;color:var(--text-faint);font-weight:500;margin-top:1px;}
-.pprog{height:6px;border-radius:6px;background:var(--track-bg);overflow:hidden;margin-bottom:7px;}
-.pprog-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));transition:width .5s cubic-bezier(0.16,1,0.3,1);}
-.pcard-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text-faint);font-weight:500;}
+.pcard{padding:9px 12px;border-radius:14px;margin-bottom:7px;}
+.pcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;}
+.pcard-name{font-size:13.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcard-card{font-size:11px;color:var(--text-faint);margin-top:1px;}
+.pcard-val{font-size:15px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
+.pcard-val .sub{font-size:10.5px;color:var(--text-faint);font-weight:500;margin-top:0;}
+.pcard-top .fbadge{width:32px;height:32px;flex:0 0 32px;}
+.pprog{height:5px;border-radius:5px;background:var(--track-bg);overflow:hidden;margin-bottom:6px;}
+.pprog-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));transition:width .5s cubic-bezier(0.16,1,0.3,1);}
+.pcard-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text-faint);font-weight:500;}
 /* assinatura — compacto e moderno */
-.acard{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:16px;margin-bottom:8px;}
-.aic{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px;background:var(--track-bg);}
+.acard{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;margin-bottom:7px;}
+.aic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:14px;background:var(--track-bg);}
 .amain{flex:1;min-width:0;}
-.aname{font-size:14.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.afreq{font-size:12px;color:var(--text-faint);margin-top:2px;}
-.aval{font-size:17px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
-.aval .sub{font-size:11.5px;color:var(--text-faint);font-weight:500;margin-top:1px;}
+.aname{font-size:13.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.afreq{font-size:11px;color:var(--text-faint);margin-top:1px;}
+.aval{font-size:15px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
+.aval .sub{font-size:10.5px;color:var(--text-faint);font-weight:500;margin-top:0;}
 /* investimentos */
 .inv-hero{padding:18px;border-radius:var(--radius-sm);margin-bottom:10px;text-align:center;}
 .inv-hero .k{font-size:13px;color:var(--text-faint);font-weight:500;}
@@ -686,6 +696,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* previsões — hero fixo no topo ao rolar (3 informações: Saldo + Faturas + Previsão) */
 .prev-sticky{position:sticky;top:var(--top-bar-h,0px);z-index:20;background:var(--bg);
   margin:0 -16px;padding:6px 16px 4px;}
+.prev-month-strip{margin-bottom:9px;}
 .prev-duo.prev-trio3{padding:13px 14px;}
 .prev-trio3 .prev-duo-blk{text-align:center;}
 .prev-trio3 .prev-duo-blk:first-child{text-align:left;}
@@ -1245,6 +1256,29 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function totalParcelasMes(){
     return parcelamentosAtivos().reduce(function(s,p){return s+p.valorParcela;},0);
   }
+  // Parcelas de um cartão que ainda cairão daqui a "f" meses (f>=1 = próximo mês).
+  function parcelasContribuindoNoMes(card, f){
+    var alvo = normalizarNomeCartao(card.nome);
+    var hoje = new Date();
+    return state.parcelamentos.filter(function(p){
+      if(!p.inicio || normalizarNomeCartao(p.cartao)!==alvo) return false;
+      var pagas = clamp(monthsBetween(p.inicio, hoje)+1, 0, p.nParcelas);
+      var parcelaNoMes = pagas + f; // número da parcela que cairia nesse mês futuro
+      return parcelaNoMes>=1 && parcelaNoMes<=p.nParcelas;
+    }).map(function(p){
+      var pagas = clamp(monthsBetween(p.inicio, hoje)+1, 0, p.nParcelas);
+      return { descricao:p.descricao, valorParcela:p.valorParcela, num:pagas+f, total:p.nParcelas };
+    });
+  }
+  // Fatura PROJETADA de um cartão daqui a "f" meses (só com base nas parcelas em aberto).
+  function faturaProjetadaCartao(card, f){
+    return parcelasContribuindoNoMes(card, f).reduce(function(s,x){return s+x.valorParcela;},0);
+  }
+  // Soma das faturas projetadas de TODOS os cartões ativos daqui a "f" meses.
+  function faturasProjetadasMes(f){
+    return state.cartoes.filter(function(c){return c.ativo!=="Não";})
+      .reduce(function(s,c){return s+faturaProjetadaCartao(c,f);},0);
+  }
   function limiteTotal(){ return state.cartoes.filter(function(c){return c.ativo!=="Não";}).reduce(function(s,c){return s+(c.limite||0);},0); }
   function limiteDisponivel(){ return limiteTotal()-totalFaturasAbertas(); }
 
@@ -1579,6 +1613,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   var cartaoAtivo=0;
   var subtabAlvo=null; // guarda qual sub-aba (parc/assin) abrir ao entrar na tela "Parcelas"
   var mesSelecionado=null; // índice dentro do array de 6 ciclos do gráfico; null = ciclo atual (a última barra)
+  var prevMesOffset=0; // mês selecionado na aba Previsões (0 = mês atual; 1.. = meses futuros)
   var MESES_COMPLETO=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   function MESES_COMPLETO_CAP(m){ var s=MESES_COMPLETO[m]||''; return s.charAt(0).toUpperCase()+s.slice(1); }
 
@@ -1594,30 +1629,37 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     return lista; // mais antiga primeiro, ciclo atual (em formação) por último
   }
-  function gastosPorMesCartao(card,nMeses){
+  function gastosPorMesCartao(card,nPast,nFut){
+    nPast = (nPast==null?3:nPast); nFut = (nFut==null?5:nFut);
     var txCard=txDoCartao(card.nome);
+    var out=[];
     if(!card.fechamento){
-      // sem dia de fechamento cadastrado na planilha: cai no mês de calendário como aproximação
-      var hoje=new Date(),out=[];
-      for(var i=nMeses-1;i>=0;i--){
+      // sem dia de fechamento: aproxima por mês de calendário (passado+atual)
+      var hoje=new Date();
+      for(var i=nPast;i>=0;i--){
         var d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
         var ini=new Date(d.getFullYear(),d.getMonth(),1),fim=new Date(d.getFullYear(),d.getMonth()+1,0);
         var total=txCard.filter(function(t){return t.tipo==="Saída"&&t.data&&t.data>=ini&&t.data<=fim;}).reduce(function(s,t){return s+t.valor;},0);
-        out.push({janela:{start:ini,end:fim},mes:d.getMonth(),ano:d.getFullYear(),total:total,atual:i===0});
+        out.push({janela:{start:ini,end:fim},mes:d.getMonth(),ano:d.getFullYear(),total:total,atual:i===0,futuro:false,f:0});
       }
-      return out;
+    } else {
+      var janelas=janelasFaturaCartao(card,nPast+1);
+      janelas.forEach(function(janela,idx){
+        var atual=(idx===janelas.length-1);
+        var total=atual?faturaAtual(card):txCard.filter(function(t){
+          return t.tipo==="Saída"&&t.data&&t.data>=janela.start&&t.data<=janela.end;
+        }).reduce(function(s,t){return s+t.valor;},0);
+        var venc=vencimentoDaJanela(janela,card.vencimento,card.fechamento);
+        out.push({janela:janela,mes:venc.getMonth(),ano:venc.getFullYear(),total:total,atual:atual,futuro:false,f:0});
+      });
     }
-    var janelas=janelasFaturaCartao(card,nMeses);
-    return janelas.map(function(janela,idx){
-      var atual=(idx===janelas.length-1);
-      // Pro ciclo atual usa o MESMO valor oficial do card do carrossel (aba Fatura Em Aberto);
-      // pros ciclos já fechados, soma as transações reais dentro da janela de fechamento certa.
-      var total=atual?faturaAtual(card):txCard.filter(function(t){
-        return t.tipo==="Saída"&&t.data&&t.data>=janela.start&&t.data<=janela.end;
-      }).reduce(function(s,t){return s+t.valor;},0);
-      var venc=vencimentoDaJanela(janela,card.vencimento,card.fechamento);
-      return {janela:janela,mes:venc.getMonth(),ano:venc.getFullYear(),total:total,atual:atual};
-    });
+    // Meses FUTUROS: fatura projetada pelas parcelas em aberto
+    var ref = out.length ? out[out.length-1] : {mes:(new Date()).getMonth(),ano:(new Date()).getFullYear()};
+    for(var f=1; f<=nFut; f++){
+      var dv=new Date(ref.ano, ref.mes+f, 1);
+      out.push({janela:null,mes:dv.getMonth(),ano:dv.getFullYear(),total:faturaProjetadaCartao(card,f),atual:false,futuro:true,f:f});
+    }
+    return out;
   }
   function transacoesDoCartaoJanela(nomeCartao,janela){
     return txDoCartao(nomeCartao).filter(function(t){return t.data&&t.data>=janela.start&&t.data<=janela.end;}).sort(function(a,b){return b.data-a.data;});
@@ -1647,56 +1689,61 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // com gradiente abaixo dela. O mês selecionado ganha borda/fundo azul. Para os pontos não virarem
   // elipses, o SVG NÃO é esticado (preserveAspectRatio padrão) e usa coordenadas reais em px,
   // medidas a partir da largura real do container no momento do render.
+  function smoothSeg(pts, a, b){
+    if(b<=a) return '';
+    var d='M'+pts[a].x.toFixed(2)+','+pts[a].y.toFixed(2);
+    for(var s=a;s<b;s++){
+      var p0=pts[s-1]||pts[s], p1=pts[s], p2=pts[s+1], p3=pts[s+2]||p2;
+      var c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+      var c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+      d+=' C'+c1x.toFixed(2)+','+c1y.toFixed(2)+' '+c2x.toFixed(2)+','+c2y.toFixed(2)+' '+p2.x.toFixed(2)+','+p2.y.toFixed(2);
+    }
+    return d;
+  }
   function gerarTimelineHtml(meses, idxSel){
     var n=meses.length;
     var valores=meses.map(function(m){return m.total;});
     var maxV=Math.max.apply(null,valores.concat([1])), minV=Math.min.apply(null,valores.concat([0]));
-    var H=148, zoneTop=34, zoneH=70;
+    var H=120, zoneTop=24, zoneH=50;
     var pts=meses.map(function(m,i){
       var x=((i+0.5)/n)*100;
       var y=(maxV===minV)?(zoneTop+zoneH/2):(zoneTop+(1-((m.total-minV)/(maxV-minV)))*zoneH);
       return {x:x,y:y};
     });
-    // Índice do primeiro mês "em aberto" (atual). Antes dele = pago (verde); a partir dele = aberto (azul).
-    var idxAberto=-1;
-    for(var k=0;k<n;k++){ if(meses[k].atual){ idxAberto=k; break; } }
-    if(idxAberto===-1) idxAberto=n-1;
+    // Índice do mês atual (em aberto). Antes = pago (verde); a partir dele = aberto/azul; futuros = pontilhado.
+    var idxAtual=-1; for(var k=0;k<n;k++){ if(meses[k].atual){ idxAtual=k; break; } }
+    if(idxAtual===-1){ for(var k2=n-1;k2>=0;k2--){ if(!meses[k2].futuro){ idxAtual=k2; break; } } }
+    if(idxAtual===-1) idxAtual=Math.min(n-1, Math.max(0, n-6));
 
-    var dFull=caminhoSuave(pts);
-    // Para colorir metades diferentes, desenho a curva inteira em VERDE e por cima desenho só o
-    // último segmento (penúltimo ponto -> último ponto) em AZUL, recriando o mesmo trecho Bézier.
-    var idxSplit=Math.max(idxAberto-1,0); // ponto onde começa o trecho azul
-    var segAzul='M'+pts[idxSplit].x.toFixed(2)+','+pts[idxSplit].y.toFixed(2);
-    for(var s=idxSplit;s<n-1;s++){
-      var p0=pts[s-1]||pts[s], p1=pts[s], p2=pts[s+1], p3=pts[s+2]||p2;
-      var c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
-      var c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
-      segAzul+=' C'+c1x.toFixed(2)+','+c1y.toFixed(2)+' '+c2x.toFixed(2)+','+c2y.toFixed(2)+' '+p2.x.toFixed(2)+','+p2.y.toFixed(2);
-    }
-    var areaFill=dFull+' L'+pts[n-1].x.toFixed(2)+','+H+' L'+pts[0].x.toFixed(2)+','+H+' Z';
+    var dGreen=smoothSeg(pts,0,idxAtual);
+    var dBlue=smoothSeg(pts,Math.max(idxAtual-1,0),idxAtual);
+    var dFut=smoothSeg(pts,idxAtual,n-1);
+    var areaSrc=(idxAtual>0?smoothSeg(pts,0,idxAtual):('M'+pts[0].x.toFixed(2)+','+pts[0].y.toFixed(2)));
+    var areaFill=areaSrc+' L'+pts[idxAtual].x.toFixed(2)+','+H+' L'+pts[0].x.toFixed(2)+','+H+' Z';
     var svg='<svg class="ftl-svg" viewBox="0 0 100 '+H+'" preserveAspectRatio="none">'+
       '<defs><linearGradient id="ftlGrad" x1="0" y1="0" x2="0" y2="1">'+
-        '<stop offset="0%" stop-color="var(--lime)" stop-opacity="0.26"/>'+
+        '<stop offset="0%" stop-color="var(--lime)" stop-opacity="0.22"/>'+
         '<stop offset="100%" stop-color="var(--lime)" stop-opacity="0"/>'+
       '</linearGradient></defs>'+
       '<path class="ftl-area" d="'+areaFill+'" fill="url(#ftlGrad)" stroke="none"/>'+
-      '<path class="ftl-line" d="'+dFull+'" fill="none" stroke="var(--lime-deep)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'+
-      '<path class="ftl-line" d="'+segAzul+'" fill="none" stroke="var(--blue)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'+
+      (dGreen?'<path class="ftl-line" d="'+dGreen+'" fill="none" stroke="var(--lime-deep)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>':'')+
+      (dBlue?'<path class="ftl-line" d="'+dBlue+'" fill="none" stroke="var(--blue)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>':'')+
+      (dFut?'<path class="ftl-line ftl-fut-line" d="'+dFut+'" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-dasharray="2.5 3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>':'')+
     '</svg>';
     var dots=pts.map(function(p,i){
-      var sel=(i===idxSel), aberto=meses[i].atual;
-      var cls='ftl-dot'+(sel?' sel':'')+(aberto?' aberto':' pago');
+      var sel=(i===idxSel), m=meses[i];
+      var cls='ftl-dot'+(sel?' sel':'')+(m.futuro?' futuro':(m.atual?' aberto':' pago'));
       return '<div class="'+cls+'" style="left:'+p.x.toFixed(2)+'%;top:'+p.y.toFixed(2)+'px"></div>';
     }).join("");
     var cols=meses.map(function(m,i){
-      var aberto=m.atual;
-      return '<div class="ftl-col'+(i===idxSel?' sel':'')+(aberto?' aberto':' pago')+'" data-i="'+i+'">'+
+      var cls='ftl-col'+(i===idxSel?' sel':'')+(m.futuro?' futuro':(m.atual?' aberto':' pago'));
+      return '<div class="'+cls+'" data-i="'+i+'">'+
         '<div class="ftl-lbl">'+MESES_ABREV[m.mes]+'</div>'+
         '<div class="ftl-dotzone"></div>'+
-        '<div class="ftl-val">'+(Number(m.total)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
+        '<div class="ftl-val">R$ '+(Number(m.total)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
       '</div>';
     }).join("");
-    return '<div class="ftl">'+svg+'<div class="ftl-dots">'+dots+'</div><div class="ftl-row">'+cols+'</div></div>';
+    return '<div class="ftl-scroll"><div class="ftl" style="min-width:'+(n*62)+'px">'+svg+'<div class="ftl-dots">'+dots+'</div><div class="ftl-row">'+cols+'</div></div></div>';
   }
 
   function renderCartoes(){
@@ -1732,25 +1779,48 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
   function renderDetalheCartao(card){
     if(!card)return;
-    var meses=gastosPorMesCartao(card,4);
-    var idxAtual=meses.length-1;
-    var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtual;
+    var meses=gastosPorMesCartao(card,3,6);
+    var idxAtualReal=-1; for(var ii=0;ii<meses.length;ii++){ if(meses[ii].atual){ idxAtualReal=ii; break; } }
+    if(idxAtualReal===-1) idxAtualReal=Math.max(0, meses.length-7);
+    var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtualReal;
     var timeline=gerarTimelineHtml(meses,idxSel);
     var mSel=meses[idxSel];
     var cp=document.getElementById('chartPanel');
     if(cp){
-      cp.innerHTML='<div class="panel-head"><span class="pt">Evolução da fatura</span><div class="ftl-tag">Últimos 4 meses</div></div>'+timeline;
+      cp.innerHTML='<div class="panel-head"><span class="pt">Evolução da fatura</span><div class="ftl-tag">Histórico + previsão</div></div>'+timeline;
       cp.querySelectorAll('.ftl-col').forEach(function(fc){
         fc.addEventListener('click',function(){
           mesSelecionado=Number(fc.getAttribute('data-i'));
           renderDetalheCartao(card);
         });
       });
+      // centraliza o mês selecionado na faixa rolável
+      var sc=cp.querySelector('.ftl-scroll'); var selCol=cp.querySelector('.ftl-col.sel');
+      if(sc&&selCol){ sc.scrollLeft=Math.max(0, selCol.offsetLeft-(sc.clientWidth-selCol.offsetWidth)/2); }
     }
-    var txs=transacoesDoCartaoJanela(card.nome,mSel.janela);
-    var tt=document.getElementById('txTitle'); if(tt) tt.textContent=mSel.atual?'Transações':'Transações · fatura de '+MESES_COMPLETO[mSel.mes];
-    var tc=document.getElementById('txCount'); if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
+    var tt=document.getElementById('txTitle');
+    var tc=document.getElementById('txCount');
     var tl=document.getElementById('txList'); if(!tl)return;
+
+    // Mês FUTURO selecionado: mostra as PARCELAS que vão compor a fatura projetada.
+    if(mSel.futuro){
+      var parc=parcelasContribuindoNoMes(card,mSel.f);
+      if(tt) tt.textContent='Previsão · '+MESES_COMPLETO[mSel.mes];
+      if(tc) tc.textContent=parc.length+(parc.length===1?' parcela':' parcelas');
+      if(!parc.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Sem parcelas previstas para este mês.</div></div>'; return; }
+      tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Parcelas previstas</span><span class="cc-day-total neg">−'+formatBRL(parc.reduce(function(s,x){return s+x.valorParcela;},0))+'</span></div><div class="cc-day-txs">'+
+        parc.map(function(x){
+          return '<div class="cctx">'+categoriaIconeHtml('',false)+
+            '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(sentenceCase(x.descricao)||'—')+'</div>'+
+            '<div class="cctx-meta">parcela '+x.num+' de '+x.total+'</div></div>'+
+            '<div class="cctx-right"><div class="cctx-val">'+formatBRL(x.valorParcela)+'</div></div></div>';
+        }).join('')+'</div></div>';
+      return;
+    }
+
+    var txs=transacoesDoCartaoJanela(card.nome,mSel.janela);
+    if(tt) tt.textContent=mSel.atual?'Transações':'Transações · fatura de '+MESES_COMPLETO[mSel.mes];
+    if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
     if(!txs.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; return; }
 
     // Agrupa por dia — mesma lógica (e mesmo visual) da aba Conta Corrente.
@@ -2068,6 +2138,30 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var saidas   = recs.reduce(function(s,r,i){ return r.tipo==='out' && !marcados[String(i)] ? s+r.valor : s; }, 0);
     return { saldo:saldo, faturas:faturas, entradas:entradas, saidas:saidas, previsao: saldo + entradas - saidas - faturas };
   }
+  // Previsão para o mês "f" à frente (0 = mês atual). Os meses futuros usam as recorrentes
+  // (todas) e as faturas PROJETADAS pelas parcelas, acumulando o saldo de um mês pro outro.
+  function calcularPrevisaoMes(f){
+    if(f<=0){
+      var c=calcularPrevisao();
+      return { saldoInicial:c.saldo, entradas:c.entradas, saidas:c.saidas, faturas:c.faturas, previsao:c.previsao };
+    }
+    var prev=calcularPrevisaoMes(f-1);
+    var recs=lerRecorrentes();
+    var entradas=recs.reduce(function(s,r){return r.tipo==='in'?s+r.valor:s;},0);
+    var saidas=recs.reduce(function(s,r){return r.tipo==='out'?s+r.valor:s;},0);
+    var faturas=faturasProjetadasMes(f);
+    var saldoInicial=prev.previsao;
+    return { saldoInicial:saldoInicial, entradas:entradas, saidas:saidas, faturas:faturas, previsao:saldoInicial+entradas-saidas-faturas };
+  }
+  // Lista de meses pro filtro da Previsão (atual + N futuros)
+  function mesesPrevisao(nFut){
+    var hoje=new Date(), out=[];
+    for(var f=0; f<=nFut; f++){
+      var d=new Date(hoje.getFullYear(), hoje.getMonth()+f, 1);
+      out.push({ f:f, mes:d.getMonth(), ano:d.getFullYear() });
+    }
+    return out;
+  }
 
   // Retorna a chave "AAAA-MM" do mês atual
   function mesAtualKey(){
@@ -2102,25 +2196,39 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   // Atualiza só os números e os estilos dos itens sem destruir o DOM (para não perder foco)
   function renderPrevisoesParcial(){
-    var calc     = calcularPrevisao();
-    var saldo    = calc.saldo;
+    var calc     = calcularPrevisaoMes(prevMesOffset);
+    var saldo    = calc.saldoInicial;
     var faturas  = calc.faturas;
     var entradas = calc.entradas;
     var saidas   = calc.saidas;
     var previsao = calc.previsao;
+    var ehAtual  = (prevMesOffset===0);
+    var saldoLbl = ehAtual ? 'Saldo em conta' : 'Saldo inicial';
+    var fatLbl   = ehAtual ? 'Faturas em aberto' : 'Faturas previstas';
+    var mesesP   = mesesPrevisao(6);
 
-    // Atualiza hero (saldo + previsão; faturas não muda sem reload)
+    // Atualiza rótulos dinâmicos (mês atual x mês futuro)
+    var skh=document.getElementById('prev-saldo-k'); if(skh) skh.textContent=saldoLbl;
+    var fkh=document.getElementById('prev-fat-k'); if(fkh) fkh.textContent=fatLbl;
+    var csk=document.getElementById('calc-saldo-k'); if(csk) csk.textContent=saldoLbl;
+    var cfk=document.getElementById('calc-fat-k'); if(cfk) cfk.textContent=fatLbl;
+    var ctk=document.getElementById('calc-total-k'); if(ctk) ctk.textContent=(ehAtual?'Previsão fim do mês':'Previsão de '+MESES_COMPLETO[mesesP[prevMesOffset].mes]);
+
+    // Atualiza hero
     var ps = document.getElementById('prev-saldo-val'); if(ps) ps.textContent = formatBRLOuOculto(saldo);
+    var pfat = document.getElementById('prev-faturas-val'); if(pfat) pfat.textContent = '−'+formatBRL(faturas);
     var ps2 = document.getElementById('prev-saldo-val2'); if(ps2) ps2.textContent = formatBRLOuOculto(saldo);
     var pv = document.getElementById('prev-previsao-val'); if(pv){ pv.textContent = formatBRL(previsao); pv.className='pd-v '+(previsao<0?'neg':'pos'); }
 
     // Atualiza linhas do cálculo
     var ce = document.getElementById('calc-entradas');
     var cs = document.getElementById('calc-saidas');
+    var cfat = document.getElementById('calc-faturas');
     var ct = document.getElementById('calc-total');
     var cr = document.getElementById('calc-row-entradas');
     var crout = document.getElementById('calc-row-saidas');
     if(ce){ ce.textContent = '+'+formatBRLOuOculto(entradas); }
+    if(cfat){ cfat.textContent = '−'+formatBRL(faturas); }
     if(cs){ cs.textContent = '−'+formatBRL(saidas); }
     if(ct){ ct.textContent = formatBRL(previsao); ct.className='amt amt-total '+(previsao<0?'neg':'pos'); }
     var ctr = document.getElementById('calc-total-row'); if(ctr){ ctr.className='calc-total-row '+(previsao<0?'neg':'pos'); }
@@ -2289,12 +2397,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function renderPrevisoes(){
     var recs     = lerRecorrentes();
     var marcados = lerMarcacoes();
-    var calc     = calcularPrevisao();
-    var saldo    = calc.saldo;
-    var faturas  = calc.faturas;
-    var entradas = calc.entradas;
-    var saidas   = calc.saidas;
-    var previsao = calc.previsao;
+    var pf       = calcularPrevisaoMes(prevMesOffset);
+    var saldo    = pf.saldoInicial;
+    var faturas  = pf.faturas;
+    var entradas = pf.entradas;
+    var saidas   = pf.saidas;
+    var previsao = pf.previsao;
+    var ehAtual  = (prevMesOffset===0);
+    var saldoLbl = ehAtual ? 'Saldo em conta' : 'Saldo inicial';
+    var fatLbl   = ehAtual ? 'Faturas em aberto' : 'Faturas previstas';
+    var mesesP   = mesesPrevisao(6);
 
     var mes = (new Date()).toLocaleString('pt-BR',{month:'long',year:'numeric'});
 
@@ -2323,17 +2435,23 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '<div class="empty" style="padding:16px 0 4px"><div class="et">Nenhuma recorrente ainda. Adicione salário, aluguel, etc.</div></div>';
 
     return ''+
-    // Hero fixo no topo (3 informações: Saldo + Faturas + Previsão)
+    // Hero fixo no topo: filtro de mês + 3 informações (Saldo + Faturas + Previsão)
     '<div class="prev-sticky">'+
+    '<div class="cc-month-strip prev-month-strip"><div class="cc-month-strip-scroll" id="prevMonthScroll">'+
+      mesesP.map(function(m){
+        return '<button class="cc-month-pill'+(m.f===prevMesOffset?' active':'')+'" data-mesoff="'+m.f+'">'+
+          MESES_ABREV[m.mes]+(m.f===0?'':' '+String(m.ano).slice(2))+'</button>';
+      }).join('')+
+    '</div></div>'+
     '<div class="prev-duo prev-trio3 glass">'+
       '<div class="prev-duo-blk">'+
-        '<div class="pd-k">Saldo em conta</div>'+
+        '<div class="pd-k" id="prev-saldo-k">'+saldoLbl+'</div>'+
         '<div class="pd-v" id="prev-saldo-val">'+formatBRLOuOculto(saldo)+'</div>'+
       '</div>'+
       '<div class="prev-duo-div"></div>'+
       '<div class="prev-duo-blk">'+
-        '<div class="pd-k">Faturas em aberto</div>'+
-        '<div class="pd-v neg">−'+formatBRL(faturas)+'</div>'+
+        '<div class="pd-k" id="prev-fat-k">'+fatLbl+'</div>'+
+        '<div class="pd-v neg" id="prev-faturas-val">−'+formatBRL(faturas)+'</div>'+
       '</div>'+
       '<div class="prev-duo-div"></div>'+
       '<div class="prev-duo-blk">'+
@@ -2344,11 +2462,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '</div>'+
     // Cálculo
     '<div class="glass calc-card">'+
-      '<div class="calc-row"><span class="lbl"><span class="cr-dot neutral"></span>Saldo em conta</span><span class="amt" id="prev-saldo-val2">'+formatBRLOuOculto(saldo)+'</span></div>'+
+      '<div class="calc-row"><span class="lbl"><span class="cr-dot neutral"></span><span id="calc-saldo-k">'+saldoLbl+'</span></span><span class="amt" id="prev-saldo-val2">'+formatBRLOuOculto(saldo)+'</span></div>'+
       '<div class="calc-row" id="calc-row-entradas"'+(entradas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot pos"></span>Entradas a receber</span><span class="amt pos" id="calc-entradas">+'+formatBRLOuOculto(entradas)+'</span></div>'+
       '<div class="calc-row" id="calc-row-saidas"'+(saidas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot neg"></span>Saídas a pagar</span><span class="amt neg" id="calc-saidas">−'+formatBRL(saidas)+'</span></div>'+
-      '<div class="calc-row"><span class="lbl"><span class="cr-dot neg"></span>Faturas em aberto</span><span class="amt neg">−'+formatBRL(faturas)+'</span></div>'+
-      '<div class="calc-total-row '+(previsao<0?'neg':'pos')+'" id="calc-total-row"><span class="lbl-total">Previsão fim do mês<small>com recorrentes e faturas</small></span><span class="amt amt-total '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
+      '<div class="calc-row"><span class="lbl"><span class="cr-dot neg"></span><span id="calc-fat-k">'+fatLbl+'</span></span><span class="amt neg" id="calc-faturas">−'+formatBRL(faturas)+'</span></div>'+
+      '<div class="calc-total-row '+(previsao<0?'neg':'pos')+'" id="calc-total-row"><span class="lbl-total"><span id="calc-total-k">'+(ehAtual?'Previsão fim do mês':'Previsão de '+MESES_COMPLETO[mesesP[prevMesOffset].mes])+'</span><small>com recorrentes e faturas</small></span><span class="amt amt-total '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
     '</div>'+
     // Seção recorrentes
     '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag">'+mes+'</span></h2>'+
@@ -2364,6 +2482,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(addBtn){
       addBtn.addEventListener('click', function(){ abrirFormPrevisao(); });
     }
+    // Filtro de mês (atual + futuros) — recalcula a previsão sem recriar a lista
+    document.querySelectorAll('#prevMonthScroll .cc-month-pill').forEach(function(pill){
+      pill.addEventListener('click', function(){
+        prevMesOffset = parseInt(pill.getAttribute('data-mesoff'),10) || 0;
+        document.querySelectorAll('#prevMonthScroll .cc-month-pill').forEach(function(p){p.classList.remove('active');});
+        pill.classList.add('active');
+        renderPrevisoesParcial();
+        try{ pill.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }catch(e){}
+      });
+    });
     // Toggles deslizantes (marcar como feito)
     document.querySelectorAll('[data-check]').forEach(function(inp){
       inp.addEventListener('change', function(ev){
