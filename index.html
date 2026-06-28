@@ -2275,34 +2275,27 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     });
   }
 
-  // Lê a aba "Previsões" da planilha e mescla com o localStorage.
-  // A planilha manda nome/tipo/valor; os campos de mês (mesInicio/repeticoes) e de
-  // lembrete ficam só no app, então são PRESERVADOS do local (casando pelo nome) para
-  // não se perderem a cada sincronização.
+  // Lê a aba "Previsões" da planilha. A partir desta versão, a PLANILHA é a fonte
+  // única de verdade: mês de início, repetições e lembrete são colunas reais da aba
+  // (E, F, G, H) — gravadas pelo Apps Script — e não dependem mais do localStorage
+  // nem de "casar pelo nome" (esse casamento por nome era o que fazia um item de Junho
+  // roubar o mês de outro item com nome igual cadastrado em Julho, por exemplo).
   function carregarRecorrentesSheet(){
     return fetchSheet('Previsões').then(function(rows){
       if(!rows||!rows.length) return lerRecorrentes();
-      var locais = lerRecorrentes();
-      var usados = {};
-      function acharLocal(nome){
-        var alvo = normalizarNomeCartao(nome);
-        for(var k=0;k<locais.length;k++){
-          if(usados[k]) continue;
-          if(normalizarNomeCartao(locais[k].nome)===alvo){ usados[k]=true; return locais[k]; }
-        }
-        return null;
-      }
       var arr = rows.map(function(c){
         var tipo = strVal(c,2);
-        var base = { nome:strVal(c,1), valor:numVal(c,3), tipo:(tipo==='Entrada'?'in':'out') };
-        var loc = acharLocal(base.nome);
-        if(loc){
-          if(loc.mesInicio)   base.mesInicio   = loc.mesInicio;
-          if(loc.repeticoes)  base.repeticoes  = loc.repeticoes;
-          if(loc.lembrete!=null)    base.lembrete    = loc.lembrete;
-          if(loc.lembreteDia!=null) base.lembreteDia = loc.lembreteDia;
-        }
-        return base;
+        var lembreteStr = strVal(c,6).trim().toLowerCase();
+        return {
+          id:          strVal(c,0) || null,
+          nome:        strVal(c,1),
+          tipo:        (tipo==='Entrada'?'in':'out'),
+          valor:       numVal(c,3),
+          mesInicio:   strVal(c,4) || null,           // "AAAA-MM"; vazio = vale todo mês (item legado)
+          repeticoes:  numVal(c,5) || 1,
+          lembrete:    (lembreteStr==='1' || lembreteStr==='true'),
+          lembreteDia: numVal(c,7) || null
+        };
       }).filter(function(x){ return x.nome && x.valor>0; });
       salvarRecorrentes(arr);
       return arr;
@@ -2315,14 +2308,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '&lembrete='+(item.lembrete?'1':'0')+'&lembreteDia='+encodeURIComponent(item.lembreteDia||'')+'&mesInicio='+encodeURIComponent(item.mesInicio||'')+'&repeticoes='+encodeURIComponent(item.repeticoes||1);
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
-  function deletarRecorrenteSheet(idx, callback){
+  // Monta o parâmetro de localização da linha: prefere o ID real da planilha (estável,
+  // imune a reordenação) e só cai pro índice local se o item ainda não tiver um ID
+  // (caso de item recém-cadastrado nesta mesma sessão, antes do próximo refresh da aba).
+  function _paramIdOuIdx(idOuIdx){
+    return (typeof idOuIdx==='string' && idOuIdx) ? ('id='+encodeURIComponent(idOuIdx)) : ('idx='+idOuIdx);
+  }
+  function deletarRecorrenteSheet(idOuIdx, callback){
     if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
-    var url = GAS_EXEC_URL+'?action=delPrevisao&idx='+idx;
+    var url = GAS_EXEC_URL+'?action=delPrevisao&'+_paramIdOuIdx(idOuIdx);
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
-  function editarRecorrenteSheet(idx, origNome, item, callback){
+  function editarRecorrenteSheet(idOuIdx, origNome, item, callback){
     if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
-    var url = GAS_EXEC_URL+'?action=editPrevisao&idx='+idx+'&origNome='+encodeURIComponent(origNome)+
+    var url = GAS_EXEC_URL+'?action=editPrevisao&'+_paramIdOuIdx(idOuIdx)+'&origNome='+encodeURIComponent(origNome)+
       '&nome='+encodeURIComponent(item.nome)+'&tipo='+encodeURIComponent(item.tipo==='in'?'Entrada':'Saída')+'&valor='+encodeURIComponent(item.valor)+
       '&lembrete='+(item.lembrete?'1':'0')+'&lembreteDia='+encodeURIComponent(item.lembreteDia||'')+'&mesInicio='+encodeURIComponent(item.mesInicio||'')+'&repeticoes='+encodeURIComponent(item.repeticoes||1);
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
@@ -2452,9 +2451,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var novo={nome:nome,valor:valor,tipo:tipo,lembrete:!!remOn,lembreteDia:remOn?parseInt(remDia.value,10):null,mesInicio:mesInicio,repeticoes:repeticoes};
       if(editando){
         btn.disabled=true; btn.textContent='Salvando…';
-        var recsAtual=lerRecorrentes(); var origNome=recsAtual[idx]?recsAtual[idx].nome:r.nome;
+        var recsAtual=lerRecorrentes();
+        var origItem=recsAtual[idx]||r;
+        var origNome=origItem.nome;
+        novo.id=origItem.id||null; // preserva o ID real da planilha (se já conhecido)
         recsAtual[idx]=novo; salvarRecorrentes(recsAtual);
-        editarRecorrenteSheet(idx, origNome, novo, function(){});
+        editarRecorrenteSheet(origItem.id||idx, origNome, novo, function(){});
         fechar(); irPara(4);
       } else {
         btn.disabled=true; btn.textContent='Enviando…'; msg.textContent='';
@@ -2468,7 +2470,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       delBtn.addEventListener('click',function(){
         var btn=this;
         if(btn.getAttribute('data-confirm')!=='1'){ btn.setAttribute('data-confirm','1'); btn.textContent='Confirmar exclusão?'; return; }
-        deletarRecorrenteSheet(idx, function(){});
+        deletarRecorrenteSheet(r&&r.id?r.id:idx, function(){});
         var m=lerMarcacoes(); var newM={};
         var recsAtual=lerRecorrentes();
         recsAtual.forEach(function(_,j){
@@ -2546,7 +2548,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '<div class="cc-month-strip prev-month-strip"><div class="cc-month-strip-scroll" id="prevMonthScroll">'+
       mesesP.map(function(m){
         return '<button class="cc-month-pill'+(m.f===prevMesOffset?' active':'')+'" data-mesoff="'+m.f+'">'+
-          MESES_ABREV[m.mes]+(m.f===0?'':' '+String(m.ano).slice(2))+'</button>';
+          MESES_COMPLETO_CAP(m.mes)+' '+m.ano+'</button>';
       }).join('')+
     '</div></div>'+
     '</div>'+
@@ -2597,7 +2599,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     document.querySelectorAll('[data-del]').forEach(function(d){
       d.addEventListener('click', function(){
         var i = Number(d.getAttribute('data-del'));
-        deletarRecorrenteSheet(i, function(){});
+        var recs0 = lerRecorrentes();
+        var itemDel = recs0[i];
+        deletarRecorrenteSheet(itemDel&&itemDel.id?itemDel.id:i, function(){});
         // Reindexar marcações ao remover um item do meio
         var m = lerMarcacoes();
         var newM = {};
