@@ -278,23 +278,35 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* carrossel cartões */
 .carousel{display:flex;gap:11px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 4px 10px;margin:0 -4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .carousel::-webkit-scrollbar{display:none;}
-.ccard{flex:0 0 85%;scroll-snap-align:center;border-radius:18px;padding:15px 17px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 8px 22px rgba(0,0,0,0.28);will-change:transform;transform:translateZ(0);}
-.cc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.cc-bank{display:flex;align-items:center;gap:9px;min-width:0;flex:1 1 auto;}
+/* Cards de cartão — versão compacta e moderna (menores, fonte menor, mais arrojados) */
+.ccard{flex:0 0 80%;scroll-snap-align:center;border-radius:15px;padding:11px 13px;min-height:92px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,0.26);will-change:transform;transform:translateZ(0);}
+.cc-top{display:flex;align-items:center;justify-content:space-between;gap:7px;}
+.cc-bank{display:flex;align-items:center;gap:7px;min-width:0;flex:1 1 auto;}
 .cc-bank-txt{min-width:0;flex:1 1 auto;}
-.cc-logo{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.18);flex:0 0 auto;}
+.cc-logo{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.18);flex:0 0 auto;}
 .cc-logo svg{width:58%;height:58%;color:#fff;}
-.cc-logo .txt{font-weight:700;font-size:14px;font-family:var(--font-display);}
-.cc-name{font-size:13.5px;font-weight:600;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cc-flag{font-size:11.5px;opacity:.7;font-weight:500;}
-.cc-venc{font-size:12px;font-weight:500;opacity:.95;background:rgba(255,255,255,0.18);padding:5px 11px;border-radius:999px;white-space:nowrap;flex:0 0 auto;}
+.cc-logo .txt{font-weight:700;font-size:12px;font-family:var(--font-display);}
+.cc-name{font-size:12.5px;font-weight:600;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cc-flag{font-size:10.5px;opacity:.65;font-weight:500;}
+.cc-venc{font-size:10.5px;font-weight:500;opacity:.92;background:rgba(255,255,255,0.16);padding:3px 9px;border-radius:999px;white-space:nowrap;flex:0 0 auto;}
 .cc-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:auto;}
 .cc-bot-main{min-width:0;}
 .cc-bot-side{text-align:right;flex:0 0 auto;}
-.cc-label{font-size:12px;opacity:.72;font-weight:500;letter-spacing:0;}
-.cc-fatura{font-size:25px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:1px;line-height:1.05;}
-.cc-disp{font-size:14px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
-.cc-glow{position:absolute;right:-30px;bottom:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.22),transparent 70%);pointer-events:none;}
+.cc-label{font-size:10.5px;opacity:.68;font-weight:500;letter-spacing:0.01em;text-transform:uppercase;}
+.cc-fatura{font-size:20px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:1px;line-height:1.05;}
+.cc-disp{font-size:12.5px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
+.cc-glow{position:absolute;right:-30px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.20),transparent 70%);pointer-events:none;}
+/* Card global (Todos os cartões) — visual escuro/elegante e stack de logos dos bancos */
+.ccard-global{background:linear-gradient(140deg,#2c2f3a 0%,#16171d 100%);}
+.ccard-global .cc-flag{opacity:.6;}
+.cc-multi{display:flex;align-items:center;flex:0 0 auto;}
+.cc-multi-ic{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #1b1d24;margin-left:-9px;color:#fff;overflow:hidden;}
+.cc-multi-ic:first-child{margin-left:0;}
+.cc-multi-ic svg{width:60%;height:60%;}
+.cc-multi-ic .txt{font-size:10px;font-weight:700;font-family:var(--font-display);}
+/* Avatar de banco usado na lista do card global */
+.cat-ic.bank-ic svg{width:56%;height:56%;}
+.cat-ic.bank-ic .txt{font-size:12px;font-weight:700;font-family:var(--font-display);}
 .dots{display:flex;justify-content:center;gap:6px;margin:1px 0 5px;}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--text-faint);opacity:.4;transition:all .3s;cursor:pointer;}
 .dot.active{opacity:1;width:18px;border-radius:3px;background:var(--lime);}
@@ -1419,6 +1431,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function bancoDaTransacaoConta(t){
     var nome=(t.conta||'').trim();
     var n=nome.toLowerCase();
+    // Linhas antigas da planilha gravaram "Conta Corrente" (o subtipo) na coluna Conta em vez
+    // do banco. Quando a coluna vier genérica/vazia, descobrimos o banco pela Observação
+    // ("auto · Nubank"). Assim a tela mostra "Nubank" mesmo antes de corrigir a planilha.
+    if(!n || n==='conta corrente' || n==='conta' || n==='cartão de crédito' || n==='cartao de credito'){
+      var obs=String(t.obs||'');
+      var partes=obs.split('·'); // "auto · Nubank · pendente"
+      if(partes.length>1){
+        var cand=partes[1].replace(/pendente/i,'').trim();
+        if(cand){ nome=cand; n=cand.toLowerCase(); }
+      }
+    }
     if(n.indexOf('nubank')!==-1||n.indexOf('nu ')!==-1) return {chave:'nubank', rotulo:'Nubank'};
     if(n.indexOf('ita')!==-1) return {chave:'itau', rotulo:'Itaú'};
     if(n.indexOf('mercado')!==-1) return {chave:'mercado', rotulo:'Mercado Pago'};
@@ -1803,10 +1826,101 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return '<div class="ftl-scroll"><div class="ftl" style="min-width:'+(n*84)+'px">'+svg+'<div class="ftl-dots">'+dots+'</div><div class="ftl-row">'+cols+'</div></div></div>';
   }
 
+  function cartoesAtivosReais(){ return state.cartoes.filter(function(c){return c.ativo!=="Não";}); }
+  // Lista exibida no carrossel: com 2+ cartões, inclui o "card global" (Todos) na frente.
+  function cartoesParaExibir(){
+    var reais=cartoesAtivosReais();
+    return reais.length>1 ? [{global:true, nome:'Todos os cartões'}].concat(reais) : reais;
+  }
+  function rotuloBanco(nome){
+    var n=(nome||'').toLowerCase();
+    if(n.indexOf('nubank')!==-1) return 'Nubank';
+    if(n.indexOf('ita')!==-1) return 'Itaú';
+    if(n.indexOf('mercado')!==-1) return 'Mercado Pago';
+    return nome||'Cartão';
+  }
+  // Avatar com a logo do banco (usado na lista do card global pra diferenciar cada cartão).
+  function bankAvatarHtml(nomeCartao){
+    var info=bancoDe(nomeCartao);
+    return '<div class="cat-ic bank-ic" style="background:'+info.cor1+';color:#fff">'+logoOuIniciais(nomeCartao)+'</div>';
+  }
+  // Série mês a mês agregada de TODOS os cartões (para o gráfico do card global).
+  // Passado/atual = por mês de calendário (atual usa a fatura real somada); futuros = soma das parcelas projetadas.
+  function seriesGlobalCartoes(nPast,nFut){
+    nPast=(nPast==null?3:nPast); nFut=(nFut==null?6:nFut);
+    var reais=cartoesAtivosReais(), hoje=new Date(), out=[];
+    for(var i=nPast;i>=0;i--){
+      var d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
+      var ini=new Date(d.getFullYear(),d.getMonth(),1), fim=new Date(d.getFullYear(),d.getMonth()+1,0,23,59,59);
+      var total;
+      if(i===0){ total=reais.reduce(function(s,c){return s+faturaAtual(c);},0); }
+      else {
+        total=0;
+        reais.forEach(function(c){ txDoCartao(c.nome).forEach(function(t){ if(t.tipo==='Saída'&&t.data&&t.data>=ini&&t.data<=fim) total+=t.valor; }); });
+      }
+      out.push({mes:d.getMonth(),ano:d.getFullYear(),total:total,atual:(i===0),futuro:false,f:0,janela:{start:ini,end:fim}});
+    }
+    for(var f=1;f<=nFut;f++){
+      var dv=new Date(hoje.getFullYear(),hoje.getMonth()+f,1);
+      var totalF=reais.reduce(function(s,c){return s+faturaProjetadaCartao(c,f);},0);
+      out.push({mes:dv.getMonth(),ano:dv.getFullYear(),total:totalF,atual:false,futuro:true,f:f});
+    }
+    return out;
+  }
+  // Detalhe do CARD GLOBAL: gráfico agregado + lista unindo as transações de todos os cartões,
+  // cada uma com a logo do banco.
+  function renderDetalheGlobal(card){
+    var reais=cartoesAtivosReais();
+    var meses=seriesGlobalCartoes(3,6);
+    var idxAtualReal=-1; for(var ii=0;ii<meses.length;ii++){ if(meses[ii].atual){ idxAtualReal=ii; break; } }
+    if(idxAtualReal===-1) idxAtualReal=Math.max(0, meses.length-7);
+    var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtualReal;
+    var timeline=gerarTimelineHtml(meses,idxSel);
+    var mSel=meses[idxSel];
+    var cp=document.getElementById('chartPanel');
+    if(cp){
+      cp.innerHTML='<div class="panel-head"><span class="pt">Evolução · todos os cartões</span><div class="ftl-tag">Histórico + previsão</div></div>'+timeline;
+      cp.querySelectorAll('.ftl-col').forEach(function(fc){
+        fc.addEventListener('click',function(){ mesSelecionado=Number(fc.getAttribute('data-i')); renderDetalheCartao(card); });
+      });
+      var sc=cp.querySelector('.ftl-scroll'); var selCol=cp.querySelector('.ftl-col.sel');
+      if(sc&&selCol){ sc.scrollLeft=Math.max(0, selCol.offsetLeft-(sc.clientWidth-selCol.offsetWidth)/2); }
+    }
+    var tt=document.getElementById('txTitle'), tc=document.getElementById('txCount'), tl=document.getElementById('txList'); if(!tl)return;
+
+    if(mSel.futuro){
+      var parcs=[];
+      reais.forEach(function(c){ parcelasContribuindoNoMes(c,mSel.f).forEach(function(x){ x.cartao=c.nome; parcs.push(x); }); });
+      if(tt) tt.textContent='Previsão · '+MESES_COMPLETO[mSel.mes];
+      if(tc) tc.textContent=parcs.length+(parcs.length===1?' parcela':' parcelas');
+      if(!parcs.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Sem parcelas previstas para este mês.</div></div>'; return; }
+      tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Parcelas previstas</span><span class="cc-day-total neg">−'+formatBRL(parcs.reduce(function(s,x){return s+x.valorParcela;},0))+'</span></div><div class="cc-day-txs">'+
+        parcs.map(function(x){
+          return '<div class="cctx">'+bankAvatarHtml(x.cartao)+
+            '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeParcela(x.descricao,x.valorParcela,x.total))+'</div>'+
+            '<div class="cctx-meta">'+escapeHtml(rotuloBanco(x.cartao))+' · parcela '+x.num+' de '+x.total+'</div></div>'+
+            '<div class="cctx-right"><div class="cctx-val">'+formatBRL(x.valorParcela)+'</div></div></div>';
+        }).join('')+'</div></div>';
+      return;
+    }
+
+    var txs=[];
+    reais.forEach(function(c){ txDoCartao(c.nome).forEach(function(t){ if(t.data&&t.data>=mSel.janela.start&&t.data<=mSel.janela.end) txs.push(t); }); });
+    txs.sort(function(a,b){return b.data-a.data;});
+    if(tt) tt.textContent=mSel.atual?'Transações · todos os cartões':'Todos os cartões · '+MESES_COMPLETO[mSel.mes];
+    if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
+    renderTxAgrupadasEm(tl, txs, {
+      icone: function(t){ return bankAvatarHtml(t.cartao); },
+      meta:  function(t){ return escapeHtml(rotuloBanco(t.cartao)+' · '+(sentenceCase(t.categoria)||'Sem categoria')); },
+      reRender: function(){ renderDetalheCartao(card); }
+    });
+  }
+
   function renderCartoes(){
-    var ativos=state.cartoes.filter(function(c){return c.ativo!=="Não";});
+    var ativos=cartoesAtivosReais();
     if(!ativos.length) return '<div class="empty"><div class="ei">💳</div><div class="et">Nenhum cartão na planilha.</div></div>';
-    if(cartaoAtivo>=ativos.length) cartaoAtivo=0;
+    var lista=cartoesParaExibir();
+    if(cartaoAtivo>=lista.length) cartaoAtivo=0;
     var totalFat=ativos.reduce(function(s,c){return s+faturaAtual(c);},0);
     var totalLim=ativos.reduce(function(s,c){return s+(c.limite||0);},0);
     var totalDisp=totalLim-totalFat;
@@ -1817,7 +1931,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<div class="cr-div"></div>'+
       '<div class="cr-blk"><div class="bk">Disponível</div><div class="bv '+(totalDisp<0?'neg':'pos')+'">'+formatBRL(totalDisp)+'</div></div>'+
     '</div>';
-    var cards=ativos.map(function(card){
+    var cards=lista.map(function(card){
+      if(card.global){
+        var multi=ativos.slice(0,4).map(function(c){var info2=bancoDe(c.nome);return '<span class="cc-multi-ic" style="background:'+info2.cor1+'">'+logoOuIniciais(c.nome)+'</span>';}).join('');
+        return '<div class="ccard ccard-global"><div class="cc-glow"></div>'+
+          '<div class="cc-top"><div class="cc-bank"><div class="cc-multi">'+multi+'</div>'+
+            '<div class="cc-bank-txt"><div class="cc-name">Todos os cartões</div><div class="cc-flag">'+ativos.length+' cartões</div></div></div>'+
+            '<div class="cc-venc">Geral</div></div>'+
+          '<div class="cc-bottom">'+
+            '<div class="cc-bot-main"><div class="cc-label">Fatura total</div><div class="cc-fatura">'+formatBRL(totalFat)+'</div></div>'+
+            '<div class="cc-bot-side"><div class="cc-label">Disponível</div><div class="cc-disp">'+formatBRL(totalDisp)+'</div></div>'+
+          '</div></div>';
+      }
       var info=bancoDe(card.nome),fat=faturaAtual(card),disp=card.limite-fat;
       var venc=card.vencimento?('Venc. dia '+card.vencimento):'';
       return '<div class="ccard" style="background:linear-gradient(140deg,'+info.cor1+','+info.cor2+')"><div class="cc-glow"></div>'+
@@ -1828,7 +1953,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           '<div class="cc-bot-side"><div class="cc-label">Disponível</div><div class="cc-disp">'+formatBRL(disp)+'</div></div>'+
         '</div></div>';
     }).join("");
-    var dots=ativos.map(function(_,i){return '<div class="dot'+(i===cartaoAtivo?' active':'')+'" data-d="'+i+'"></div>';}).join("");
+    var dots=lista.map(function(_,i){return '<div class="dot'+(i===cartaoAtivo?' active':'')+'" data-d="'+i+'"></div>';}).join("");
     return '<div class="cards-sticky-hdr">'+resumo+'<div class="carousel" id="carousel">'+cards+'</div><div class="dots" id="dots">'+dots+'</div></div>'+
       '<div class="glass panel" id="chartPanel" style="margin-top:6px"></div>'+
       '<div class="cards-tx-sticky"><div class="section-head" style="margin:6px 4px 2px"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div></div>'+
@@ -1836,6 +1961,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
   function renderDetalheCartao(card){
     if(!card)return;
+    if(card.global) return renderDetalheGlobal(card);
     var meses=gastosPorMesCartao(card,3,6);
     var idxAtualReal=-1; for(var ii=0;ii<meses.length;ii++){ if(meses[ii].atual){ idxAtualReal=ii; break; } }
     if(idxAtualReal===-1) idxAtualReal=Math.max(0, meses.length-7);
@@ -1880,7 +2006,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
     if(!txs.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; return; }
 
-    // Agrupa por dia — mesma lógica (e mesmo visual) da aba Conta Corrente.
+    renderTxAgrupadasEm(tl, txs, { reRender: function(){ renderDetalheCartao(card); } });
+  }
+
+  // Renderiza uma lista de transações agrupadas por dia (visual dos Cartões/Conta), com clique
+  // para renomear. opts.icone(t,ent) define o avatar (padrão = ícone da categoria); opts.meta(t)
+  // define o subtítulo (padrão = categoria); opts.reRender() é chamado após salvar um apelido.
+  function renderTxAgrupadasEm(tl, txs, opts){
+    opts = opts || {};
+    var iconeFn = opts.icone || function(t,ent){ return categoriaIconeHtml(t.categoria, ent); };
+    var metaFn  = opts.meta  || function(t){ return escapeHtml(sentenceCase(t.categoria)||"Sem categoria"); };
+    if(!txs.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; return; }
     var dias=[],diaMap={};
     txs.forEach(function(t){
       if(!t.data) return;
@@ -1896,7 +2032,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var v=t.tipo==='Entrada'?t.valor:-t.valor;
       diaMap[key].total+=v;
     });
-
     var txFlat=[]; // referência das transações renderizadas, pro clique de renomear achar o item
     tl.innerHTML=dias.map(function(key){
       var grupo=diaMap[key];
@@ -1907,9 +2042,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         var idx=txFlat.push(t)-1;
         var parc=t.parcelamentoId?'<span class="tx-parcela">'+escapeHtml(t.parcelamentoId)+'</span>':'';
         var apel=temApelido(t)?'<span class="cctx-apel" title="Nome personalizado">✎</span>':'';
-        return '<div class="cctx cctx-edit" data-txidx="'+idx+'" title="Toque para renomear esta compra">'+categoriaIconeHtml(t.categoria,ent)+
+        return '<div class="cctx cctx-edit" data-txidx="'+idx+'" title="Toque para renomear esta compra">'+iconeFn(t,ent)+
           '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeTx(t))+parc+apel+'</div>'+
-          '<div class="cctx-meta">'+escapeHtml(sentenceCase(t.categoria)||"Sem categoria")+'</div></div>'+
+          '<div class="cctx-meta">'+metaFn(t)+'</div></div>'+
           '<div class="cctx-right">'+
             '<div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div>'+
           '</div></div>';
@@ -1922,17 +2057,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="cc-day-txs">'+txsHtml+'</div>'+
       '</div>';
     }).join("");
-    // Clique em uma transação abre o modal de renomear (apelido salvo no aparelho)
     tl.querySelectorAll('.cctx-edit').forEach(function(el){
       el.addEventListener('click', function(){
         var t=txFlat[Number(el.getAttribute('data-txidx'))];
-        if(t) abrirRenomearTx(t, function(){ renderDetalheCartao(card); });
+        if(t) abrirRenomearTx(t, function(){ if(typeof opts.reRender==='function') opts.reRender(); });
       });
     });
   }
   function wireCartoes(){
     mesSelecionado=null; // volta a mostrar o mês atual ao entrar na tela
-    var ativos=state.cartoes.filter(function(c){return c.ativo!=="Não";});
+    var ativos=cartoesParaExibir();
+    if(cartaoAtivo>=ativos.length) cartaoAtivo=0;
     renderDetalheCartao(ativos[cartaoAtivo]);
     var carousel=document.getElementById('carousel'); if(!carousel)return;
     var cards=carousel.querySelectorAll('.ccard');
@@ -2393,7 +2528,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var mesKey = mesKeyOffset(prevMesOffset);
     var m = lerMarcacoes(mesKey);
     m[recKey] = !m[recKey];
-    salvarMarcacoes(m, mesKey);
+    salvarMarcacoes(m, mesKey);                       // local imediato
+    gravarMarcacaoSheet(mesKey, recKey, m[recKey]?1:0); // sincroniza na planilha (multi-dispositivo)
     renderPrevisoesParcial(); // atualiza sem recriar tudo
   }
 
@@ -2404,6 +2540,28 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       Object.keys(raw).forEach(function(mes){ if(raw[mes] && raw[mes][recKey]) delete raw[mes][recKey]; });
       localStorage.setItem(CHECK_KEY, JSON.stringify(raw));
     }catch(e){}
+  }
+
+  // ── Sincronização das marcações Pago/Recebido com a planilha (aba "Marcações") ──
+  // Faz o status de pago/recebido valer em qualquer dispositivo. Requer o trecho de
+  // Apps Script (action setMarcacao) publicado.
+  function aplicarMarcacoesDaPlanilha(rows){
+    if(!rows || !rows.length) return; // aba ainda não existe/sem dados: mantém o local
+    var obj = {};
+    rows.forEach(function(c){
+      var mes = strVal(c,0), chave = strVal(c,1), feito = strVal(c,2);
+      if(!mes || !chave) return;
+      var f = (feito==='1' || feito.toLowerCase()==='true' || feito.toLowerCase()==='sim');
+      if(!f) return;
+      if(!obj[mes]) obj[mes] = {};
+      obj[mes][chave] = true;
+    });
+    try{ localStorage.setItem(CHECK_KEY, JSON.stringify(obj)); }catch(e){}
+  }
+  function gravarMarcacaoSheet(mes, chave, feito, callback){
+    if(!GAS_EXEC_URL || GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
+    var url = GAS_EXEC_URL+'?action=setMarcacao&mes='+encodeURIComponent(mes)+'&chave='+encodeURIComponent(chave)+'&feito='+(feito?'1':'0');
+    fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
 
   // Atualiza só os números e os estilos dos itens sem destruir o DOM (para não perder foco)
@@ -3359,7 +3517,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* ===== load ===== */
   function loadAll(done){
     var btn=$("#banksToggle"); if(btn) btn.classList.add("loading");
-    var nomes=["Contas","Cartões","Categorias","Transações Cartão","Transações Conta","Parcelamentos","Assinaturas","Investimentos","Fatura Em Aberto","Apelidos"];
+    var nomes=["Contas","Cartões","Categorias","Transações Cartão","Transações Conta","Parcelamentos","Assinaturas","Investimentos","Fatura Em Aberto","Apelidos","Marcações"];
     Promise.all(nomes.map(function(n){ return fetchSheet(n).catch(function(){ return []; }); }))
       .then(function(r){
         state.contas = mapContas(r[0]);
@@ -3371,7 +3529,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         state.assinaturas = mapAssinaturas(r[6]);
         state.investimentos = mapInvestimentos(r[7]);
         state.faturaEmAberto = mapFaturaEmAberto(r[8]);
-        aplicarApelidosDaPlanilha(r[9]); // nomes personalizados vindos da aba "Apelidos" (multi-dispositivo)
+        aplicarApelidosDaPlanilha(r[9]);   // nomes personalizados vindos da aba "Apelidos" (multi-dispositivo)
+        aplicarMarcacoesDaPlanilha(r[10]); // marcações Pago/Recebido vindas da aba "Marcações" (multi-dispositivo)
         ultimaAtualizacao = new Date();
         renderBancos();
         if(btn) btn.classList.remove("loading");
