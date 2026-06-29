@@ -362,15 +362,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* Avatar de banco usado na lista do card global */
 .cat-ic.bank-ic svg{width:56%;height:56%;}
 .cat-ic.bank-ic .txt{font-size:12px;font-weight:700;font-family:var(--font-display);}
-.dots{display:flex;justify-content:center;gap:6px;margin:1px 0 5px;}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--text-faint);opacity:.4;transition:all .3s;cursor:pointer;}
-.dot.active{opacity:1;width:18px;border-radius:3px;background:var(--lime);}
+.dots{display:flex;justify-content:center;align-items:center;gap:8px;margin:1px 0 5px;}
+/* BUGFIX do slide: a cor NÃO transiciona (só largura/opacidade). Antes o verde "vazava"
+   pro dot anterior durante a rolagem, parecendo 2 indicadores acesos. Agora só o ativo fica verde. */
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text-faint);opacity:.38;cursor:pointer;flex:0 0 auto;
+  transition:width .25s ease, opacity .2s ease;}
+.dot.active{opacity:1;width:17px;border-radius:3px;background:var(--lime);}
 /* panel + chart */
-.panel{padding:18px;border-radius:var(--radius-sm);margin-bottom:13px;}
-.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-.panel-head .pt{font-size:16px;color:var(--text-dim);font-weight:400;}
+/* Card "Evolução da fatura" — mesmo material/raio do card de resumo (Em aberto/Limite/Disponível),
+   porém mais compacto e com fonte menor. */
+.panel{padding:13px 14px 11px;border-radius:var(--radius-sm);margin-bottom:11px;}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.panel-head .pt{font-size:13px;color:var(--text-faint);font-weight:600;letter-spacing:.01em;}
 .panel-head .pic{width:30px;height:30px;border-radius:9px;background:var(--track-bg);display:flex;align-items:center;justify-content:center;color:var(--text-dim);}
-.ftl-tag{font-size:12.5px;font-weight:500;color:var(--text-dim);background:var(--track-bg);padding:6px 11px;border-radius:10px;}
+.ftl-tag{font-size:10.5px;font-weight:500;color:var(--text-dim);background:var(--track-bg);padding:4px 9px;border-radius:8px;}
 .panel .big{font-size:26px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;}
 @keyframes popIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 .panel .big.anim{animation:popIn .3s cubic-bezier(0.16,1,0.3,1);}
@@ -379,12 +384,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .ftl-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:0 -6px;padding:0 6px 2px;}
 .ftl-scroll::-webkit-scrollbar{display:none;}
 .ftl-scroll{scrollbar-width:none;}
-.ftl{position:relative;margin-top:10px;height:120px;}
-.ftl-svg{position:absolute;left:0;top:0;width:100%;height:120px;display:block;overflow:visible;pointer-events:none;z-index:1;}
-.ftl-dots{position:absolute;left:0;top:0;width:100%;height:120px;pointer-events:none;z-index:3;}
-.ftl-row{display:flex;gap:8px;height:100%;position:relative;z-index:2;}
-.ftl-col{flex:1;min-width:0;border-radius:13px;border:1.5px solid transparent;cursor:pointer;position:relative;
-  display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 3px 9px;
+.ftl{position:relative;margin-top:8px;height:100px;}
+.ftl-svg{position:absolute;left:0;top:0;width:100%;height:100px;display:block;overflow:visible;pointer-events:none;z-index:1;}
+.ftl-dots{position:absolute;left:0;top:0;width:100%;height:100px;pointer-events:none;z-index:3;}
+.ftl-row{display:flex;gap:7px;height:100%;position:relative;z-index:2;}
+.ftl-col{flex:1;min-width:0;border-radius:11px;border:1.5px solid transparent;cursor:pointer;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 3px 7px;
   transition:border-color .3s,background .3s,transform .3s;}
 .ftl-col:active{transform:scale(0.97);}
 /* Mês selecionado: aberto=azul, pago=verde, futuro=neutro tracejado. */
@@ -393,12 +398,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .ftl-col.futuro{border-style:dashed;border-color:rgba(255,255,255,0.10);}
 .ftl-col.sel.futuro{border-color:var(--text-dim);border-style:dashed;background:rgba(255,255,255,0.05);}
 .ftl-col.futuro .ftl-lbl,.ftl-col.futuro .ftl-val{opacity:.78;}
-.ftl-lbl{font-size:12px;font-weight:600;color:var(--text-faint);text-transform:capitalize;line-height:1;z-index:3;}
+.ftl-lbl{font-size:11px;font-weight:600;color:var(--text-faint);text-transform:capitalize;line-height:1;z-index:3;}
 .ftl-col.sel.aberto .ftl-lbl{color:var(--blue);}
 .ftl-col.sel.pago .ftl-lbl{color:var(--lime-deep);}
 .ftl-col.sel.futuro .ftl-lbl{color:var(--text-dim);}
 .ftl-dotzone{flex:1;width:100%;}
-.ftl-val{font-size:11px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;color:var(--text-dim);
+.ftl-val{font-size:10px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;color:var(--text-dim);
   text-align:center;line-height:1.15;z-index:3;transition:color .3s,font-size .3s;white-space:nowrap;}
 .ftl-col.sel.aberto .ftl-val{color:var(--blue);}
 .ftl-col.sel.pago .ftl-val{color:var(--lime-deep);}
@@ -656,6 +661,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .afreq{font-size:10.5px;color:var(--text-faint);margin-top:0;}
 .aval{font-size:13.5px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
 .aval .sub{font-size:10px;color:var(--text-faint);font-weight:500;margin-top:0;}
+.acard-edit{cursor:pointer;}
+.adel{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--text-faint);font-size:16px;line-height:1;cursor:pointer;margin-left:2px;}
+.adel[data-confirm="1"]{color:var(--lime-deep);background:color-mix(in srgb,var(--lime) 16%,transparent);}
 /* investimentos */
 .inv-hero{padding:18px;border-radius:var(--radius-sm);margin-bottom:10px;text-align:center;}
 .inv-hero .k{font-size:13px;color:var(--text-faint);font-weight:500;}
@@ -1158,7 +1167,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function mapAssinaturas(rows){
     return rows.map(function(c){
       return {
-        nome: strVal(c,1), categoria: strVal(c,2), valor: numVal(c,3), frequencia: strVal(c,4) || "Mensal",
+        id: strVal(c,0), nome: strVal(c,1), categoria: strVal(c,2), valor: numVal(c,3), frequencia: strVal(c,4) || "Mensal",
         diaCobranca: numVal(c,5), origem: strVal(c,6), ativa: strVal(c,7) || "Sim"
       };
     }).filter(function(x){ return x.nome; });
@@ -1846,7 +1855,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var n=meses.length;
     var valores=meses.map(function(m){return m.total;});
     var maxV=Math.max.apply(null,valores.concat([1])), minV=Math.min.apply(null,valores.concat([0]));
-    var H=120, zoneTop=24, zoneH=50;
+    var H=100, zoneTop=20, zoneH=42;
     var pts=meses.map(function(m,i){
       var x=((i+0.5)/n)*100;
       var y=(maxV===minV)?(zoneTop+zoneH/2):(zoneTop+(1-((m.total-minV)/(maxV-minV)))*zoneH);
@@ -2207,12 +2216,23 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="pcard-meta"><span>'+pagas+' de '+p.nParcelas+' parcelas</span><span>'+(p.nParcelas-pagas)+' restantes</span></div></div>';
     }).join("");
   }
+  // Índices (em state.assinaturas) das assinaturas ativas exibidas — pro clique achar o item certo.
+  var _assinVisiveis=[];
   function renderListaAssinaturas(){
-    var ativas=state.assinaturas.filter(function(a){return a.ativa!=="Não";});
-    if(!ativas.length) return '<div class="empty"><div class="ei">🔁</div><div class="et">Nenhuma assinatura cadastrada.</div></div>';
-    return ativas.map(function(a){
-      return '<div class="glass acard"><div class="aic">🔁</div><div class="amain"><div class="aname">'+escapeHtml(sentenceCase(a.nome))+'</div><div class="afreq">'+escapeHtml(a.frequencia||"Mensal")+(a.categoria?' · '+escapeHtml(sentenceCase(a.categoria)):'')+'</div></div><div class="aval">'+formatBRL(a.valor)+'<div class="sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div></div>';
-    }).join("");
+    var head='<div class="section-head" style="margin:14px 4px 9px"><h2 style="font-size:16px">Assinaturas</h2><span class="link" id="assinAddBtn">+ Cadastrar</span></div>';
+    _assinVisiveis=[];
+    var itens='';
+    state.assinaturas.forEach(function(a,idx){
+      if(a.ativa==="Não") return;
+      var pos=_assinVisiveis.push(idx)-1;
+      itens+='<div class="glass acard acard-edit" data-assin="'+pos+'" title="Toque para editar"><div class="aic">🔁</div>'+
+        '<div class="amain"><div class="aname">'+escapeHtml(sentenceCase(a.nome))+'</div>'+
+        '<div class="afreq">'+escapeHtml(a.frequencia||"Mensal")+(a.categoria?' · '+escapeHtml(sentenceCase(a.categoria)):'')+'</div></div>'+
+        '<div class="aval">'+formatBRL(a.valor)+'<div class="sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div>'+
+        '<div class="adel" data-adel="'+pos+'" title="Remover assinatura">×</div></div>';
+    });
+    if(!_assinVisiveis.length) itens='<div class="empty"><div class="ei">🔁</div><div class="et">Nenhuma assinatura cadastrada. Toque em “+ Cadastrar”.</div></div>';
+    return head+itens;
   }
   function wireParcelas(){
     document.querySelectorAll('.subtab').forEach(function(st){
@@ -2234,7 +2254,96 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         abrirRenomearTx({descricao:p.descricao, valor:p.valorParcela, parcela:{num:1,total:p.nParcelas}}, function(){ irPara(2); });
       });
     });
+    // Assinaturas: cadastrar / editar (clicar no card) / excluir (×)
+    var assinAdd=document.getElementById('assinAddBtn');
+    if(assinAdd) assinAdd.addEventListener('click', function(){ subtabAlvo='assin'; abrirFormAssinatura(); });
+    document.querySelectorAll('.acard-edit').forEach(function(el){
+      el.addEventListener('click', function(ev){
+        if(ev.target && ev.target.getAttribute('data-adel')!=null) return; // clique no × é tratado abaixo
+        var a=state.assinaturas[_assinVisiveis[Number(el.getAttribute('data-assin'))]];
+        if(a) abrirFormAssinatura(a);
+      });
+    });
+    document.querySelectorAll('.acard-edit [data-adel]').forEach(function(d){
+      d.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var a=state.assinaturas[_assinVisiveis[Number(d.getAttribute('data-adel'))]];
+        if(!a) return;
+        if(d.getAttribute('data-confirm')!=='1'){ d.setAttribute('data-confirm','1'); d.textContent='✓'; d.title='Confirmar remoção'; setTimeout(function(){ if(d){d.setAttribute('data-confirm','0');d.textContent='×';d.title='Remover assinatura';} },2500); return; }
+        a.ativa='Não'; // some na hora
+        deletarAssinaturaSheet(a, function(){});
+        subtabAlvo='assin'; irPara(2);
+      });
+    });
   }
+
+  // Modal de cadastro/edição de assinatura (mesmo estilo do modal de recorrente).
+  function abrirFormAssinatura(a){
+    var editando = !!a;
+    var ov=document.createElement('div'); ov.className='modal-ov';
+    ov.innerHTML='<div class="modal glass">'+
+      '<div class="modal-head"><div class="modal-title">'+(editando?'Editar assinatura':'Nova assinatura')+'</div><div class="modal-x" id="asClose">✕</div></div>'+
+      '<div class="modal-body">'+
+        '<label class="fld"><span>Nome</span><input id="asNome" type="text" maxlength="40" placeholder="Ex: Netflix, Spotify" autocomplete="off" value="'+escapeHtml(editando?a.nome:'')+'"></label>'+
+        '<div class="fld-row">'+
+          '<label class="fld"><span>Valor</span><input id="asValor" type="text" inputmode="numeric" placeholder="R$ 0,00" value="'+(editando&&a.valor?('R$ '+Number(a.valor).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})):'')+'"></label>'+
+          '<label class="fld"><span>Frequência</span><select id="asFreq"><option value="Mensal"'+((!editando||a.frequencia!=='Anual')?' selected':'')+'>Mensal</option><option value="Anual"'+((editando&&a.frequencia==='Anual')?' selected':'')+'>Anual</option></select></label>'+
+        '</div>'+
+        '<div class="fld-row">'+
+          '<label class="fld"><span>Categoria</span><input id="asCat" type="text" maxlength="30" placeholder="Ex: Lazer" value="'+escapeHtml(editando?(a.categoria||''):'')+'"></label>'+
+          '<label class="fld"><span>Dia da cobrança</span><select id="asDia"><option value="">—</option>'+(function(){var o='';for(var d=1;d<=31;d++){o+='<option value="'+d+'"'+((editando&&Number(a.diaCobranca)===d)?' selected':'')+'>dia '+d+'</option>';}return o;})()+'</select></label>'+
+        '</div>'+
+        '<div class="modal-msg" id="asMsg"></div>'+
+      '</div>'+
+      '<div class="modal-foot">'+
+        (editando?'<button class="btn-danger" id="asDelete">Excluir</button>':'<button class="btn-ghost" id="asCancel">Cancelar</button>')+
+        '<button class="btn-primary" id="asSave">'+(editando?'Salvar':'Cadastrar')+'</button>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+    function fechar(){ ov.classList.remove('show'); setTimeout(function(){ ov.remove(); },220); }
+    ov.addEventListener('click',function(e){ if(e.target===ov) fechar(); });
+    ov.querySelector('#asClose').addEventListener('click',fechar);
+    var cancel=ov.querySelector('#asCancel'); if(cancel) cancel.addEventListener('click',fechar);
+    var valorInput=ov.querySelector('#asValor');
+    function moedaFmt_(str){ var d=String(str).replace(/\D/g,''); return d?('R$ '+(parseInt(d,10)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})):''; }
+    function parseMoeda(s){ var d=String(s).replace(/\D/g,''); return d?parseInt(d,10)/100:0; }
+    if(valorInput) valorInput.addEventListener('input',function(){ this.value=moedaFmt_(this.value); });
+    var del=ov.querySelector('#asDelete');
+    if(del) del.addEventListener('click',function(){
+      var b=this; if(b.getAttribute('data-c')!=='1'){ b.setAttribute('data-c','1'); b.textContent='Confirmar exclusão?'; return; }
+      a.ativa='Não'; deletarAssinaturaSheet(a,function(){}); fechar(); subtabAlvo='assin'; irPara(2);
+    });
+    ov.querySelector('#asSave').addEventListener('click',function(){
+      var nome=(ov.querySelector('#asNome').value||'').trim();
+      var valor=parseMoeda(ov.querySelector('#asValor').value);
+      var cat=(ov.querySelector('#asCat').value||'').trim();
+      var freq=ov.querySelector('#asFreq').value||'Mensal';
+      var dia=ov.querySelector('#asDia').value||'';
+      var msg=ov.querySelector('#asMsg');
+      if(!nome){ msg.textContent='Informe o nome.'; return; }
+      if(!(valor>0)){ msg.textContent='Informe um valor válido.'; return; }
+      if(editando){
+        a.nome=nome; a.valor=valor; a.categoria=cat; a.frequencia=freq; a.diaCobranca=dia;
+        editarAssinaturaSheet(a,function(){});
+      } else {
+        var id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID().slice(0,8):('a'+Date.now().toString(36));
+        var nova={id:id,nome:nome,valor:valor,categoria:cat,frequencia:freq,diaCobranca:dia,origem:'manual',ativa:'Sim'};
+        state.assinaturas.push(nova);
+        gravarAssinaturaSheet(nova,function(){});
+      }
+      fechar(); subtabAlvo='assin'; irPara(2);
+    });
+    setTimeout(function(){ var i=ov.querySelector('#asNome'); if(i) i.focus(); },120);
+  }
+  function _asParams(a){
+    return 'id='+encodeURIComponent(a.id||'')+'&nome='+encodeURIComponent(a.nome||'')+'&valor='+encodeURIComponent(a.valor||0)+
+      '&categoria='+encodeURIComponent(a.categoria||'')+'&frequencia='+encodeURIComponent(a.frequencia||'Mensal')+'&dia='+encodeURIComponent(a.diaCobranca||'');
+  }
+  function gravarAssinaturaSheet(a,cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=addAssinatura&'+_asParams(a),{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(false);}); }
+  function editarAssinaturaSheet(a,cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=editAssinatura&'+_asParams(a),{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(false);}); }
+  function deletarAssinaturaSheet(a,cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=delAssinatura&'+_asParams(a),{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(false);}); }
 
   /* ===== TELA 4: INVESTIMENTOS ===== */
   function renderInvestimentos(){
@@ -2411,8 +2520,35 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // Chave de uma compra PARCELADA. É a MESMA fórmula tanto para a transação no Cartão
   // quanto para a linha em Parcelamentos (descrição + valor da parcela + nº de parcelas),
   // então renomear num lugar reflete no outro — as abas ficam realmente interligadas.
+  // Normaliza a descrição do parcelamento como o Apps Script faz (tira "01/12", números e símbolos).
+  function normDescParc(s){ return (s||'').toLowerCase().replace(/\d{1,2}\/\d{1,2}/g,'').replace(/[^a-z]/g,'').trim(); }
   function parcAliasKey(descricao, valorParcela, total){
-    return 'P|'+(descricao||'').trim().toLowerCase()+'|'+Math.round((valorParcela||0)*100)+'|'+(total||0);
+    // Chave robusta e IGUAL nas duas telas: descrição normalizada + nº de parcelas +
+    // valor total arredondado à dezena. Como uma parcela pode vir com centavos diferentes
+    // (ex.: 1ª de 134,49 e as demais de 134,41), arredondar o TOTAL à dezena faz a chave
+    // bater entre a aba Parcelas e a aba Cartões. (Era esse o motivo de não "conversarem".)
+    var totalAprox = Math.round((Number(valorParcela)||0)*(Number(total)||0)/10)*10;
+    return 'P|'+normDescParc(descricao)+'|'+(total||0)+'|'+totalAprox;
+  }
+  // Formato ANTIGO da chave (centavos exatos) — usado só pra migrar apelidos já salvos.
+  function parcAliasKeyLegacy(descricao, valorParcela, total){
+    return 'P|'+(descricao||'').trim().toLowerCase()+'|'+Math.round((Number(valorParcela)||0)*100)+'|'+(total||0);
+  }
+  // Migra apelidos de parcelamentos do formato antigo (por centavo) para o novo (interligado).
+  // Assim o que você já renomeou na aba Parcelas passa a aparecer também na aba Cartões.
+  function migrarApelidosParcelamentos(){
+    try{
+      var mapa=lerApelidos(), mudou=false;
+      (state.parcelamentos||[]).forEach(function(p){
+        var legado=parcAliasKeyLegacy(p.descricao,p.valorParcela,p.nParcelas);
+        var nova=parcAliasKey(p.descricao,p.valorParcela,p.nParcelas);
+        if(mapa[legado] && !mapa[nova]){
+          mapa[nova]=mapa[legado]; mudou=true;
+          gravarApelidoSheet(nova, mapa[nova]); // propaga pra planilha (multi-dispositivo)
+        }
+      });
+      if(mudou) salvarApelidos(mapa);
+    }catch(e){}
   }
   // Chave estável da transação. Parcelada => chave de parcelamento (vale p/ todas as parcelas
   // e p/ a aba Parcelamentos). Não parcelada => descrição + valor + data (compra específica).
@@ -3133,11 +3269,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     content.innerHTML='<div class="screen active">'+tela.render()+'</div>';
     if(tela.wire) tela.wire();
     if(window.requestAnimationFrame){requestAnimationFrame(medirStickies);}else{medirStickies();}
-    // Ao ENTRAR em Previsões (vindo de outra tela), re-sincroniza com a planilha — assim as
-    // marcações Pago/Recebido feitas em outro aparelho aparecem ao abrir a aba. Reentrar
-    // re-sincroniza (antes era só 1x por sessão, por isso não atualizava entre dispositivos).
+    // Ao ENTRAR em Previsões (vindo de outra tela), re-sincroniza com a planilha em SILÊNCIO:
+    // a tela já foi renderizada acima (1x). Quando os dados chegam, atualizamos só a lista no
+    // lugar (renderPrevisoesParcial) — sem re-renderizar a tela inteira (era isso que causava
+    // o "carrega 2 vezes"). Reentrar re-sincroniza, então marcações de outro aparelho aparecem.
     if(i===4 && irPara._ultima!==4){
-      carregarRecorrentesSheet().then(function(){ if(telaAtual===4) irPara(4); }).catch(function(){});
+      carregarRecorrentesSheet().then(function(){
+        if(telaAtual===4 && document.getElementById('recLista')) renderPrevisoesParcial();
+      }).catch(function(){});
     }
     irPara._ultima = i;
     // navbar
@@ -3622,6 +3761,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         state.faturaEmAberto = mapFaturaEmAberto(r[8]);
         aplicarApelidosDaPlanilha(r[9]);   // nomes personalizados vindos da aba "Apelidos" (multi-dispositivo)
         if(r[10] && r[10].length) processarPrevisoesSheet(r[10]); // recorrentes + marcações (Pago/Recebido) da aba Previsões
+        migrarApelidosParcelamentos();     // garante que renomeações antigas de Parcelas apareçam nos Cartões
         ultimaAtualizacao = new Date();
         renderBancos();
         if(btn) btn.classList.remove("loading");
