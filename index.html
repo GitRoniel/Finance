@@ -130,7 +130,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .banks-add:active{transform:scale(0.97);}
 @keyframes spin360{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 .ro-ic.spin svg{animation:spin360 .9s linear infinite;}
-.icon-btn.loading{opacity:1;}
+/* BUGFIX: o botão de bancos recebe a classe "loading" durante o carregamento, mas essa
+   mesma classe é usada pelo loader de tela cheia (.loading) — então o spinner gigante
+   (::before) e o padding de 72px "vazavam" pro botão, virando aquele arco azul torto no
+   canto superior direito. Aqui anulamos esse vazamento e desenhamos um spinner próprio,
+   pequeno e centralizado, do tamanho certo pra caber dentro da cápsula. */
+.icon-btn.loading{opacity:1;display:flex;align-items:center;justify-content:center;padding:0 7px;}
+.icon-btn.loading::before{content:none!important;display:none!important;}
+.icon-btn.loading .banks-stack::after{content:"";width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--track-bg);border-top-color:var(--lime);animation:spin360 .8s linear infinite;}
 .refresh-opt{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:13px;cursor:pointer;transition:background .15s;}
 .refresh-opt:active{transform:scale(0.97);}
 .refresh-opt:not(:last-of-type){margin-bottom:3px;}
@@ -495,7 +503,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
    as transacoes deslizam por baixo e dissolvem com desfoque progressivo (estilo iOS). */
 
 /* ── Agrupamento por dia ── */
-.cc-day-group{margin-bottom:16px;}
+/* content-visibility: o navegador pula a renderização dos grupos fora da tela, deixando
+   listas longas de transações bem mais leves pra rolar. O contain-intrinsic-size reserva
+   uma altura aproximada pra barra de rolagem não "pular". */
+.cc-day-group{margin-bottom:16px;content-visibility:auto;contain-intrinsic-size:auto 160px;}
 .cc-day-hdr{
   display:flex;align-items:center;justify-content:space-between;
   padding:0 4px 7px;
@@ -532,6 +543,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cctx-main{flex:1;min-width:0;}
 .cctx-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:0 0 auto;}
 .cctx-desc{font-size:13.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Transação renomeável (aba Cartões) */
+.cctx-edit{cursor:pointer;}
+.cctx-apel{font-size:10px;color:var(--text-faint);margin-left:5px;opacity:.8;}
+.rn-orig{font-size:12.5px;color:var(--text-dim);line-height:1.5;margin-bottom:12px;padding:9px 11px;border-radius:11px;background:var(--track-bg);}
+.rn-hint{font-size:11.5px;color:var(--text-faint);margin-top:8px;line-height:1.4;}
 .cctx-meta{font-size:11px;color:var(--text-faint);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cctx-val{font-size:14px;font-weight:600;font-family:var(--font-display);letter-spacing:-0.01em;}
 .cctx-val.in{color:var(--lime-deep);}
@@ -618,27 +634,28 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .calc-row.total .lbl{color:var(--text);font-weight:600;font-family:var(--font-display);}
 .calc-row.total .amt{font-size:20px;font-weight:700;}
 /* rec-item com toggle deslizante */
-.rec-item{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:13px;background:var(--glass-bg);border:1px solid var(--glass-border);margin-bottom:8px;transition:opacity .3s;}
-.rec-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;}
+/* Itens recorrentes — versão compacta (fonte menor e menos espaçamento) */
+.rec-item{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:11px;background:var(--glass-bg);border:1px solid var(--glass-border);margin-bottom:5px;transition:opacity .3s;}
+.rec-dot{width:7px;height:7px;border-radius:50%;flex:0 0 7px;}
 .rec-dot.in{background:var(--lime);}
 .rec-dot.out{background:var(--red);}
 .rec-main{flex:1;min-width:0;cursor:pointer;}
 .rec-val{cursor:pointer;}
-.rec-name{font-size:15px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rec-bell{font-size:10.5px;opacity:.85;margin-left:2px;}
-.rec-check-lbl{font-size:11px;color:var(--text-faint);font-weight:500;margin-top:1px;transition:color .2s;}
-.rec-val{font-size:17px;font-weight:700;font-family:var(--font-display);flex:0 0 auto;transition:opacity .3s;}
+.rec-name{font-size:13.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rec-bell{font-size:10px;opacity:.85;margin-left:2px;}
+.rec-check-lbl{font-size:10px;color:var(--text-faint);font-weight:500;margin-top:0;transition:color .2s;}
+.rec-val{font-size:14.5px;font-weight:700;font-family:var(--font-display);flex:0 0 auto;transition:opacity .3s;}
 .rec-val.in{color:var(--lime-deep);}
 .rec-val.out{color:var(--red);}
 /* Toggle deslizante */
-.rec-toggle{position:relative;width:48px;height:27px;flex:0 0 48px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.rec-toggle{position:relative;width:42px;height:24px;flex:0 0 42px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .rec-toggle input{opacity:0;width:0;height:0;position:absolute;}
-.rec-toggle-track{position:absolute;inset:0;border-radius:27px;background:var(--track-bg);border:1.5px solid var(--glass-border);transition:background .25s,border-color .25s;}
-.rec-toggle-thumb{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);transition:transform .25s cubic-bezier(0.34,1.4,0.5,1),background .25s;}
+.rec-toggle-track{position:absolute;inset:0;border-radius:24px;background:var(--track-bg);border:1.5px solid var(--glass-border);transition:background .25s,border-color .25s;}
+.rec-toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);transition:transform .25s cubic-bezier(0.34,1.4,0.5,1),background .25s;}
 /* Estado ON (marcado) */
 .rec-check.checked ~ .rec-toggle-track,
 .rec-toggle.checked .rec-toggle-track{background:var(--lime);border-color:var(--lime);}
-.rec-toggle.checked .rec-toggle-thumb{transform:translateX(21px);background:#fff;}
+.rec-toggle.checked .rec-toggle-thumb{transform:translateX(20px);background:#fff;}
 [data-theme="light"] .rec-toggle.checked .rec-toggle-track{background:var(--lime-deep);border-color:var(--lime-deep);}
 /* Estado OFF vermelho para saídas */
 .rec-toggle.out-toggle .rec-toggle-track{background:var(--track-bg);}
@@ -653,6 +670,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .rec-del{color:var(--text-faint);cursor:pointer;font-size:17px;padding:2px 3px;flex:0 0 auto;}
 /* Tag do mês */
 .rec-mes-tag{font-size:12px;color:var(--text-faint);font-weight:500;margin-left:6px;}
+/* Filtro Todos/Entrada/Saída (abaixo do título "Recorrentes") */
+.rec-filtro{margin:2px 0 10px;}
 /* Hint de uso */
 .rec-reset-hint{font-size:12px;color:var(--text-faint);margin-bottom:11px;padding:0 2px;line-height:1.5;}
 
@@ -1008,12 +1027,45 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return rows.map(function(c){ return { nome: strVal(c,0), tipo: strVal(c,1) }; }).filter(function(x){ return x.nome; });
   }
 
+  // A coluna "Parcelamento ID" guarda algo como "1/12". Mas o Google Sheets costuma
+  // interpretar "1/12" como DATA e o gviz devolve isso como "Date(2026,11,1)" — daí o
+  // texto sem sentido que aparecia na tela. Aqui decodificamos os dois formatos para
+  // { num: parcela atual, total: nº de parcelas }. Em "Date(ano,mes,dia)" o dia é a
+  // parcela e o mês (base 0) + 1 é o total (ex.: Date(2026,11,1) => 1 de 12).
+  function decodeParcela(raw){
+    if(raw == null) return null;
+    var s = String(raw).trim();
+    if(!s) return null;
+    var md = /Date\(\s*\d+\s*,\s*(\d+)\s*,\s*(\d+)/.exec(s);
+    if(md){
+      var totalD = (+md[1]) + 1, numD = +md[2];
+      if(numD >= 1 && totalD >= 1 && numD <= totalD) return { num: numD, total: totalD };
+    }
+    var mf = /^(\d+)\s*\/\s*(\d+)$/.exec(s);
+    if(mf){
+      var numF = +mf[1], totalF = +mf[2];
+      if(numF >= 1 && totalF >= 1 && numF <= totalF) return { num: numF, total: totalF };
+    }
+    return null;
+  }
+
   function mapTransacoes(rows, origem){
     return rows.map(function(c){
+      var data = dateVal(c,1);
+      var parcela = decodeParcela(strVal(c,8));
+      // A planilha registra TODAS as parcelas de uma compra na mesma data. Isso fazia a
+      // fatura do mês somar as 12 parcelas de uma vez. Aqui jogamos cada parcela para o
+      // mês em que ela realmente cai (parcela 1 = mês da compra, 2 = mês seguinte, …),
+      // assim cada fatura mostra só a parcela correspondente — igual à aba de previsão.
+      if(parcela && data){
+        data = new Date(data.getFullYear(), data.getMonth() + (parcela.num - 1), data.getDate());
+      }
       return {
-        data: dateVal(c,1), descricao: strVal(c,2), categoria: strVal(c,3),
+        data: data, descricao: strVal(c,2), categoria: strVal(c,3),
         conta: strVal(c,4), cartao: strVal(c,5), tipo: strVal(c,6) || "Saída",
-        valor: numVal(c,7), parcelamentoId: strVal(c,8), obs: strVal(c,9),
+        valor: numVal(c,7), parcela: parcela,
+        parcelamentoId: parcela ? ('Parcela '+parcela.num+' de '+parcela.total) : '',
+        obs: strVal(c,9),
         origem: origem || "conta"
       };
     }).filter(function(x){ return x.descricao || x.valor; });
@@ -1618,6 +1670,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   var subtabAlvo=null; // guarda qual sub-aba (parc/assin) abrir ao entrar na tela "Parcelas"
   var mesSelecionado=null; // índice dentro do array de 6 ciclos do gráfico; null = ciclo atual (a última barra)
   var prevMesOffset=0; // mês selecionado na aba Previsões (0 = mês atual; 1.. = meses futuros)
+  var prevTipoFiltro='all'; // filtro de tipo na aba Previsões: 'all' | 'in' (Entrada) | 'out' (Saída)
   var MESES_COMPLETO=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   function MESES_COMPLETO_CAP(m){ var s=MESES_COMPLETO[m]||''; return s.charAt(0).toUpperCase()+s.slice(1); }
 
@@ -1844,15 +1897,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       diaMap[key].total+=v;
     });
 
+    var txFlat=[]; // referência das transações renderizadas, pro clique de renomear achar o item
     tl.innerHTML=dias.map(function(key){
       var grupo=diaMap[key];
       var totalPos=grupo.total>=0;
       var totalFmt=(totalPos?'+':'')+formatBRL(Math.abs(grupo.total));
       var txsHtml=grupo.txs.map(function(t){
         var ent=t.tipo==="Entrada";
+        var idx=txFlat.push(t)-1;
         var parc=t.parcelamentoId?'<span class="tx-parcela">'+escapeHtml(t.parcelamentoId)+'</span>':'';
-        return '<div class="cctx">'+categoriaIconeHtml(t.categoria,ent)+
-          '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+parc+'</div>'+
+        var apel=temApelido(t)?'<span class="cctx-apel" title="Nome personalizado">✎</span>':'';
+        return '<div class="cctx cctx-edit" data-txidx="'+idx+'" title="Toque para renomear esta compra">'+categoriaIconeHtml(t.categoria,ent)+
+          '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeTx(t))+parc+apel+'</div>'+
           '<div class="cctx-meta">'+escapeHtml(sentenceCase(t.categoria)||"Sem categoria")+'</div></div>'+
           '<div class="cctx-right">'+
             '<div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div>'+
@@ -1866,6 +1922,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="cc-day-txs">'+txsHtml+'</div>'+
       '</div>';
     }).join("");
+    // Clique em uma transação abre o modal de renomear (apelido salvo no aparelho)
+    tl.querySelectorAll('.cctx-edit').forEach(function(el){
+      el.addEventListener('click', function(){
+        var t=txFlat[Number(el.getAttribute('data-txidx'))];
+        if(t) abrirRenomearTx(t, function(){ renderDetalheCartao(card); });
+      });
+    });
   }
   function wireCartoes(){
     mesSelecionado=null; // volta a mostrar o mês atual ao entrar na tela
@@ -2130,6 +2193,76 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   function lerRecorrentes(){ try{ return JSON.parse(localStorage.getItem(REC_KEY))||[]; }catch(e){ return []; } }
   function salvarRecorrentes(arr){ try{ localStorage.setItem(REC_KEY, JSON.stringify(arr)); }catch(e){} }
+
+  // ── Apelidos de transações ────────────────────────────────────────
+  // A planilha é só leitura (gviz), então renomear uma transação não mexe nela:
+  // guardamos um "apelido" no próprio aparelho (localStorage), associado a uma
+  // assinatura estável da compra. Assim, mesmo quando os dados são recarregados da
+  // planilha a cada 5 min, o nome personalizado continua aparecendo.
+  var ALIAS_KEY = 'financeiro-apelidos-tx';
+  function lerApelidos(){ try{ return JSON.parse(localStorage.getItem(ALIAS_KEY))||{}; }catch(e){ return {}; } }
+  function salvarApelidos(obj){ try{ localStorage.setItem(ALIAS_KEY, JSON.stringify(obj)); }catch(e){} }
+  // Chave estável da transação. Para compras parceladas usamos descrição + valor +
+  // total de parcelas (assim renomear uma vez vale para todas as parcelas daquela
+  // compra). Para as demais, descrição + valor + data.
+  function txAliasKey(t){
+    var desc = (t.descricao||'').trim().toLowerCase();
+    var val  = Math.round((t.valor||0)*100);
+    if(t.parcela){ return 'P|'+desc+'|'+val+'|'+t.parcela.total; }
+    var dia = t.data ? (t.data.getFullYear()+'-'+(t.data.getMonth()+1)+'-'+t.data.getDate()) : '';
+    return 'T|'+desc+'|'+val+'|'+dia;
+  }
+  // Nome a exibir: apelido salvo (se houver) ou a descrição original já formatada.
+  function nomeTx(t){
+    var ap = lerApelidos()[txAliasKey(t)];
+    if(ap && String(ap).trim()) return String(ap).trim();
+    return sentenceCase(t.descricao)||'—';
+  }
+  function temApelido(t){ var ap=lerApelidos()[txAliasKey(t)]; return !!(ap && String(ap).trim()); }
+
+  // Modal leve para renomear uma transação (não altera a planilha — só salva um apelido local).
+  function abrirRenomearTx(t, onSalvo){
+    if(!t) return;
+    var key = txAliasKey(t);
+    var apelAtual = lerApelidos()[key] || '';
+    var original = sentenceCase(t.descricao) || t.descricao || '—';
+    var ov=document.createElement('div');
+    ov.className='modal-ov';
+    ov.innerHTML='<div class="modal glass">'+
+      '<div class="modal-head"><div class="modal-title">Renomear transação</div><div class="modal-x" id="rnClose">✕</div></div>'+
+      '<div class="modal-body">'+
+        '<div class="rn-orig">Descrição na planilha:<br><b>'+escapeHtml(original)+'</b>'+
+          (t.parcela?' · <span style="color:var(--text-faint)">parcelado em '+t.parcela.total+'x</span>':'')+'</div>'+
+        '<label class="fld"><span>Novo nome</span><input id="rnNome" type="text" maxlength="40" placeholder="Ex: Fone de ouvido, Mercado do mês…" autocomplete="off" value="'+escapeHtml(apelAtual)+'"></label>'+
+        (t.parcela?'<div class="rn-hint">O nome vale para todas as '+t.parcela.total+' parcelas desta compra.</div>':'')+
+        '<div class="modal-msg" id="rnMsg"></div>'+
+      '</div>'+
+      '<div class="modal-foot">'+
+        (apelAtual?'<button class="btn-ghost" id="rnReset">Restaurar original</button>':'<button class="btn-ghost" id="rnCancel">Cancelar</button>')+
+        '<button class="btn-primary" id="rnSave">Salvar</button>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+    function fechar(){ ov.classList.remove('show'); setTimeout(function(){ ov.remove(); },220); }
+    ov.addEventListener('click',function(e){ if(e.target===ov) fechar(); });
+    ov.querySelector('#rnClose').addEventListener('click',fechar);
+    var cancelBtn=ov.querySelector('#rnCancel'); if(cancelBtn) cancelBtn.addEventListener('click',fechar);
+    var input=ov.querySelector('#rnNome'); if(input){ setTimeout(function(){ input.focus(); },120); }
+    var resetBtn=ov.querySelector('#rnReset');
+    if(resetBtn){ resetBtn.addEventListener('click',function(){
+      var mapa=lerApelidos(); delete mapa[key]; salvarApelidos(mapa);
+      fechar(); if(typeof onSalvo==='function') onSalvo();
+    }); }
+    ov.querySelector('#rnSave').addEventListener('click',function(){
+      var novo=(input&&input.value||'').trim();
+      var mapa=lerApelidos();
+      if(novo) mapa[key]=novo; else delete mapa[key];
+      salvarApelidos(mapa);
+      fechar(); if(typeof onSalvo==='function') onSalvo();
+    });
+    if(input){ input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); ov.querySelector('#rnSave').click(); } }); }
+  }
 
   // ── Modelo mês a mês ──────────────────────────────────────────────
   // Cada recorrente novo guarda { mesInicio:"AAAA-MM", repeticoes:N }.
@@ -2487,9 +2620,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function gerarRecListaHtml(offset){
     var recs     = lerRecorrentes();
     var marcados = lerMarcacoes();
-    var recsAtivos = recs.map(function(r,i){return {r:r,i:i};}).filter(function(x){return recAtivaNoMes(x.r, offset);});
+    var recsAtivos = recs.map(function(r,i){return {r:r,i:i};}).filter(function(x){return recAtivaNoMes(x.r, offset);})
+      // Filtro Todos/Entrada/Saída (logo abaixo do título "Recorrentes")
+      .filter(function(x){ return prevTipoFiltro==='all' || x.r.tipo===prevTipoFiltro; });
     if(!recsAtivos.length){
-      return '<div class="empty" style="padding:16px 0 4px"><div class="et">Nada cadastrado para este mês. Toque em “+ Cadastrar”.</div></div>';
+      var msgVazio = prevTipoFiltro==='in' ? 'Nenhuma entrada cadastrada para este mês.'
+                   : prevTipoFiltro==='out' ? 'Nenhuma saída cadastrada para este mês.'
+                   : 'Nada cadastrado para este mês. Toque em “+ Cadastrar”.';
+      return '<div class="empty" style="padding:16px 0 4px"><div class="et">'+msgVazio+'</div></div>';
     }
     return recsAtivos.map(function(x){
       var r=x.r, i=x.i;
@@ -2571,6 +2709,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag" id="recMesTag">'+mes+'</span></h2>'+
       '<span class="link" id="recAddBtn">+ Cadastrar</span>'+
     '</div>'+
+    // Filtro de tipo (Todos / Entrada / Saída) — mesmo estilo das sub-abas de Parcelamentos
+    '<div class="subtabs rec-filtro" id="recFiltro">'+
+      '<div class="subtab'+(prevTipoFiltro==='all'?' active':'')+'" data-tipo="all">Todos</div>'+
+      '<div class="subtab'+(prevTipoFiltro==='in'?' active':'')+'" data-tipo="in">Entradas</div>'+
+      '<div class="subtab'+(prevTipoFiltro==='out'?' active':'')+'" data-tipo="out">Saídas</div>'+
+    '</div>'+
     '<div id="recLista">'+recHtml+'</div>'+
     '';
   }
@@ -2624,6 +2768,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         pill.classList.add('active');
         renderPrevisoesParcial();
         try{ pill.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }catch(e){}
+      });
+    });
+    // Filtro de tipo (Todos / Entrada / Saída) — só reconstrói a lista, sem recarregar a tela
+    document.querySelectorAll('#recFiltro .subtab').forEach(function(tab){
+      tab.addEventListener('click', function(){
+        prevTipoFiltro = tab.getAttribute('data-tipo') || 'all';
+        document.querySelectorAll('#recFiltro .subtab').forEach(function(t){ t.classList.remove('active'); });
+        tab.classList.add('active');
+        var recLista = document.getElementById('recLista');
+        if(recLista){ recLista.innerHTML = gerarRecListaHtml(prevMesOffset); wireRecLista(); }
       });
     });
     wireRecLista();
@@ -2700,7 +2854,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     atualizarCabecalho(); // já reseta pro estado "no topo" (saudação completa / sem fade)
   }
 
-  window.addEventListener('scroll',atualizarCabecalho,{passive:true});
+  // Scroll: o cabeçalho só precisa atualizar 1x por frame. Sem isso, o handler rodava em
+  // TODO evento de scroll (lendo/escrevendo o DOM), causando travadas na rolagem. Agora
+  // agrupamos com requestAnimationFrame — rolagem bem mais leve.
+  var _cabTicking=false;
+  function onScrollCabecalho(){
+    if(_cabTicking) return;
+    _cabTicking=true;
+    (window.requestAnimationFrame||function(f){setTimeout(f,16);})(function(){
+      atualizarCabecalho(); _cabTicking=false;
+    });
+  }
+  window.addEventListener('scroll',onScrollCabecalho,{passive:true});
 
   // Sticky header offsets: mede o .top -> --top-bar-h e o cabecalho dos cartoes -> --cards-hdr-h
   function medirStickies(){
