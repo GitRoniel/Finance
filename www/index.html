@@ -691,6 +691,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .inv-val{text-align:right;}
 .inv-val .v{font-size:17px;font-weight:700;font-family:var(--font-display);}
 .inv-val .r{font-size:12px;color:var(--lime-deep);font-weight:500;margin-top:1px;}
+/* Parcelamentos e Assinaturas no MESMO padrão das linhas de Investimentos */
+.inv-ic svg{width:56%;height:56%;}
+.inv-ic svg use{color:#fff;}
+.il-row{cursor:pointer;}
+.il-row:active{background:var(--track-bg);}
+.il-row .cat-ic{width:36px;height:36px;flex:0 0 36px;}
+.il-sub{font-size:12px;color:var(--text-faint);font-weight:500;margin-top:1px;}
+.il-apel{font-size:11px;color:var(--text-faint);opacity:.8;}
+.assin-actions{display:inline-flex;gap:15px;align-items:center;}
+.assin-sync{color:var(--text-dim)!important;}
+.assin-sync.syncing{opacity:.6;pointer-events:none;}
 /* previsões */
 .prev-hero{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px;}
 .prev-box{padding:18px 16px;border-radius:var(--radius-sm);}
@@ -1329,6 +1340,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     {kw:['lazer','entreten','cinema','streaming','netflix','jogo','game'], color:'#c44bff', svg:'<path d="M3 8h18M3 8l2-4h3l-2 4M8 8l2-4h3l-2 4M13 8l2-4h3l-2 4"/><rect x="3" y="8" width="18" height="12" rx="2"/>'},
     {kw:['eletr','celular','smartphone','informátic','informatic','tech'], color:'#00b1ea', svg:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>'},
     {kw:['vestuário','vestuario','roupa','moda','calçad','calcad'], color:'#ec7000', svg:'<path d="M16 4l4 2-2 4-2-1v11H8V9L6 10 4 6l4-2 2 2h4l2-2z"/>'},
+    {kw:['seguro','segur','proteç','protec'], color:'#3d8bff', svg:'<path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6l7-3z"/><path d="M9 12l2 2 4-4"/>'},
+    {kw:['streaming','netflix','spotify','disney','prime','hbo','max','youtube'], color:'#e23b6d', svg:'<path d="M8 5v14l11-7z"/>'},
     {kw:['assinatura','clube'], color:'#7c4dff', svg:'<path d="M4 7l8-4 8 4v10l-8 4-8-4V7z"/><path d="M12 3v18M4 7l8 4 8-4"/>'},
     {kw:['educa','curso','escola','faculdade','livro'], color:'#5fa015', svg:'<path d="M2 4h7a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2zM22 4h-7a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h8z"/>'},
     {kw:['casa','moradia','aluguel','condom','energia','luz','água','agua','internet','telefone'], color:'#83d626', svg:'<path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V9.5z"/>'},
@@ -2207,32 +2220,41 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function renderListaParcelamentos(){
     var ativos=parcelamentosAtivos();
     if(!ativos.length) return '<div class="empty"><div class="ei">📦</div><div class="et">Nenhum parcelamento ativo.</div></div>';
-    return ativos.map(function(p,i){
+    // Mesmo padrão visual das linhas de Investimentos (ícone redondo + nome/sub + valor à direita).
+    var rows=ativos.map(function(p,i){
       var pagas=clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
-      var pct=clamp((pagas/p.nParcelas)*100,0,100);
-      var apel=apelidoPorChave(parcAliasKey(p.descricao,p.valorParcela,p.nParcelas))?'<span class="pcard-apel" title="Nome personalizado">✎</span>':'';
-      return '<div class="glass pcard pcard-edit" data-parc="'+i+'" title="Toque para renomear esta compra"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+apel+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
-        '<div class="pprog"><div class="pprog-fill" style="width:'+pct+'%"></div></div>'+
-        '<div class="pcard-meta"><span>'+pagas+' de '+p.nParcelas+' parcelas</span><span>'+(p.nParcelas-pagas)+' restantes</span></div></div>';
+      var info=bancoDe(p.cartao);
+      var apel=apelidoPorChave(parcAliasKey(p.descricao,p.valorParcela,p.nParcelas))?' <span class="il-apel" title="Nome personalizado">✎</span>':'';
+      return '<div class="inv-row il-row pcard-edit" data-parc="'+i+'" title="Toque para renomear esta compra">'+
+        '<div class="inv-ic" style="background:'+info.cor1+'">'+logoOuIniciais(p.cartao)+'</div>'+
+        '<div class="inv-main"><div class="inv-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+apel+'</div>'+
+        '<div class="inv-taxa">'+escapeHtml(p.cartao)+' · '+pagas+'/'+p.nParcelas+' parcelas</div></div>'+
+        '<div class="inv-val"><div class="v">'+formatBRL(p.valorParcela)+'</div><div class="il-sub">de '+formatBRL(p.valorTotal)+'</div></div>'+
+        '<div class="inv-edit-chev">›</div></div>';
     }).join("");
+    return '<div class="glass tx-list">'+rows+'</div>';
   }
   // Índices (em state.assinaturas) das assinaturas ativas exibidas — pro clique achar o item certo.
   var _assinVisiveis=[];
   function renderListaAssinaturas(){
-    var head='<div class="section-head" style="margin:14px 4px 9px"><h2 style="font-size:16px">Assinaturas</h2><span class="link" id="assinAddBtn">+ Cadastrar</span></div>';
+    var head='<div class="section-head" style="margin:14px 4px 9px"><h2 style="font-size:16px">Assinaturas</h2>'+
+      '<span class="assin-actions"><span class="link assin-sync" id="assinSyncBtn" title="Detectar assinaturas automaticamente nas transações">↻ Sincronizar</span>'+
+      '<span class="link" id="assinAddBtn">+ Cadastrar</span></span></div>';
     _assinVisiveis=[];
-    var itens='';
+    var rows='';
     state.assinaturas.forEach(function(a,idx){
       if(a.ativa==="Não") return;
       var pos=_assinVisiveis.push(idx)-1;
-      itens+='<div class="glass acard acard-edit" data-assin="'+pos+'" title="Toque para editar"><div class="aic">🔁</div>'+
-        '<div class="amain"><div class="aname">'+escapeHtml(sentenceCase(a.nome))+'</div>'+
-        '<div class="afreq">'+escapeHtml(a.frequencia||"Mensal")+(a.categoria?' · '+escapeHtml(sentenceCase(a.categoria)):'')+'</div></div>'+
-        '<div class="aval">'+formatBRL(a.valor)+'<div class="sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div>'+
+      // Ícone conforme a CATEGORIA (ex.: Seguro -> escudo). Mesmo padrão das linhas de Investimentos.
+      var sub=(a.frequencia||"Mensal")+(a.categoria?' · '+sentenceCase(a.categoria):'')+(a.diaCobranca?' · dia '+a.diaCobranca:'');
+      rows+='<div class="inv-row il-row acard-edit" data-assin="'+pos+'" title="Toque para editar">'+
+        categoriaIconeHtml(a.categoria,false)+
+        '<div class="inv-main"><div class="inv-name">'+escapeHtml(sentenceCase(a.nome))+'</div><div class="inv-taxa">'+escapeHtml(sub)+'</div></div>'+
+        '<div class="inv-val"><div class="v">'+formatBRL(a.valor)+'</div><div class="il-sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div>'+
         '<div class="adel" data-adel="'+pos+'" title="Remover assinatura">×</div></div>';
     });
-    if(!_assinVisiveis.length) itens='<div class="empty"><div class="ei">🔁</div><div class="et">Nenhuma assinatura cadastrada. Toque em “+ Cadastrar”.</div></div>';
-    return head+itens;
+    if(!_assinVisiveis.length) return head+'<div class="empty"><div class="ei">🔁</div><div class="et">Nenhuma assinatura cadastrada. Toque em “+ Cadastrar”.</div></div>';
+    return head+'<div class="glass tx-list">'+rows+'</div>';
   }
   function wireParcelas(){
     document.querySelectorAll('.subtab').forEach(function(st){
@@ -2254,9 +2276,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         abrirRenomearTx({descricao:p.descricao, valor:p.valorParcela, parcela:{num:1,total:p.nParcelas}}, function(){ irPara(2); });
       });
     });
-    // Assinaturas: cadastrar / editar (clicar no card) / excluir (×)
+    // Assinaturas: cadastrar / editar (clicar no card) / excluir (×) / sincronizar (detecção automática)
     var assinAdd=document.getElementById('assinAddBtn');
     if(assinAdd) assinAdd.addEventListener('click', function(){ subtabAlvo='assin'; abrirFormAssinatura(); });
+    var assinSync=document.getElementById('assinSyncBtn');
+    if(assinSync) assinSync.addEventListener('click', function(){
+      var b=this; if(b.classList.contains('syncing')) return;
+      b.classList.add('syncing'); b.textContent='Sincronizando…';
+      sincronizarAssinaturasSheet(function(){
+        // o sync roda no Apps Script (busca as transações e detecta); recarregamos depois pra puxar o resultado
+        setTimeout(function(){ subtabAlvo='assin'; loadAll(); }, 7000);
+      });
+    });
     document.querySelectorAll('.acard-edit').forEach(function(el){
       el.addEventListener('click', function(ev){
         if(ev.target && ev.target.getAttribute('data-adel')!=null) return; // clique no × é tratado abaixo
@@ -2342,6 +2373,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '&categoria='+encodeURIComponent(a.categoria||'')+'&frequencia='+encodeURIComponent(a.frequencia||'Mensal')+'&dia='+encodeURIComponent(a.diaCobranca||'');
   }
   function gravarAssinaturaSheet(a,cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=addAssinatura&'+_asParams(a),{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(false);}); }
+  // Dispara SÓ a detecção automática de assinaturas no Apps Script (não mexe no resto).
+  function sincronizarAssinaturasSheet(cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=syncAssinaturas',{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(true);}); }
   function editarAssinaturaSheet(a,cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=editAssinatura&'+_asParams(a),{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(false);}); }
   function deletarAssinaturaSheet(a,cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=delAssinatura&'+_asParams(a),{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(false);}); }
 
