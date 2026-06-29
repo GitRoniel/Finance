@@ -162,6 +162,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .empty{text-align:center;padding:36px 20px;color:var(--text-faint);}
 .empty .ei{font-size:32px;margin-bottom:10px;opacity:.5;}
 .empty .et{font-size:13px;}
+/* Toast de confirmação (cadastros, etc.) */
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 26px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(14px);
+  z-index:600;display:flex;align-items:center;gap:9px;max-width:88%;padding:11px 16px;border-radius:14px;
+  background:rgba(22,24,30,0.96);color:#fff;font-size:13.5px;font-weight:500;
+  box-shadow:0 12px 32px rgba(0,0,0,0.4);border:1px solid var(--glass-border);
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;}
+[data-theme="light"] .toast{background:rgba(28,30,36,0.96);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast .tk{width:20px;height:20px;border-radius:50%;flex:0 0 20px;display:flex;align-items:center;justify-content:center;
+  background:var(--lime);color:#08130d;font-size:13px;font-weight:800;}
 /* ===== Tela de login (moderna) ===== */
 .login-ov{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;
   background:var(--bg);overflow:hidden;transition:opacity .36s ease;}
@@ -661,7 +671,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .afreq{font-size:10.5px;color:var(--text-faint);margin-top:0;}
 .aval{font-size:13.5px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
 .aval .sub{font-size:10px;color:var(--text-faint);font-weight:500;margin-top:0;}
-.acard-edit{cursor:pointer;}
+.acard-edit{cursor:pointer;touch-action:pan-y;}
+/* Arrastar para reordenar assinaturas */
+#assinLista.arrastando-on{touch-action:none;}
+.acard.arrastando{transform:scale(1.03);box-shadow:0 14px 30px rgba(0,0,0,0.4);opacity:.96;position:relative;z-index:5;
+  border-color:color-mix(in srgb,var(--lime) 40%,var(--glass-border));}
+.acard{transition:transform .14s ease, box-shadow .14s ease;}
 .adel{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   color:var(--text-faint);font-size:16px;line-height:1;cursor:pointer;margin-left:2px;}
 .adel[data-confirm="1"]{color:var(--lime-deep);background:color-mix(in srgb,var(--lime) 16%,transparent);}
@@ -2247,20 +2262,28 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<span class="assin-actions"><span class="link assin-sync" id="assinSyncBtn" title="Detectar assinaturas automaticamente nas transações">↻ Sincronizar</span>'+
       '<span class="link" id="assinAddBtn">+ Cadastrar</span></span></div>';
     _assinVisiveis=[];
+    // Ativas, na ORDEM personalizada (salva ao arrastar). Quem não está na ordem vai pro fim.
+    var ordem=lerOrdemAssin();
+    var ativas=state.assinaturas.map(function(a,idx){return {a:a,idx:idx};}).filter(function(x){return x.a.ativa!=="Não";});
+    ativas.sort(function(x,y){
+      var ix=ordem.indexOf(String(x.a.id)); if(ix===-1) ix=1000+x.idx;
+      var iy=ordem.indexOf(String(y.a.id)); if(iy===-1) iy=1000+y.idx;
+      return ix-iy;
+    });
     var rows='';
-    state.assinaturas.forEach(function(a,idx){
-      if(a.ativa==="Não") return;
+    ativas.forEach(function(x){
+      var a=x.a, idx=x.idx;
       var pos=_assinVisiveis.push(idx)-1;
       // Ícone conforme a CATEGORIA (ex.: Seguro -> escudo). Nome MANTÉM a escrita original da planilha.
       var sub=(a.frequencia||"Mensal")+(a.categoria?' · '+a.categoria:'')+(a.diaCobranca?' · dia '+a.diaCobranca:'');
-      rows+='<div class="glass acard acard-edit" data-assin="'+pos+'" title="Toque para editar">'+
+      rows+='<div class="glass acard acard-edit" data-assin="'+pos+'" data-aid="'+escapeHtml(String(a.id||('i'+idx)))+'" title="Toque para editar · segure para reposicionar">'+
         categoriaIconeHtml(a.categoria,false)+
         '<div class="amain"><div class="aname">'+escapeHtml(a.nome)+'</div><div class="afreq">'+escapeHtml(sub)+'</div></div>'+
         '<div class="aval">'+formatBRL(a.valor)+'<div class="sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div>'+
         '<div class="adel" data-adel="'+pos+'" title="Remover assinatura">×</div></div>';
     });
     if(!_assinVisiveis.length) return head+'<div class="empty"><div class="ei">🔁</div><div class="et">Nenhuma assinatura cadastrada. Toque em “+ Cadastrar”.</div></div>';
-    return head+rows;
+    return head+'<div id="assinLista">'+rows+'</div>';
   }
   function wireParcelas(){
     document.querySelectorAll('.subtab').forEach(function(st){
@@ -2296,11 +2319,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     });
     document.querySelectorAll('.acard-edit').forEach(function(el){
       el.addEventListener('click', function(ev){
+        if(_assinArrastou) return; // acabou de arrastar — não abre edição
         if(ev.target && ev.target.getAttribute('data-adel')!=null) return; // clique no × é tratado abaixo
         var a=state.assinaturas[_assinVisiveis[Number(el.getAttribute('data-assin'))]];
         if(a) abrirFormAssinatura(a);
       });
     });
+    wireArrastarAssinaturas(); // segurar + arrastar reposiciona a assinatura
     document.querySelectorAll('.acard-edit [data-adel]').forEach(function(d){
       d.addEventListener('click', function(ev){
         ev.stopPropagation();
@@ -2351,6 +2376,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(del) del.addEventListener('click',function(){
       var b=this; if(b.getAttribute('data-c')!=='1'){ b.setAttribute('data-c','1'); b.textContent='Confirmar exclusão?'; return; }
       a.ativa='Não'; deletarAssinaturaSheet(a,function(){}); fechar(); subtabAlvo='assin'; irPara(2);
+      toast('Assinatura removida');
     });
     ov.querySelector('#asSave').addEventListener('click',function(){
       var nome=(ov.querySelector('#asNome').value||'').trim();
@@ -2364,19 +2390,81 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       if(editando){
         a.nome=nome; a.valor=valor; a.categoria=cat; a.frequencia=freq; a.diaCobranca=dia;
         editarAssinaturaSheet(a,function(){});
+        fechar(); subtabAlvo='assin'; irPara(2);
+        toast('Assinatura atualizada');
       } else {
         var id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID().slice(0,8):('a'+Date.now().toString(36));
         var nova={id:id,nome:nome,valor:valor,categoria:cat,frequencia:freq,diaCobranca:dia,origem:'manual',ativa:'Sim'};
         state.assinaturas.push(nova);
+        var ord=lerOrdemAssin(); ord.push(String(id)); salvarOrdemAssin(ord); // entra no fim da lista
         gravarAssinaturaSheet(nova,function(){});
+        fechar(); subtabAlvo='assin'; irPara(2);
+        toast('Assinatura cadastrada: '+nome);
       }
-      fechar(); subtabAlvo='assin'; irPara(2);
     });
     setTimeout(function(){ var i=ov.querySelector('#asNome'); if(i) i.focus(); },120);
   }
   function _asParams(a){
     return 'id='+encodeURIComponent(a.id||'')+'&nome='+encodeURIComponent(a.nome||'')+'&valor='+encodeURIComponent(a.valor||0)+
       '&categoria='+encodeURIComponent(a.categoria||'')+'&frequencia='+encodeURIComponent(a.frequencia||'Mensal')+'&dia='+encodeURIComponent(a.diaCobranca||'');
+  }
+
+  // ── Toast de confirmação ──────────────────────────────────────────
+  var _toastTimer=null;
+  function toast(msg){
+    var el=document.getElementById('toastMsg');
+    if(!el){ el=document.createElement('div'); el.id='toastMsg'; el.className='toast'; document.body.appendChild(el); }
+    el.innerHTML='<span class="tk">✓</span><span>'+escapeHtml(msg)+'</span>';
+    requestAnimationFrame(function(){ el.classList.add('show'); });
+    clearTimeout(_toastTimer);
+    _toastTimer=setTimeout(function(){ el.classList.remove('show'); }, 2600);
+  }
+
+  // ── Ordem personalizada das assinaturas (arrastar p/ reposicionar) ──
+  var ORDEM_ASSIN_KEY='financeiro-ordem-assin';
+  var _assinArrastou=false; // suprime o clique de edição logo após um arraste
+  function lerOrdemAssin(){ try{ return JSON.parse(localStorage.getItem(ORDEM_ASSIN_KEY))||[]; }catch(e){ return []; } }
+  function salvarOrdemAssin(arr){ try{ localStorage.setItem(ORDEM_ASSIN_KEY, JSON.stringify(arr)); }catch(e){} }
+
+  // Arrastar para reordenar: segura ~380ms numa assinatura e arrasta pra cima/baixo.
+  function wireArrastarAssinaturas(){
+    var cont=document.getElementById('assinLista'); if(!cont) return;
+    cont.querySelectorAll('.acard-edit').forEach(function(el){
+      el.addEventListener('pointerdown', function(ev){
+        if(ev.target.closest && ev.target.closest('[data-adel]')) return; // não arrasta pelo botão ×
+        var y0=ev.clientY, pid=ev.pointerId, ativo=false, moveu=false, timer;
+        timer=setTimeout(function(){
+          ativo=true; el.classList.add('arrastando'); cont.classList.add('arrastando-on');
+          try{ el.setPointerCapture(pid); }catch(e){}
+          if(navigator.vibrate){ try{ navigator.vibrate(18); }catch(e){} }
+        }, 380);
+        function onMove(e){
+          if(!ativo){ if(Math.abs(e.clientY-y0)>10){ clearTimeout(timer); fim(); } return; }
+          e.preventDefault(); moveu=true;
+          var irmaos=[].slice.call(cont.querySelectorAll('.acard-edit')).filter(function(x){return x!==el;});
+          var alvo=null;
+          for(var i=0;i<irmaos.length;i++){ var r=irmaos[i].getBoundingClientRect(); if(e.clientY < r.top + r.height/2){ alvo=irmaos[i]; break; } }
+          if(alvo) cont.insertBefore(el, alvo); else cont.appendChild(el);
+        }
+        function onUp(){
+          clearTimeout(timer);
+          if(ativo){
+            el.classList.remove('arrastando'); cont.classList.remove('arrastando-on');
+            if(moveu){
+              var nova=[].slice.call(cont.querySelectorAll('.acard-edit')).map(function(x){return x.getAttribute('data-aid');});
+              salvarOrdemAssin(nova);
+              _assinArrastou=true; setTimeout(function(){ _assinArrastou=false; }, 350);
+              toast('Ordem atualizada');
+            }
+          }
+          fim();
+        }
+        function fim(){ document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); document.removeEventListener('pointercancel',onUp); }
+        document.addEventListener('pointermove',onMove,{passive:false});
+        document.addEventListener('pointerup',onUp);
+        document.addEventListener('pointercancel',onUp);
+      });
+    });
   }
   function gravarAssinaturaSheet(a,cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=addAssinatura&'+_asParams(a),{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(false);}); }
   // Dispara SÓ a detecção automática de assinaturas no Apps Script (não mexe no resto).
