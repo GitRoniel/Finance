@@ -1566,7 +1566,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var txsHtml=grupo.txs.map(function(t){
         var ent=t.tipo==="Entrada";
         return '<div class="cctx">'+categoriaIconeHtml(t.categoria,ent)+
-          '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+'</div>'+
+          '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeTx(t))+'</div>'+
           '<div class="cctx-meta">'+escapeHtml(bancoDaTransacaoConta(t).rotulo)+'</div></div>'+
           '<div class="cctx-right">'+
             '<div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div>'+
@@ -1639,7 +1639,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var txsHtml=aberta?('<div class="gcat-txs">'+c.txs.map(function(t){
         var dia=t.data?t.data.getDate():'',mes=t.data?MESES_ABREV[t.data.getMonth()]:'';
         var origem=t.cartao||t.conta||'';
-        return '<div class="gcat-tx"><div class="gcat-tx-main"><div class="gcat-tx-desc">'+escapeHtml(sentenceCase(t.descricao)||"—")+'</div>'+
+        return '<div class="gcat-tx"><div class="gcat-tx-main"><div class="gcat-tx-desc">'+escapeHtml(nomeTx(t))+'</div>'+
           '<div class="gcat-tx-meta">'+dia+' '+mes+(origem?' · '+escapeHtml(origem):'')+'</div></div>'+
           '<div class="gcat-tx-val">'+formatBRL(t.valor)+'</div></div>';
       }).join("")+'</div>'):'';
@@ -1868,7 +1868,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Parcelas previstas</span><span class="cc-day-total neg">−'+formatBRL(parc.reduce(function(s,x){return s+x.valorParcela;},0))+'</span></div><div class="cc-day-txs">'+
         parc.map(function(x){
           return '<div class="cctx">'+categoriaIconeHtml('',false)+
-            '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(sentenceCase(x.descricao)||'—')+'</div>'+
+            '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeParcela(x.descricao,x.valorParcela,x.total))+'</div>'+
             '<div class="cctx-meta">parcela '+x.num+' de '+x.total+'</div></div>'+
             '<div class="cctx-right"><div class="cctx-val">'+formatBRL(x.valorParcela)+'</div></div></div>';
         }).join('')+'</div></div>';
@@ -2004,7 +2004,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return ativos.map(function(p){
       var pagas=clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
       var pct=clamp((pagas/p.nParcelas)*100,0,100);
-      return '<div class="glass pcard"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(sentenceCase(p.descricao))+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
+      return '<div class="glass pcard"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
         '<div class="pprog"><div class="pprog-fill" style="width:'+pct+'%"></div></div>'+
         '<div class="pcard-meta"><span>'+pagas+' de '+p.nParcelas+' parcelas</span><span>'+(p.nParcelas-pagas)+' restantes</span></div></div>';
     }).join("");
@@ -2202,25 +2202,55 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   var ALIAS_KEY = 'financeiro-apelidos-tx';
   function lerApelidos(){ try{ return JSON.parse(localStorage.getItem(ALIAS_KEY))||{}; }catch(e){ return {}; } }
   function salvarApelidos(obj){ try{ localStorage.setItem(ALIAS_KEY, JSON.stringify(obj)); }catch(e){} }
-  // Chave estável da transação. Para compras parceladas usamos descrição + valor +
-  // total de parcelas (assim renomear uma vez vale para todas as parcelas daquela
-  // compra). Para as demais, descrição + valor + data.
+  // Chave de uma compra PARCELADA. É a MESMA fórmula tanto para a transação no Cartão
+  // quanto para a linha em Parcelamentos (descrição + valor da parcela + nº de parcelas),
+  // então renomear num lugar reflete no outro — as abas ficam realmente interligadas.
+  function parcAliasKey(descricao, valorParcela, total){
+    return 'P|'+(descricao||'').trim().toLowerCase()+'|'+Math.round((valorParcela||0)*100)+'|'+(total||0);
+  }
+  // Chave estável da transação. Parcelada => chave de parcelamento (vale p/ todas as parcelas
+  // e p/ a aba Parcelamentos). Não parcelada => descrição + valor + data (compra específica).
   function txAliasKey(t){
+    if(t.parcela) return parcAliasKey(t.descricao, t.valor, t.parcela.total);
     var desc = (t.descricao||'').trim().toLowerCase();
     var val  = Math.round((t.valor||0)*100);
-    if(t.parcela){ return 'P|'+desc+'|'+val+'|'+t.parcela.total; }
-    var dia = t.data ? (t.data.getFullYear()+'-'+(t.data.getMonth()+1)+'-'+t.data.getDate()) : '';
+    var dia  = t.data ? (t.data.getFullYear()+'-'+(t.data.getMonth()+1)+'-'+t.data.getDate()) : '';
     return 'T|'+desc+'|'+val+'|'+dia;
   }
-  // Nome a exibir: apelido salvo (se houver) ou a descrição original já formatada.
-  function nomeTx(t){
-    var ap = lerApelidos()[txAliasKey(t)];
-    if(ap && String(ap).trim()) return String(ap).trim();
-    return sentenceCase(t.descricao)||'—';
+  // Resolve um apelido a partir de uma chave já pronta.
+  function apelidoPorChave(key){ var ap=lerApelidos()[key]; return (ap && String(ap).trim()) ? String(ap).trim() : ''; }
+  // Nome a exibir de uma TRANSAÇÃO: apelido salvo (se houver) ou a descrição original.
+  function nomeTx(t){ return apelidoPorChave(txAliasKey(t)) || (sentenceCase(t.descricao)||'—'); }
+  function temApelido(t){ return !!apelidoPorChave(txAliasKey(t)); }
+  // Nome a exibir de um PARCELAMENTO (aba Parcelamentos / previsões de fatura).
+  function nomeParcela(descricao, valorParcela, total){
+    return apelidoPorChave(parcAliasKey(descricao, valorParcela, total)) || (sentenceCase(descricao)||'—');
   }
-  function temApelido(t){ var ap=lerApelidos()[txAliasKey(t)]; return !!(ap && String(ap).trim()); }
 
-  // Modal leve para renomear uma transação (não altera a planilha — só salva um apelido local).
+  // ── Sincronização dos apelidos com a planilha (aba "Apelidos") ────────
+  // Com isso os nomes personalizados deixam de ser só do aparelho e passam a
+  // valer em qualquer dispositivo. Requer o trecho de Apps Script (actions
+  // setApelido/delApelido) publicado na implantação.
+  function aplicarApelidosDaPlanilha(rows){
+    // Sem linhas = a aba ainda não existe (ou está vazia). Não apagamos o que já
+    // está salvo localmente, pra não perder nada antes do Apps Script estar no ar.
+    if(!rows || !rows.length) return;
+    var mapa = {};
+    rows.forEach(function(c){
+      var chave = strVal(c,0), nome = strVal(c,1);
+      if(chave && nome) mapa[chave] = nome;
+    });
+    salvarApelidos(mapa); // a planilha vira a fonte de verdade (multi-dispositivo)
+  }
+  // Grava (ou remove, se nome vazio) um apelido na planilha via Apps Script.
+  function gravarApelidoSheet(chave, nome, callback){
+    if(!GAS_EXEC_URL || GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
+    var url = GAS_EXEC_URL+'?action=setApelido&chave='+encodeURIComponent(chave)+'&nome='+encodeURIComponent(nome||'');
+    fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
+  }
+
+  // Modal leve para renomear uma transação. Salva o apelido local (resposta instantânea)
+  // e sincroniza na aba "Apelidos" da planilha, pra valer em qualquer dispositivo.
   function abrirRenomearTx(t, onSalvo){
     if(!t) return;
     var key = txAliasKey(t);
@@ -2234,7 +2264,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="rn-orig">Descrição na planilha:<br><b>'+escapeHtml(original)+'</b>'+
           (t.parcela?' · <span style="color:var(--text-faint)">parcelado em '+t.parcela.total+'x</span>':'')+'</div>'+
         '<label class="fld"><span>Novo nome</span><input id="rnNome" type="text" maxlength="40" placeholder="Ex: Fone de ouvido, Mercado do mês…" autocomplete="off" value="'+escapeHtml(apelAtual)+'"></label>'+
-        (t.parcela?'<div class="rn-hint">O nome vale para todas as '+t.parcela.total+' parcelas desta compra.</div>':'')+
+        (t.parcela?'<div class="rn-hint">O nome vale para todas as '+t.parcela.total+' parcelas desta compra — e também aparece na aba Parcelamentos.</div>':'')+
         '<div class="modal-msg" id="rnMsg"></div>'+
       '</div>'+
       '<div class="modal-foot">'+
@@ -2251,14 +2281,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var input=ov.querySelector('#rnNome'); if(input){ setTimeout(function(){ input.focus(); },120); }
     var resetBtn=ov.querySelector('#rnReset');
     if(resetBtn){ resetBtn.addEventListener('click',function(){
-      var mapa=lerApelidos(); delete mapa[key]; salvarApelidos(mapa);
+      var mapa=lerApelidos(); delete mapa[key]; salvarApelidos(mapa); // local na hora
+      gravarApelidoSheet(key, '');                                   // e remove na planilha
       fechar(); if(typeof onSalvo==='function') onSalvo();
     }); }
     ov.querySelector('#rnSave').addEventListener('click',function(){
       var novo=(input&&input.value||'').trim();
       var mapa=lerApelidos();
       if(novo) mapa[key]=novo; else delete mapa[key];
-      salvarApelidos(mapa);
+      salvarApelidos(mapa);            // grava local imediatamente (resposta instantânea)
+      gravarApelidoSheet(key, novo);   // e sincroniza na planilha (vale em outros aparelhos)
       fechar(); if(typeof onSalvo==='function') onSalvo();
     });
     if(input){ input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); ov.querySelector('#rnSave').click(); } }); }
@@ -2288,9 +2320,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var saldo    = saldoTotalContas();
     var faturas  = totalFaturasAbertas();
     var recs     = lerRecorrentes();
-    var marcados = lerMarcacoes();
-    var entradas = recs.reduce(function(s,r,i){ return (r.tipo==='in'  && recAtivaNoMes(r,0) && !marcados[String(i)]) ? s+r.valor : s; }, 0);
-    var saidas   = recs.reduce(function(s,r,i){ return (r.tipo==='out' && recAtivaNoMes(r,0) && !marcados[String(i)]) ? s+r.valor : s; }, 0);
+    var marcados = lerMarcacoes(mesKeyOffset(0));
+    var entradas = recs.reduce(function(s,r,i){ return (r.tipo==='in'  && recAtivaNoMes(r,0) && !marcados[recMarcKey(r,i)]) ? s+r.valor : s; }, 0);
+    var saidas   = recs.reduce(function(s,r,i){ return (r.tipo==='out' && recAtivaNoMes(r,0) && !marcados[recMarcKey(r,i)]) ? s+r.valor : s; }, 0);
     return { saldo:saldo, faturas:faturas, entradas:entradas, saidas:saidas, previsao: saldo + entradas - saidas - faturas };
   }
   // Previsão para o mês "f" à frente (0 = atual). Usa só as recorrentes ATIVAS naquele mês +
@@ -2302,8 +2334,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     var prev=calcularPrevisaoMes(f-1);
     var recs=lerRecorrentes();
-    var entradas=recs.reduce(function(s,r){return (r.tipo==='in'  && recAtivaNoMes(r,f))?s+r.valor:s;},0);
-    var saidas=recs.reduce(function(s,r){return (r.tipo==='out' && recAtivaNoMes(r,f))?s+r.valor:s;},0);
+    var marcados=lerMarcacoes(mesKeyOffset(f)); // respeita o que já foi marcado como pago/recebido NAQUELE mês
+    var entradas=recs.reduce(function(s,r,i){return (r.tipo==='in'  && recAtivaNoMes(r,f) && !marcados[recMarcKey(r,i)])?s+r.valor:s;},0);
+    var saidas=recs.reduce(function(s,r,i){return (r.tipo==='out' && recAtivaNoMes(r,f) && !marcados[recMarcKey(r,i)])?s+r.valor:s;},0);
     var faturas=faturasProjetadasMes(f);
     var saldoInicial=prev.previsao;
     return { saldoInicial:saldoInicial, entradas:entradas, saidas:saidas, faturas:faturas, previsao:saldoInicial+entradas-saidas-faturas };
@@ -2324,29 +2357,53 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
   }
 
-  // Lê as marcações do mês atual (descarta automaticamente meses anteriores)
-  function lerMarcacoes(){
+  // Chave ESTÁVEL de um recorrente para as marcações (Pago/Recebido). Usa o ID da planilha
+  // (imune a reordenação/edição). Sem ID (itens legados), cai numa assinatura por conteúdo.
+  function recMarcKey(r, i){
+    if(r && r.id) return 'id:'+r.id;
+    return 'sig:'+((r&&r.nome)||'')+'|'+((r&&r.tipo)||'')+'|'+((r&&r.valor)||'')+'|'+((r&&r.mesInicio)||'');
+  }
+
+  // Lê as marcações de UM mês específico ("AAAA-MM"). Agora cada mês tem o seu próprio
+  // conjunto de marcações — marcar em agosto não marca em junho (era esse o bug).
+  function lerMarcacoes(mesKey){
     try{
       var raw = JSON.parse(localStorage.getItem(CHECK_KEY)) || {};
-      var mes = mesAtualKey();
-      // Se não tem entrada pro mês atual, começa tudo desmarcado (reset automático)
+      var mes = mesKey || mesAtualKey();
       return raw[mes] || {};
     }catch(e){ return {}; }
   }
 
-  // Salva marcações preservando só o mês atual
-  function salvarMarcacoes(marcacoes){
+  // Salva as marcações de UM mês, preservando os demais meses já marcados.
+  // Mantém um histórico enxuto (poda meses com mais de ~18 meses de idade).
+  function salvarMarcacoes(marcacoes, mesKey){
     try{
-      var obj = {}; obj[mesAtualKey()] = marcacoes;
-      localStorage.setItem(CHECK_KEY, JSON.stringify(obj));
+      var raw = {};
+      try{ raw = JSON.parse(localStorage.getItem(CHECK_KEY)) || {}; }catch(e){ raw = {}; }
+      if(!raw || typeof raw !== 'object') raw = {};
+      raw[mesKey || mesAtualKey()] = marcacoes;
+      var limite = mesKeyOffset(-18); // remove marcações muito antigas
+      Object.keys(raw).forEach(function(k){ if(String(k) < limite) delete raw[k]; });
+      localStorage.setItem(CHECK_KEY, JSON.stringify(raw));
     }catch(e){}
   }
 
-  function toggleMarcacao(idx){
-    var m = lerMarcacoes();
-    m[String(idx)] = !m[String(idx)];
-    salvarMarcacoes(m);
+  // Marca/desmarca um recorrente NO MÊS QUE ESTÁ SENDO EXIBIDO (prevMesOffset).
+  function toggleMarcacao(recKey){
+    var mesKey = mesKeyOffset(prevMesOffset);
+    var m = lerMarcacoes(mesKey);
+    m[recKey] = !m[recKey];
+    salvarMarcacoes(m, mesKey);
     renderPrevisoesParcial(); // atualiza sem recriar tudo
+  }
+
+  // Remove as marcações de um recorrente em TODOS os meses (usado ao excluir o item).
+  function removerMarcacoesDoRec(recKey){
+    try{
+      var raw = JSON.parse(localStorage.getItem(CHECK_KEY)) || {};
+      Object.keys(raw).forEach(function(mes){ if(raw[mes] && raw[mes][recKey]) delete raw[mes][recKey]; });
+      localStorage.setItem(CHECK_KEY, JSON.stringify(raw));
+    }catch(e){}
   }
 
   // Atualiza só os números e os estilos dos itens sem destruir o DOM (para não perder foco)
@@ -2600,13 +2657,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         var btn=this;
         if(btn.getAttribute('data-confirm')!=='1'){ btn.setAttribute('data-confirm','1'); btn.textContent='Confirmar exclusão?'; return; }
         deletarRecorrenteSheet(r&&r.id?r.id:idx, function(){});
-        var m=lerMarcacoes(); var newM={};
         var recsAtual=lerRecorrentes();
-        recsAtual.forEach(function(_,j){
-          if(j<idx && m[String(j)]) newM[String(j)]=true;
-          if(j>idx && m[String(j)]) newM[String(j-1)]=true;
-        });
-        salvarMarcacoes(newM);
+        removerMarcacoesDoRec(recMarcKey(recsAtual[idx], idx)); // limpa marcações do item em todos os meses
         recsAtual.splice(idx,1); salvarRecorrentes(recsAtual);
         fechar(); irPara(4);
       });
@@ -2619,7 +2671,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // selecionado — e não fique "presa" no mês em que a tela foi aberta.
   function gerarRecListaHtml(offset){
     var recs     = lerRecorrentes();
-    var marcados = lerMarcacoes();
+    var marcados = lerMarcacoes(mesKeyOffset(offset)); // marcações DO MÊS exibido
     var recsAtivos = recs.map(function(r,i){return {r:r,i:i};}).filter(function(x){return recAtivaNoMes(x.r, offset);})
       // Filtro Todos/Entrada/Saída (logo abaixo do título "Recorrentes")
       .filter(function(x){ return prevTipoFiltro==='all' || x.r.tipo===prevTipoFiltro; });
@@ -2631,7 +2683,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     return recsAtivos.map(function(x){
       var r=x.r, i=x.i;
-      var feito = !!marcados[String(i)];
+      var feito = !!marcados[recMarcKey(r,i)];
       var lblFeito = r.tipo==='in' ? 'recebido' : 'pago';
       var lblPend  = r.tipo==='in' ? 'a receber' : 'a pagar';
       var clsFeito = feito ? ' rec-feito'+(r.tipo==='out'?' rec-feito-out':'') : '';
@@ -2727,7 +2779,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     document.querySelectorAll('#recLista [data-check]').forEach(function(inp){
       inp.addEventListener('change', function(ev){
         ev.stopPropagation();
-        toggleMarcacao(Number(inp.getAttribute('data-check')));
+        var i = Number(inp.getAttribute('data-check'));
+        var r = lerRecorrentes()[i];
+        toggleMarcacao(recMarcKey(r, i)); // marca só no mês exibido, pela identidade do item
       });
     });
     document.querySelectorAll('#recLista [data-edit]').forEach(function(el){
@@ -2736,18 +2790,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     document.querySelectorAll('#recLista [data-del]').forEach(function(d){
       d.addEventListener('click', function(){
         var i = Number(d.getAttribute('data-del'));
-        var recs0 = lerRecorrentes();
-        var itemDel = recs0[i];
-        deletarRecorrenteSheet(itemDel&&itemDel.id?itemDel.id:i, function(){});
-        // Reindexar marcações ao remover um item do meio
-        var m = lerMarcacoes();
-        var newM = {};
         var recs = lerRecorrentes();
-        recs.forEach(function(_,j){
-          if(j < i && m[String(j)]) newM[String(j)] = true;
-          if(j > i && m[String(j)]) newM[String(j-1)] = true;
-        });
-        salvarMarcacoes(newM);
+        var itemDel = recs[i];
+        deletarRecorrenteSheet(itemDel&&itemDel.id?itemDel.id:i, function(){});
+        // Marcações são por identidade (ID) — basta removê-las de todos os meses.
+        removerMarcacoesDoRec(recMarcKey(itemDel, i));
         recs.splice(i,1); salvarRecorrentes(recs);
         irPara(4);
       });
@@ -3312,7 +3359,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* ===== load ===== */
   function loadAll(done){
     var btn=$("#banksToggle"); if(btn) btn.classList.add("loading");
-    var nomes=["Contas","Cartões","Categorias","Transações Cartão","Transações Conta","Parcelamentos","Assinaturas","Investimentos","Fatura Em Aberto"];
+    var nomes=["Contas","Cartões","Categorias","Transações Cartão","Transações Conta","Parcelamentos","Assinaturas","Investimentos","Fatura Em Aberto","Apelidos"];
     Promise.all(nomes.map(function(n){ return fetchSheet(n).catch(function(){ return []; }); }))
       .then(function(r){
         state.contas = mapContas(r[0]);
@@ -3324,6 +3371,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         state.assinaturas = mapAssinaturas(r[6]);
         state.investimentos = mapInvestimentos(r[7]);
         state.faturaEmAberto = mapFaturaEmAberto(r[8]);
+        aplicarApelidosDaPlanilha(r[9]); // nomes personalizados vindos da aba "Apelidos" (multi-dispositivo)
         ultimaAtualizacao = new Date();
         renderBancos();
         if(btn) btn.classList.remove("loading");
