@@ -162,6 +162,30 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .empty{text-align:center;padding:36px 20px;color:var(--text-faint);}
 .empty .ei{font-size:32px;margin-bottom:10px;opacity:.5;}
 .empty .et{font-size:13px;}
+/* ===== Tela de login ===== */
+.login-ov{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:var(--bg);overflow:hidden;transition:opacity .3s;}
+.login-ov::before{content:"";position:fixed;inset:0;background:var(--glow);pointer-events:none;}
+.login-ov.hide{opacity:0;pointer-events:none;}
+.login-card{position:relative;z-index:1;width:100%;max-width:340px;padding:30px 24px 24px;border-radius:24px;display:flex;flex-direction:column;}
+.login-logo{width:52px;height:52px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:700;font-family:var(--font-display);color:#0a0a0a;
+  background:linear-gradient(140deg,var(--lime),var(--lime-deep));}
+.login-title{text-align:center;font-size:21px;font-weight:600;font-family:var(--font-display);letter-spacing:-0.01em;}
+.login-sub{text-align:center;font-size:13px;color:var(--text-faint);margin-top:2px;margin-bottom:20px;}
+.login-fld{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;}
+.login-fld span{font-size:12px;color:var(--text-dim);font-weight:500;}
+.login-fld input{width:100%;padding:12px 14px;border-radius:13px;border:1px solid var(--glass-border);
+  background:var(--track-bg);color:var(--text);font-size:15px;font-family:var(--font);outline:none;transition:border-color .2s;}
+.login-fld input:focus{border-color:var(--lime);}
+.login-keep{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-dim);margin:2px 0 4px;cursor:pointer;}
+.login-keep input{width:16px;height:16px;accent-color:var(--lime-deep);flex:0 0 auto;}
+.login-msg{font-size:12.5px;color:var(--red);min-height:17px;margin:6px 0 2px;text-align:center;}
+.login-btn{margin-top:6px;padding:13px;border-radius:13px;border:none;cursor:pointer;
+  font-size:15px;font-weight:600;font-family:var(--font-display);color:#0a0a0a;
+  background:linear-gradient(140deg,var(--lime),var(--lime-deep));}
+.login-btn:active{transform:scale(0.98);}
+.lock-toggle svg{display:block;}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin:18px 4px 11px;}
 .section-head h2{font-size:18px;font-weight:400;font-family:var(--font-display);letter-spacing:-0.01em;}
 .section-head .link{font-size:13px;color:var(--lime-deep);font-weight:600;cursor:pointer;}
@@ -581,25 +605,26 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .ps-div{width:1px;height:26px;background:var(--glass-border);margin:0 10px;flex:0 0 1px;}
 .subpane{display:none;}
 .subpane.active{display:block;animation:fadeUp .35s ease both;}
-/* item de parcelamento — compacto e moderno */
-.pcard{padding:9px 12px;border-radius:14px;margin-bottom:7px;}
-.pcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;}
-.pcard-name{font-size:13.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pcard-card{font-size:11px;color:var(--text-faint);margin-top:1px;}
-.pcard-val{font-size:15px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
-.pcard-val .sub{font-size:10.5px;color:var(--text-faint);font-weight:500;margin-top:0;}
-.pcard-top .fbadge{width:32px;height:32px;flex:0 0 32px;}
-.pprog{height:5px;border-radius:5px;background:var(--track-bg);overflow:hidden;margin-bottom:6px;}
+/* item de parcelamento — versão ainda mais compacta */
+.pcard{padding:7px 11px;border-radius:12px;margin-bottom:5px;cursor:pointer;}
+.pcard-top{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:5px;}
+.pcard-name{font-size:12.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pcard-apel{font-size:10px;color:var(--text-faint);margin-left:5px;opacity:.8;}
+.pcard-card{font-size:10.5px;color:var(--text-faint);margin-top:0;}
+.pcard-val{font-size:13.5px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
+.pcard-val .sub{font-size:10px;color:var(--text-faint);font-weight:500;margin-top:0;}
+.pcard-top .fbadge{width:28px;height:28px;flex:0 0 28px;}
+.pprog{height:4px;border-radius:5px;background:var(--track-bg);overflow:hidden;margin-bottom:5px;}
 .pprog-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));transition:width .5s cubic-bezier(0.16,1,0.3,1);}
-.pcard-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text-faint);font-weight:500;}
-/* assinatura — compacto e moderno */
-.acard{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;margin-bottom:7px;}
-.aic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:14px;background:var(--track-bg);}
+.pcard-meta{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text-faint);font-weight:500;}
+/* assinatura — compacta */
+.acard{display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:12px;margin-bottom:5px;}
+.aic{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:13px;background:var(--track-bg);}
 .amain{flex:1;min-width:0;}
-.aname{font-size:13.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.afreq{font-size:11px;color:var(--text-faint);margin-top:1px;}
-.aval{font-size:15px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
-.aval .sub{font-size:10.5px;color:var(--text-faint);font-weight:500;margin-top:0;}
+.aname{font-size:12.5px;font-weight:500;font-family:var(--font-display);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.afreq{font-size:10.5px;color:var(--text-faint);margin-top:0;}
+.aval{font-size:13.5px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
+.aval .sub{font-size:10px;color:var(--text-faint);font-weight:500;margin-top:0;}
 /* investimentos */
 .inv-hero{padding:18px;border-radius:var(--radius-sm);margin-bottom:10px;text-align:center;}
 .inv-hero .k{font-size:13px;color:var(--text-faint);font-weight:500;}
@@ -894,6 +919,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       <div class="sub" id="appSub"></div>
     </div>
     <div class="top-actions">
+      <div class="icon-btn lock-toggle" id="lockToggle" title="Bloquear / sair">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
       <div class="icon-btn pill theme-toggle" id="themeToggle" title="Tema">
         <svg class="ic-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <svg class="ic-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -945,6 +973,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // NÃO é o link do editor — precisa terminar em .../exec.
   var GAS_EXEC_URL_PLACEHOLDER = "COLE_AQUI_O_LINK_/exec_DA_IMPLANTACAO";
   var GAS_EXEC_URL = params.get("gas") || "https://script.google.com/macros/s/AKfycbzVUnPZ1KT6L4iOWaXnMRN4AOj99hLJOSWi16OW_IsrCLkaRUBYDBvcT29xHl-p8ss/exec";
+  // ===== LOGIN / SENHA =====================================================
+  // TROQUE o usuário e a senha abaixo pelos seus. (Para desativar a tela de
+  // login, deixe ativo:false.) Obs.: é uma proteção BÁSICA de acesso — bom para
+  // impedir que alguém abra e veja tudo, mas não é segurança forte (a planilha
+  // continua acessível por quem tiver o link/ID dela).
+  var LOGIN = { ativo:true, usuario:"admin", senha:"financeiro2026" };
   var MESES_ABREV = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
   var state = { contas:[], cartoes:[], categorias:[], transacoes:[], txPorCartao:{}, parcelamentos:[], assinaturas:[], metas:[], investimentos:[], faturaEmAberto:{} };
 
@@ -2136,10 +2170,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function renderListaParcelamentos(){
     var ativos=parcelamentosAtivos();
     if(!ativos.length) return '<div class="empty"><div class="ei">📦</div><div class="et">Nenhum parcelamento ativo.</div></div>';
-    return ativos.map(function(p){
+    return ativos.map(function(p,i){
       var pagas=clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
       var pct=clamp((pagas/p.nParcelas)*100,0,100);
-      return '<div class="glass pcard"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
+      var apel=apelidoPorChave(parcAliasKey(p.descricao,p.valorParcela,p.nParcelas))?'<span class="pcard-apel" title="Nome personalizado">✎</span>':'';
+      return '<div class="glass pcard pcard-edit" data-parc="'+i+'" title="Toque para renomear esta compra"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+apel+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
         '<div class="pprog"><div class="pprog-fill" style="width:'+pct+'%"></div></div>'+
         '<div class="pcard-meta"><span>'+pagas+' de '+p.nParcelas+' parcelas</span><span>'+(p.nParcelas-pagas)+' restantes</span></div></div>';
     }).join("");
@@ -2161,6 +2196,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         document.getElementById('paneAssin').classList.toggle('active',sub==='assin');
         var stats=document.getElementById('parcStats'); if(stats) stats.innerHTML=parcStatsHtml(sub);
         if(window.requestAnimationFrame){requestAnimationFrame(medirStickies);}
+      });
+    });
+    // Clicar num parcelamento abre o MESMO modal de renomear dos Cartões (chave interligada).
+    document.querySelectorAll('.pcard-edit').forEach(function(el){
+      el.addEventListener('click',function(){
+        var p=parcelamentosAtivos()[Number(el.getAttribute('data-parc'))];
+        if(!p) return;
+        abrirRenomearTx({descricao:p.descricao, valor:p.valorParcela, parcela:{num:1,total:p.nParcelas}}, function(){ irPara(2); });
       });
     });
   }
@@ -2458,7 +2501,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var marcados = lerMarcacoes(mesKeyOffset(0));
     var entradas = recs.reduce(function(s,r,i){ return (r.tipo==='in'  && recAtivaNoMes(r,0) && !marcados[recMarcKey(r,i)]) ? s+r.valor : s; }, 0);
     var saidas   = recs.reduce(function(s,r,i){ return (r.tipo==='out' && recAtivaNoMes(r,0) && !marcados[recMarcKey(r,i)]) ? s+r.valor : s; }, 0);
-    return { saldo:saldo, faturas:faturas, entradas:entradas, saidas:saidas, previsao: saldo + entradas - saidas - faturas };
+    var assin    = assinStatsData().total; // assinaturas mensais (débitos em conta) entram na previsão
+    return { saldo:saldo, faturas:faturas, entradas:entradas, saidas:saidas, assinaturas:assin, previsao: saldo + entradas - saidas - assin - faturas };
   }
   // Previsão para o mês "f" à frente (0 = atual). Usa só as recorrentes ATIVAS naquele mês +
   // as faturas projetadas pelas parcelas, acumulando o saldo de um mês pro outro.
@@ -2472,9 +2516,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var marcados=lerMarcacoes(mesKeyOffset(f)); // respeita o que já foi marcado como pago/recebido NAQUELE mês
     var entradas=recs.reduce(function(s,r,i){return (r.tipo==='in'  && recAtivaNoMes(r,f) && !marcados[recMarcKey(r,i)])?s+r.valor:s;},0);
     var saidas=recs.reduce(function(s,r,i){return (r.tipo==='out' && recAtivaNoMes(r,f) && !marcados[recMarcKey(r,i)])?s+r.valor:s;},0);
+    var assin=assinStatsData().total;
     var faturas=faturasProjetadasMes(f);
     var saldoInicial=prev.previsao;
-    return { saldoInicial:saldoInicial, entradas:entradas, saidas:saidas, faturas:faturas, previsao:saldoInicial+entradas-saidas-faturas };
+    return { saldoInicial:saldoInicial, entradas:entradas, saidas:saidas, assinaturas:assin, faturas:faturas, previsao:saldoInicial+entradas-saidas-assin-faturas };
   }
   // Lista de meses pro filtro da Previsão (atual + N futuros)
   function mesesPrevisao(nFut){
@@ -2597,13 +2642,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var ct = document.getElementById('calc-total');
     var cr = document.getElementById('calc-row-entradas');
     var crout = document.getElementById('calc-row-saidas');
+    var assinaturas = calc.assinaturas || 0;
+    var cassin = document.getElementById('calc-assin');
+    var crassin = document.getElementById('calc-row-assin');
     if(ce){ ce.textContent = '+'+formatBRLOuOculto(entradas); }
     if(cfat){ cfat.textContent = '−'+formatBRL(faturas); }
     if(cs){ cs.textContent = '−'+formatBRL(saidas); }
+    if(cassin){ cassin.textContent = '−'+formatBRL(assinaturas); }
     if(ct){ ct.textContent = formatBRL(previsao); ct.className='amt amt-total '+(previsao<0?'neg':'pos'); }
     var ctr = document.getElementById('calc-total-row'); if(ctr){ ctr.className='calc-total-row '+(previsao<0?'neg':'pos'); }
     if(cr)  cr.style.display  = entradas ? '' : 'none';
     if(crout) crout.style.display = saidas  ? '' : 'none';
+    if(crassin) crassin.style.display = assinaturas ? '' : 'none';
 
     // Atualiza o rótulo "Recorrentes <mês>" para o mês do FILTRO selecionado (não o mês real de hoje)
     var tagEl = document.getElementById('recMesTag');
@@ -2869,6 +2919,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var faturas  = pf.faturas;
     var entradas = pf.entradas;
     var saidas   = pf.saidas;
+    var assinaturas = pf.assinaturas || 0;
     var previsao = pf.previsao;
     var ehAtual  = (prevMesOffset===0);
     var saldoLbl = ehAtual ? 'Saldo em conta' : 'Saldo inicial';
@@ -2912,6 +2963,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<div class="calc-row"><span class="lbl"><span class="cr-dot neutral"></span><span id="calc-saldo-k">'+saldoLbl+'</span></span><span class="amt" id="prev-saldo-val2">'+formatBRLOuOculto(saldo)+'</span></div>'+
       '<div class="calc-row" id="calc-row-entradas"'+(entradas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot pos"></span>Entradas a receber</span><span class="amt pos" id="calc-entradas">+'+formatBRLOuOculto(entradas)+'</span></div>'+
       '<div class="calc-row" id="calc-row-saidas"'+(saidas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot neg"></span>Saídas a pagar</span><span class="amt neg" id="calc-saidas">−'+formatBRL(saidas)+'</span></div>'+
+      '<div class="calc-row" id="calc-row-assin"'+(assinaturas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot neg"></span>Assinaturas</span><span class="amt neg" id="calc-assin">−'+formatBRL(assinaturas)+'</span></div>'+
       '<div class="calc-row"><span class="lbl"><span class="cr-dot neg"></span><span id="calc-fat-k">'+fatLbl+'</span></span><span class="amt neg" id="calc-faturas">−'+formatBRL(faturas)+'</span></div>'+
       '<div class="calc-total-row '+(previsao<0?'neg':'pos')+'" id="calc-total-row"><span class="lbl-total"><span id="calc-total-k">'+(ehAtual?'Previsão fim do mês':'Previsão de '+MESES_COMPLETO[mesesP[prevMesOffset].mes])+'</span><small>com recorrentes e faturas</small></span><span class="amt amt-total '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
     '</div>'+
@@ -3544,19 +3596,71 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       });
   }
 
-  if(DEMO){
-    carregarDadosDemo();
-    // Dados fictícios não recarregam sozinhos: recarregar a página gera um novo cenário.
-  } else if(SHEET_ID === SHEET_ID_PLACEHOLDER){
-    $("#content").innerHTML = "<div class='empty' style='padding-top:60px'><div class='ei'>🔧</div><div class='et'>Configure o ID da sua planilha Google Sheets na variável SHEET_ID, no início do script.</div></div>";
-  } else {
-    loadAll();
-    // Atualização automática a cada 5 min, preservando a posição de rolagem (refresh silencioso).
-    setInterval(function(){
-      var sc = window.scrollY;
-      loadAll(function(){ window.scrollTo(0, sc); });
-    }, 5*60*1000);
+  // ===== ACESSO (login/senha) =====
+  // Só inicia o app de verdade depois de autenticar.
+  function iniciarApp(){
+    if(DEMO){
+      carregarDadosDemo();
+      // Dados fictícios não recarregam sozinhos: recarregar a página gera um novo cenário.
+    } else if(SHEET_ID === SHEET_ID_PLACEHOLDER){
+      $("#content").innerHTML = "<div class='empty' style='padding-top:60px'><div class='ei'>🔧</div><div class='et'>Configure o ID da sua planilha Google Sheets na variável SHEET_ID, no início do script.</div></div>";
+    } else {
+      loadAll();
+      // Atualização automática a cada 5 min, preservando a posição de rolagem (refresh silencioso).
+      setInterval(function(){
+        var sc = window.scrollY;
+        loadAll(function(){ window.scrollTo(0, sc); });
+      }, 5*60*1000);
+    }
   }
+  function estaAutenticado(){
+    try{ return localStorage.getItem('financeiro-auth')==='1' || sessionStorage.getItem('financeiro-auth')==='1'; }catch(e){ return false; }
+  }
+  function logout(){
+    try{ localStorage.removeItem('financeiro-auth'); sessionStorage.removeItem('financeiro-auth'); }catch(e){}
+    location.reload();
+  }
+  function mostrarLogin(){
+    var ov=document.createElement('div'); ov.className='login-ov'; ov.id='loginOv';
+    ov.innerHTML='<form class="login-card glass" id="loginForm">'+
+      '<div class="login-logo">$</div>'+
+      '<div class="login-title">Financeiro</div>'+
+      '<div class="login-sub">Acesso protegido</div>'+
+      '<label class="login-fld"><span>Usuário</span><input id="loginUser" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="text"></label>'+
+      '<label class="login-fld"><span>Senha</span><input id="loginPass" type="password" autocomplete="current-password"></label>'+
+      '<label class="login-keep"><input type="checkbox" id="loginKeep" checked> <span>Manter conectado neste aparelho</span></label>'+
+      '<div class="login-msg" id="loginMsg"></div>'+
+      '<button class="login-btn" type="submit">Entrar</button>'+
+    '</form>';
+    document.body.appendChild(ov);
+    var form=ov.querySelector('#loginForm');
+    form.addEventListener('submit',function(e){
+      e.preventDefault();
+      var u=(ov.querySelector('#loginUser').value||'').trim();
+      var p=(ov.querySelector('#loginPass').value||'');
+      if(u===LOGIN.usuario && p===LOGIN.senha){
+        try{ (ov.querySelector('#loginKeep').checked?localStorage:sessionStorage).setItem('financeiro-auth','1'); }catch(err){}
+        ov.classList.add('hide');
+        setTimeout(function(){ if(ov.parentNode) ov.remove(); }, 320);
+        iniciarApp();
+      } else {
+        var m=ov.querySelector('#loginMsg'); if(m) m.textContent='Usuário ou senha incorretos.';
+        var pi=ov.querySelector('#loginPass'); if(pi){ pi.value=''; pi.focus(); }
+      }
+    });
+    setTimeout(function(){ var i=ov.querySelector('#loginUser'); if(i) i.focus(); }, 150);
+  }
+  // Botão de bloquear/sair no topo
+  (function(){
+    var lockBtn=$("#lockToggle");
+    if(lockBtn){
+      if(!LOGIN.ativo) lockBtn.style.display='none';
+      else lockBtn.addEventListener('click', logout);
+    }
+  })();
+
+  if(!LOGIN.ativo || estaAutenticado()){ iniciarApp(); }
+  else { mostrarLogin(); }
 })();
 </script>
 
