@@ -287,7 +287,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
    discreta e brilho/realce reduzidos — pra ficar com a sutileza do exemplo de referência.
    O anel de brilho do ::before (gradiente diagonal) foi desativado aqui: ele desenhava uma 2ª linha
    de contorno por cima da border normal, dando a impressão de borda duplicada/desalinhada. */
-.tcard,.tile,.fatura-card,.cc-hero,.cards-resumo,.prev-duo,.calc-card,.parc-stats{
+.tcard,.tile,.fatura-card,.cc-hero,.cards-resumo,.prev-duo,.calc-card,.parc-stats,.pcard,.acard{
   background:rgba(255,255,255,0.07);
   border-color:rgba(255,255,255,0.09);
   backdrop-filter:blur(6px) saturate(140%);
@@ -295,9 +295,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   box-shadow:0 8px 20px rgba(0,0,0,0.22),0 2px 6px rgba(0,0,0,0.16);
   --glass-gloss:rgba(255,255,255,0.05);
 }
-.tcard::before,.tile::before,.fatura-card::before,.cc-hero::before,.cards-resumo::before,.prev-duo::before,.calc-card::before,.parc-stats::before{content:none;}
-.tcard::after,.tile::after,.fatura-card::after,.cc-hero::after,.cards-resumo::after,.prev-duo::after,.calc-card::after,.parc-stats::after{opacity:.3;}
-[data-theme="light"] .tcard,[data-theme="light"] .tile,[data-theme="light"] .fatura-card,[data-theme="light"] .cc-hero,[data-theme="light"] .cards-resumo,[data-theme="light"] .prev-duo,[data-theme="light"] .calc-card,[data-theme="light"] .parc-stats{
+.tcard::before,.tile::before,.fatura-card::before,.cc-hero::before,.cards-resumo::before,.prev-duo::before,.calc-card::before,.parc-stats::before,.pcard::before,.acard::before{content:none;}
+.tcard::after,.tile::after,.fatura-card::after,.cc-hero::after,.cards-resumo::after,.prev-duo::after,.calc-card::after,.parc-stats::after,.pcard::after,.acard::after{opacity:.3;}
+[data-theme="light"] .tcard,[data-theme="light"] .tile,[data-theme="light"] .fatura-card,[data-theme="light"] .cc-hero,[data-theme="light"] .cards-resumo,[data-theme="light"] .prev-duo,[data-theme="light"] .calc-card,[data-theme="light"] .parc-stats,[data-theme="light"] .pcard,[data-theme="light"] .acard{
   background:rgba(255,255,255,0.40);
   border-color:rgba(0,0,0,0.07);
   box-shadow:0 6px 16px rgba(40,60,50,0.10),0 1px 3px rgba(0,0,0,0.05);
@@ -2184,6 +2184,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       },70);
     },{passive:true});
     document.querySelectorAll('#dots .dot').forEach(function(dot){dot.addEventListener('click',function(){cards[Number(dot.getAttribute('data-d'))].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});});});
+    // Clicar/tocar num cartão também leva até ele (centraliza no carrossel) — desktop e mobile.
+    cards.forEach(function(cardEl,i){
+      cardEl.addEventListener('click',function(){
+        if(i===cartaoAtivo) return; // já é o atual
+        cardEl.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+        // garante a seleção mesmo que o snap de scroll não dispare (ex.: card já quase centralizado)
+        clearTimeout(timer);
+        timer=setTimeout(function(){ var idx=idxMaisProximo(); cartaoAtivo=idx; mesSelecionado=null; dotsEls.forEach(function(d,j){d.classList.toggle('active',j===idx);}); renderDetalheCartao(ativos[cartaoAtivo]); },300);
+      });
+    });
   }
 
   /* ===== TELA 3: PARCELAMENTOS / ASSINATURAS ===== */
@@ -2220,19 +2230,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function renderListaParcelamentos(){
     var ativos=parcelamentosAtivos();
     if(!ativos.length) return '<div class="empty"><div class="ei">📦</div><div class="et">Nenhum parcelamento ativo.</div></div>';
-    // Mesmo padrão visual das linhas de Investimentos (ícone redondo + nome/sub + valor à direita).
-    var rows=ativos.map(function(p,i){
+    return ativos.map(function(p,i){
       var pagas=clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
-      var info=bancoDe(p.cartao);
-      var apel=apelidoPorChave(parcAliasKey(p.descricao,p.valorParcela,p.nParcelas))?' <span class="il-apel" title="Nome personalizado">✎</span>':'';
-      return '<div class="inv-row il-row pcard-edit" data-parc="'+i+'" title="Toque para renomear esta compra">'+
-        '<div class="inv-ic" style="background:'+info.cor1+'">'+logoOuIniciais(p.cartao)+'</div>'+
-        '<div class="inv-main"><div class="inv-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+apel+'</div>'+
-        '<div class="inv-taxa">'+escapeHtml(p.cartao)+' · '+pagas+'/'+p.nParcelas+' parcelas</div></div>'+
-        '<div class="inv-val"><div class="v">'+formatBRL(p.valorParcela)+'</div><div class="il-sub">de '+formatBRL(p.valorTotal)+'</div></div>'+
-        '<div class="inv-edit-chev">›</div></div>';
+      var pct=clamp((pagas/p.nParcelas)*100,0,100);
+      var apel=apelidoPorChave(parcAliasKey(p.descricao,p.valorParcela,p.nParcelas))?'<span class="pcard-apel" title="Nome personalizado">✎</span>':'';
+      return '<div class="glass pcard pcard-edit" data-parc="'+i+'" title="Toque para renomear esta compra"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+apel+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
+        '<div class="pprog"><div class="pprog-fill" style="width:'+pct+'%"></div></div>'+
+        '<div class="pcard-meta"><span>'+pagas+' de '+p.nParcelas+' parcelas</span><span>'+(p.nParcelas-pagas)+' restantes</span></div></div>';
     }).join("");
-    return '<div class="glass tx-list">'+rows+'</div>';
   }
   // Índices (em state.assinaturas) das assinaturas ativas exibidas — pro clique achar o item certo.
   var _assinVisiveis=[];
@@ -2245,16 +2250,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     state.assinaturas.forEach(function(a,idx){
       if(a.ativa==="Não") return;
       var pos=_assinVisiveis.push(idx)-1;
-      // Ícone conforme a CATEGORIA (ex.: Seguro -> escudo). Mesmo padrão das linhas de Investimentos.
+      // Ícone conforme a CATEGORIA (ex.: Seguro -> escudo).
       var sub=(a.frequencia||"Mensal")+(a.categoria?' · '+sentenceCase(a.categoria):'')+(a.diaCobranca?' · dia '+a.diaCobranca:'');
-      rows+='<div class="inv-row il-row acard-edit" data-assin="'+pos+'" title="Toque para editar">'+
+      rows+='<div class="glass acard acard-edit" data-assin="'+pos+'" title="Toque para editar">'+
         categoriaIconeHtml(a.categoria,false)+
-        '<div class="inv-main"><div class="inv-name">'+escapeHtml(sentenceCase(a.nome))+'</div><div class="inv-taxa">'+escapeHtml(sub)+'</div></div>'+
-        '<div class="inv-val"><div class="v">'+formatBRL(a.valor)+'</div><div class="il-sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div>'+
+        '<div class="amain"><div class="aname">'+escapeHtml(sentenceCase(a.nome))+'</div><div class="afreq">'+escapeHtml(sub)+'</div></div>'+
+        '<div class="aval">'+formatBRL(a.valor)+'<div class="sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div>'+
         '<div class="adel" data-adel="'+pos+'" title="Remover assinatura">×</div></div>';
     });
     if(!_assinVisiveis.length) return head+'<div class="empty"><div class="ei">🔁</div><div class="et">Nenhuma assinatura cadastrada. Toque em “+ Cadastrar”.</div></div>';
-    return head+'<div class="glass tx-list">'+rows+'</div>';
+    return head+rows;
   }
   function wireParcelas(){
     document.querySelectorAll('.subtab').forEach(function(st){
