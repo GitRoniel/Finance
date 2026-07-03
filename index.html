@@ -1794,6 +1794,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   var mesSelecionado=null; // índice dentro do array de 6 ciclos do gráfico; null = ciclo atual (a última barra)
   var prevMesOffset=0; // mês selecionado na aba Previsões (0 = mês atual; 1.. = meses futuros)
   var prevTipoFiltro='all'; // filtro de tipo na aba Previsões: 'all' | 'in' (Entrada) | 'out' (Saída)
+  // Dia em que o "mês financeiro" vira: salário cai e as faturas/contas do mês anterior são
+  // pagas/fechadas. Até esse dia, o usuário ainda está lidando com o mês passado (ex.: paga a
+  // fatura de junho no dia 10/07), então tratamos o mês anterior como o "mês atual" (offset 0).
+  var DIA_CORTE_MES = 10;
+  function baseMesReferencia(){
+    var h=new Date(), y=h.getFullYear(), m=h.getMonth();
+    if(h.getDate() < DIA_CORTE_MES){ m -= 1; if(m<0){ m=11; y-=1; } }
+    return new Date(y, m, 1);
+  }
   var MESES_COMPLETO=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   function MESES_COMPLETO_CAP(m){ var s=MESES_COMPLETO[m]||''; return s.charAt(0).toUpperCase()+s.slice(1); }
 
@@ -1830,7 +1839,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           return t.tipo==="Saída"&&t.data&&t.data>=janela.start&&t.data<=janela.end;
         }).reduce(function(s,t){return s+t.valor;},0);
         var venc=vencimentoDaJanela(janela,card.vencimento,card.fechamento);
-        out.push({janela:janela,mes:venc.getMonth(),ano:venc.getFullYear(),total:total,atual:atual,futuro:false,f:0});
+        // Rótulo pelo mês de FECHAMENTO (não pelo vencimento): a fatura que fecha em junho e
+        // vence em julho continua sendo chamada de "fatura de junho" — é como o extrato do banco
+        // e como o usuário se refere a ela, mesmo pagando no mês seguinte.
+        out.push({janela:janela,mes:janela.end.getMonth(),ano:janela.end.getFullYear(),total:total,atual:atual,futuro:false,f:0,vencimento:venc});
       });
     }
     // Meses FUTUROS: fatura projetada pelas parcelas em aberto
@@ -1974,6 +1986,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var meses=seriesGlobalCartoes(3,6);
     var idxAtualReal=-1; for(var ii=0;ii<meses.length;ii++){ if(meses[ii].atual){ idxAtualReal=ii; break; } }
     if(idxAtualReal===-1) idxAtualReal=Math.max(0, meses.length-7);
+    // Antes do dia de corte (dia 10), ainda estamos fechando as contas do mês anterior —
+    // mantém ele em destaque em vez de já pular pro mês-calendário atual.
+    if(new Date().getDate() < DIA_CORTE_MES && idxAtualReal>0) idxAtualReal -= 1;
     var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtualReal;
     var timeline=gerarTimelineHtml(meses,idxSel);
     var mSel=meses[idxSel];
@@ -2063,7 +2078,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(!card)return;
     if(card.global) return renderDetalheGlobal(card);
     var meses=gastosPorMesCartao(card,3,6);
-    var idxAtualReal=-1; for(var ii=0;ii<meses.length;ii++){ if(meses[ii].atual){ idxAtualReal=ii; break; } }
+    // Fatura padrão a mostrar: a mais antiga que AINDA NÃO VENCEU (ainda não foi paga) — é essa
+    // que o usuário considera "a fatura do momento", mesmo que uma nova já esteja se formando.
+    // Ex.: fatura de junho vence 10/07 — até essa data, ela continua sendo a fatura em destaque.
+    var hoje=new Date(), idxAtualReal=-1;
+    for(var ii=0; ii<meses.length; ii++){
+      var mIt=meses[ii];
+      if(mIt.futuro) continue;
+      if(mIt.vencimento){ if(hoje<=mIt.vencimento){ idxAtualReal=ii; break; } }
+      else if(mIt.atual){ idxAtualReal=ii; break; }
+    }
+    if(idxAtualReal===-1) for(var jj=0;jj<meses.length;jj++){ if(meses[jj].atual){ idxAtualReal=jj; break; } }
     if(idxAtualReal===-1) idxAtualReal=Math.max(0, meses.length-7);
     var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtualReal;
     var timeline=gerarTimelineHtml(meses,idxSel);
@@ -2769,7 +2794,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // Cada recorrente novo guarda { mesInicio:"AAAA-MM", repeticoes:N }.
   // Itens antigos (sem mesInicio) continuam valendo TODO mês (compatibilidade).
   function mesKeyOffset(f){
-    var d=new Date(); d=new Date(d.getFullYear(), d.getMonth()+f, 1);
+    var b=baseMesReferencia();
+    var d=new Date(b.getFullYear(), b.getMonth()+f, 1);
     return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
   }
   function mesesEntreKeys(a,b){ // b - a, em meses
@@ -2814,17 +2840,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
   // Lista de meses pro filtro da Previsão (atual + N futuros)
   function mesesPrevisao(nFut){
-    var hoje=new Date(), out=[];
+    var base=baseMesReferencia(), out=[];
     for(var f=0; f<=nFut; f++){
-      var d=new Date(hoje.getFullYear(), hoje.getMonth()+f, 1);
+      var d=new Date(base.getFullYear(), base.getMonth()+f, 1);
       out.push({ f:f, mes:d.getMonth(), ano:d.getFullYear() });
     }
     return out;
   }
 
-  // Retorna a chave "AAAA-MM" do mês atual
+  // Retorna a chave "AAAA-MM" do mês de referência atual (respeita o dia de corte)
   function mesAtualKey(){
-    var d = new Date();
+    var d = baseMesReferencia();
     return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
   }
 
