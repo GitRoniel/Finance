@@ -359,6 +359,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cc-bot-side{text-align:right;flex:0 0 auto;}
 .cc-label{font-size:10.5px;opacity:.68;font-weight:500;letter-spacing:0.01em;text-transform:uppercase;}
 .cc-fatura{font-size:20px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;margin-top:1px;line-height:1.05;}
+.cc-fat-note{font-size:9.5px;margin-top:3px;opacity:.85;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500;}
+.cc-fat-note.warn{color:#ffe1b8;opacity:.95;}
+.fatura-nota{font-size:11.5px;color:var(--text-faint);margin-top:10px;padding:9px 11px;border-radius:10px;background:rgba(120,120,140,0.08);display:flex;align-items:flex-start;gap:6px;line-height:1.35;}
+.fatura-nota.warn{color:var(--orange);background:rgba(240,121,31,0.1);}
 .cc-disp{font-size:12.5px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
 .cc-glow{position:absolute;right:-30px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.20),transparent 70%);pointer-events:none;}
 /* Card global (Todos os cartões) — visual escuro/elegante e stack de logos dos bancos */
@@ -1286,6 +1290,22 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     return null;
   }
+  // Decide se mostra uma nota discreta (ou de alerta) junto do valor da fatura em aberto,
+  // usando o que a planilha "Fatura Em Aberto" já calcula (campos "regra" e "alerta") mas que
+  // antes ficava só na planilha — o app nunca mostrava isso pro usuário.
+  // Prioridade: alerta explícito do backend > aviso genérico de "balance direto" (Itaú), que
+  // é um valor cru do banco e pode ter uma pequena defasagem de cache em relação ao app oficial.
+  function notaFaturaCard(card){
+    var info = buscarFaturaEmAberto(card.nome);
+    if(!info) return null;
+    if(info.alerta){
+      return { texto: String(info.alerta).replace(/^⚠\s*/, ''), warn: true };
+    }
+    if(info.regra && info.regra.toLowerCase().indexOf('balance direto') !== -1){
+      return { texto: 'Direto do banco — pode ter pequena defasagem de cache', warn: false };
+    }
+    return null;
+  }
   // Agrupa as transações por cartão UMA VEZ por carregamento, em vez de varrer a lista inteira
   // de novo a cada troca de cartão/mês na tela de Cartões (era o principal gargalo de performance ali).
   function indexarTransacoesPorCartao(transacoes){
@@ -2060,11 +2080,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       }
       var info=bancoDe(card.nome),fat=faturaAtual(card),disp=card.limite-fat;
       var venc=card.vencimento?('Venc. dia '+card.vencimento):'';
+      var nota=notaFaturaCard(card);
+      var notaHtml=nota?('<div class="cc-fat-note'+(nota.warn?' warn':'')+'" title="'+escapeHtml(nota.texto)+'">'+(nota.warn?'⚠':'ⓘ')+' '+escapeHtml(nota.texto)+'</div>'):'';
       return '<div class="ccard" style="background:linear-gradient(140deg,'+info.cor1+','+info.cor2+')"><div class="cc-glow"></div>'+
         '<div class="cc-top"><div class="cc-bank"><div class="cc-logo">'+logoHtml(info)+'</div><div class="cc-bank-txt"><div class="cc-name">'+escapeHtml(card.nome)+'</div><div class="cc-flag">'+info.flag+'</div></div></div>'+
           (venc?'<div class="cc-venc">'+venc+'</div>':'')+'</div>'+
         '<div class="cc-bottom">'+
-          '<div class="cc-bot-main"><div class="cc-label">Fatura em aberto</div><div class="cc-fatura">'+formatBRL(fat)+'</div></div>'+
+          '<div class="cc-bot-main"><div class="cc-label">Fatura em aberto</div><div class="cc-fatura">'+formatBRL(fat)+'</div>'+notaHtml+'</div>'+
           '<div class="cc-bot-side"><div class="cc-label">Disponível</div><div class="cc-disp">'+formatBRL(disp)+'</div></div>'+
         '</div></div>';
     }).join("");
@@ -2095,7 +2117,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var mSel=meses[idxSel];
     var cp=document.getElementById('chartPanel');
     if(cp){
-      cp.innerHTML='<div class="panel-head"><span class="pt">Evolução da fatura</span><div class="ftl-tag">Histórico + previsão</div></div>'+timeline;
+      // Nota/aviso só faz sentido quando a fatura selecionada é a ATUAL (a que está em formação/aberta) —
+      // pra meses já fechados ou futuros ela não se aplica.
+      var nota=(idxSel===idxAtualReal)?notaFaturaCard(card):null;
+      var notaHtml=nota?('<div class="fatura-nota'+(nota.warn?' warn':'')+'">'+(nota.warn?'⚠':'ⓘ')+'&nbsp;'+escapeHtml(nota.texto)+'</div>'):'';
+      cp.innerHTML='<div class="panel-head"><span class="pt">Evolução da fatura</span><div class="ftl-tag">Histórico + previsão</div></div>'+timeline+notaHtml;
       cp.querySelectorAll('.ftl-col').forEach(function(fc){
         fc.addEventListener('click',function(){
           mesSelecionado=Number(fc.getAttribute('data-i'));
