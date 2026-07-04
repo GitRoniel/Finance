@@ -2100,17 +2100,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(!card)return;
     if(card.global) return renderDetalheGlobal(card);
     var meses=gastosPorMesCartao(card,3,6);
-    // Fatura padrão a mostrar: a mais antiga que AINDA NÃO VENCEU (ainda não foi paga) — é essa
-    // que o usuário considera "a fatura do momento", mesmo que uma nova já esteja se formando.
-    // Ex.: fatura de junho vence 10/07 — até essa data, ela continua sendo a fatura em destaque.
-    var hoje=new Date(), idxAtualReal=-1;
-    for(var ii=0; ii<meses.length; ii++){
-      var mIt=meses[ii];
-      if(mIt.futuro) continue;
-      if(mIt.vencimento){ if(hoje<=mIt.vencimento){ idxAtualReal=ii; break; } }
-      else if(mIt.atual){ idxAtualReal=ii; break; }
-    }
-    if(idxAtualReal===-1) for(var jj=0;jj<meses.length;jj++){ if(meses[jj].atual){ idxAtualReal=jj; break; } }
+    // Fatura padrão a mostrar: a que está EM FORMAÇÃO agora (flag "atual", construída a partir
+    // de hoje de verdade em janelasFaturaCartao/getInvoiceWindow). Antes tentávamos "a fatura
+    // mais antiga que ainda não venceu", mas essa comparação dependia do dia de fechamento
+    // ESTIMADO do cartão — e uma pequena imprecisão nele fazia o app travar numa fatura antiga
+    // (ex.: junho) em vez de ir pra que está realmente aberta hoje.
+    var idxAtualReal=-1;
+    for(var jj=0;jj<meses.length;jj++){ if(meses[jj].atual){ idxAtualReal=jj; break; } }
     if(idxAtualReal===-1) idxAtualReal=Math.max(0, meses.length-7);
     var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtualReal;
     var timeline=gerarTimelineHtml(meses,idxSel);
