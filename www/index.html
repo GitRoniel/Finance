@@ -128,6 +128,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .bank-row .bupd .bdot{width:6px;height:6px;border-radius:50%;background:var(--lime);flex:0 0 auto;}
 .banks-add{margin-top:10px;padding:10px;border-radius:12px;background:var(--track-bg);text-align:center;font-size:13px;font-weight:500;color:var(--text-dim);cursor:pointer;}
 .banks-add:active{transform:scale(0.97);}
+/* Fundo desfocado enquanto um popover (bancos/cor) está aberto — deixa a caixa em evidência. */
+.pop-scrim{position:fixed;inset:0;z-index:240;background:rgba(0,0,0,0.30);
+  backdrop-filter:blur(8px) saturate(115%);-webkit-backdrop-filter:blur(8px) saturate(115%);
+  opacity:0;pointer-events:none;transition:opacity .22s;}
+.pop-scrim.show{opacity:1;pointer-events:auto;}
+/* Mobile: o card de bancos vira um painel lateral que pega a lateral inteira do celular. */
+@media (max-width:600px){
+  .banks-pop{width:min(87vw,340px);transform:translateX(26px);}
+  .banks-pop.show{position:fixed;top:0;right:0;left:auto;bottom:0;height:100vh;height:100dvh;
+    max-width:none;border-radius:22px 0 0 22px;transform:none;
+    box-shadow:-18px 0 46px rgba(0,0,0,0.42);overflow-y:auto;
+    padding-top:calc(env(safe-area-inset-top,0px) + 18px);
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 18px);}
+}
 @keyframes spin360{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 .ro-ic.spin svg{animation:spin360 .9s linear infinite;}
 /* BUGFIX: o botão de bancos recebe a classe "loading" durante o carregamento, mas essa
@@ -366,6 +380,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cc-fat-note.warn{color:#ffe1b8;opacity:.95;}
 .fatura-nota{font-size:11.5px;color:var(--text-faint);margin-top:10px;padding:9px 11px;border-radius:10px;background:rgba(120,120,140,0.08);display:flex;align-items:flex-start;gap:6px;line-height:1.35;}
 .fatura-nota.warn{color:var(--orange);background:rgba(240,121,31,0.1);}
+/* Reconciliação da fatura (aba Cartões): explica por que a soma dos lançamentos difere do valor oficial. */
+.fatura-reconc{border-radius:14px;background:rgba(120,120,140,0.08);border:1px solid var(--hairline);padding:12px 13px;margin:2px 0 12px;}
+.fatura-reconc .rec-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--hairline);}
+.fatura-reconc .rec-tit{font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;}
+.fatura-reconc .rec-oficial{font-size:19px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;}
+.fatura-reconc .rec-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--text-dim);padding:3px 0;}
+.fatura-reconc .rec-neg{color:var(--red);font-weight:600;}
+.fatura-reconc .rec-pos{color:var(--lime-deep);font-weight:600;}
+.fatura-reconc .rec-foot{margin-top:8px;}
+.fatura-reconc .rec-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;}
+.fatura-reconc .rec-badge.ok{color:var(--lime-deep);background:rgba(63,224,163,0.13);}
+.fatura-reconc .rec-badge.diff{color:var(--orange);background:rgba(240,121,31,0.12);}
 .cc-disp{font-size:12.5px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
 .cc-glow{position:absolute;right:-30px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.20),transparent 70%);pointer-events:none;}
 /* Card global (Todos os cartões) — visual escuro/elegante e stack de logos dos bancos */
@@ -777,6 +803,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .rec-feito .rec-check-lbl{color:var(--lime-deep);}
 [data-theme="light"] .rec-feito .rec-check-lbl{color:var(--lime-deep);}
 .rec-feito.rec-feito-out .rec-check-lbl{color:var(--red);}
+/* Faturas na aba Previsões: avatar do banco + chip "Paga" */
+.fat-item .cat-ic{width:30px;height:30px;border-radius:50%;flex:0 0 30px;display:flex;align-items:center;justify-content:center;}
+.fat-item .cat-ic svg{width:56%;height:56%;}
+.fat-item .cat-ic .txt{font-size:11px;font-weight:700;font-family:var(--font-display);}
+.fat-paga-chip{font-size:11px;font-weight:600;color:var(--lime-deep);background:rgba(63,224,163,0.13);padding:5px 11px;border-radius:20px;flex:0 0 auto;white-space:nowrap;}
 .rec-del{color:var(--text-faint);cursor:pointer;font-size:17px;padding:2px 3px;flex:0 0 auto;}
 /* Tag do mês */
 .rec-mes-tag{font-size:12px;color:var(--text-faint);font-weight:500;margin-left:6px;}
@@ -939,6 +970,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
      conhecido), aparecendo "atrás" ou cortados pelos cards em vez de flutuar por cima
      de tudo. Ficando como filhos diretos do body, o position:fixed funciona corretamente
      relativo à viewport. O JS continua posicionando via getBoundingClientRect do botão. -->
+<div class="pop-scrim" id="popScrim"></div>
 <div class="color-pop" id="colorPop">
   <div class="color-pop-title">Cor de destaque</div>
   <div class="swatches">
@@ -957,18 +989,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   <div class="color-pop-title">Contas conectadas</div>
   <div id="banksList"></div>
   <div class="banks-divider"></div>
-  <div class="refresh-opt" id="refreshForce">
-    <div class="ro-ic" id="refreshForceIc" style="background:rgba(180,244,74,0.13);color:var(--lime)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-    <div class="ro-txt">
-      <div class="ro-t" style="color:var(--lime)">Forçar atualização do banco</div>
-      <div class="ro-s">Limpa cache do Pluggy e busca saldo atualizado</div>
-    </div>
-  </div>
   <div class="refresh-opt" id="refreshSync">
     <div class="ro-ic" id="refreshSyncIc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M3 16v5h5M21 8V3h-5"/></svg></div>
     <div class="ro-txt">
       <div class="ro-t">Sincronizar com o banco</div>
-      <div class="ro-s">Busca dados novos via Open Finance (Apps Script)</div>
+      <div class="ro-s">Limpa o cache e busca saldo e dados novos via Open Finance</div>
     </div>
   </div>
   <div class="refresh-opt" id="refreshPage">
@@ -1227,7 +1252,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var novo = strVal(c,6) !== '';
       if(novo){
         mapa[nome] = { valor:numVal(c,1), fechada:numVal(c,2), vencFechada:dateVal(c,3), atual:numVal(c,4),
-                       saldo:numVal(c,5), regra:strVal(c,6), alerta:strVal(c,7) };
+                       saldo:numVal(c,5), regra:strVal(c,6), alerta:strVal(c,7), atualizado:dateVal(c,8) };
       } else {
         mapa[nome] = { valor:numVal(c,1), fechada:null, vencFechada:null, atual:null,
                        saldo:numVal(c,2), regra:strVal(c,3), alerta:strVal(c,4) };
@@ -1448,16 +1473,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var chaveCiclo = ciclo.getFullYear()*12 + ciclo.getMonth();
       if(alvo === chaveCiclo){
         var v = faturaCorrenteCard(card);
-        if(v > 0.005) itens.push({ cartao:card.nome, valor:v, tipo:'atual', venc:vencCicloAtualData(card), paga:false });
+        if(v > 0.005) itens.push({ cartao:card.nome, valor:v, tipo:'atual', venc:vencCicloAtualData(card), paga:false, id:null });
       } else if(alvo > chaveCiclo){
         var v2 = faturaProjetadaCartao(card, alvo - chaveCiclo);
-        if(v2 > 0.005) itens.push({ cartao:card.nome, valor:v2, tipo:'projetada', venc:null, paga:false });
+        if(v2 > 0.005) itens.push({ cartao:card.nome, valor:v2, tipo:'projetada', venc:null, paga:false, id:null });
       } else {
         faturasDoCartao(card.nome).forEach(function(fb){
           if(!fb.venc || fb.venc.getFullYear()*12 + fb.venc.getMonth() !== alvo) return;
           var paga = faturaPaga(fb);
           if(somenteNaoPagas && paga) return;
-          itens.push({ cartao:card.nome, valor:fb.valor, tipo:'fechada', venc:fb.venc, paga:paga });
+          itens.push({ cartao:card.nome, valor:fb.valor, tipo:'fechada', venc:fb.venc, paga:paga, id:fb.id||null });
         });
       }
     });
@@ -1469,14 +1494,19 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function faturasAPagarPrevisao(f){
     var base = baseMesReferencia();
     var alvoD = new Date(base.getFullYear(), base.getMonth()+f+1, 1);
-    var r = faturasVencendoNoMes(alvoD.getFullYear(), alvoD.getMonth(), true);
-    var total = r.total;
+    var mesKey = mesKeyOffset(f);
+    // Pega TODAS as faturas do mês (pagas e não) e desconta as marcadas como pagas — assim o
+    // botão "marcar pago" da fatura tira o valor da previsão, dando previsibilidade melhor.
+    var r = faturasVencendoNoMes(alvoD.getFullYear(), alvoD.getMonth(), false);
+    var total = r.itens.reduce(function(s,it){ return faturaMarcadaPaga(it, mesKey) ? s : s+it.valor; }, 0);
     if(f === 0){
       var chaveAlvo = alvoD.getFullYear()*12 + alvoD.getMonth();
       cartoesAtivosReais().forEach(function(card){
         faturasDoCartao(card.nome).forEach(function(fb){
           if(!fb.venc || faturaPaga(fb)) return;
-          if(fb.venc.getFullYear()*12 + fb.venc.getMonth() < chaveAlvo) total += fb.valor;
+          if(fb.venc.getFullYear()*12 + fb.venc.getMonth() >= chaveAlvo) return;
+          var itemAtras={ id:fb.id||null, cartao:card.nome, tipo:'fechada', paga:false };
+          if(!faturaMarcadaPaga(itemAtras, mesKey)) total += fb.valor;
         });
       });
     }
@@ -2267,6 +2297,39 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<div class="cards-tx-sticky"><div class="section-head" style="margin:6px 4px 2px"><h2 id="txTitle">Transações</h2><span class="cnt" id="txCount"></span></div></div>'+
       '<div id="txList"></div>';
   }
+  // Reconciliação da fatura: por que a SOMA das transações às vezes não bate com o valor
+  // OFICIAL da fatura. A lista mostra as compras lançadas; o valor oficial (aba Faturas /
+  // Fatura Em Aberto) inclui encargos que NÃO são transações (IOF, juros, anuidade, seguro)
+  // e desconta estornos/créditos. Aqui explicitamos cada parte pra o número SEMPRE fechar:
+  //   compras (Saída) − estornos (Entrada) + encargos/ajustes = fatura oficial.
+  function reconciliacaoFaturaHtml(mSel, txs){
+    if(!mSel) return '';
+    var oficial=Number(mSel.total)||0;
+    if(oficial<=0 && (!txs||!txs.length)) return '';
+    var somaSaida=0, somaEntrada=0;
+    (txs||[]).forEach(function(t){
+      var v=Number(t.valor)||0;
+      if(t.tipo==='Entrada') somaEntrada+=v; else somaSaida+=v;
+    });
+    var liquido=somaSaida-somaEntrada;
+    var ajuste=Math.round((oficial-liquido)*100)/100;
+    var bate=Math.abs(ajuste)<0.01;
+    var linhas='';
+    linhas+='<div class="rec-row"><span>Compras lançadas</span><span class="rec-neg">−'+formatBRL(somaSaida)+'</span></div>';
+    if(somaEntrada>0.005) linhas+='<div class="rec-row"><span>Estornos e créditos</span><span class="rec-pos">+'+formatBRL(somaEntrada)+'</span></div>';
+    if(!bate){
+      var rotulo=ajuste>0?'Encargos, IOF, juros e anuidade':'Ajustes e créditos do banco';
+      linhas+='<div class="rec-row"><span>'+rotulo+'</span><span class="'+(ajuste>0?'rec-neg':'rec-pos')+'">'+(ajuste>0?'−':'+')+formatBRL(Math.abs(ajuste))+'</span></div>';
+    }
+    var selo=bate
+      ? '<span class="rec-badge ok">✓ Bate com a fatura</span>'
+      : '<span class="rec-badge diff">Inclui encargos/ajustes</span>';
+    return '<div class="fatura-reconc">'+
+      '<div class="rec-top"><span class="rec-tit">Fatura oficial</span><span class="rec-oficial">'+formatBRL(oficial)+'</span></div>'+
+      linhas+
+      '<div class="rec-foot">'+selo+'</div>'+
+    '</div>';
+  }
   function renderDetalheCartao(card){
     if(!card)return;
     if(card.global) return renderDetalheGlobal(card);
@@ -2325,9 +2388,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var txs=transacoesDoCartaoJanela(card.nome,mSel.janela);
     if(tt) tt.textContent=mSel.atual?'Transações':'Transações · fatura de '+MESES_COMPLETO[mSel.mes];
     if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
-    if(!txs.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; return; }
+    var reconHtml=reconciliacaoFaturaHtml(mSel, txs);
+    if(!txs.length){ tl.innerHTML=reconHtml+'<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; return; }
 
     renderTxAgrupadasEm(tl, txs, { reRender: function(){ renderDetalheCartao(card); } });
+    if(reconHtml) tl.insertAdjacentHTML('afterbegin', reconHtml);
   }
 
   // Renderiza uma lista de transações agrupadas por dia (visual dos Cartões/Conta), com clique
@@ -3025,7 +3090,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // as faturas que vencem no mês correspondente (fonte única: faturasAPagarPrevisao),
   // acumulando o saldo de um mês pro outro.
   function calcularPrevisaoMes(f){
-    if(f<=0){
+    // Meses PASSADOS: registro histórico. Não projeta saldo pra frente — mostra o movimento
+    // daquele mês (recorrentes ativos − marcados + faturas que venceram nele).
+    if(f<0){
+      var recsP=lerRecorrentes();
+      var marcP=lerMarcacoes(mesKeyOffset(f));
+      var entradasP=recsP.reduce(function(s,r,i){return (r.tipo==='in'  && recAtivaNoMes(r,f) && !marcP[recMarcKey(r,i)])?s+r.valor:s;},0);
+      var saidasP=recsP.reduce(function(s,r,i){return (r.tipo==='out' && recAtivaNoMes(r,f) && !marcP[recMarcKey(r,i)])?s+r.valor:s;},0);
+      var assinP=assinStatsData().total;
+      var faturasP=faturasAPagarPrevisao(f);
+      return { saldoInicial:0, entradas:entradasP, saidas:saidasP, assinaturas:assinP, faturas:faturasP, previsao: entradasP - saidasP - assinP - faturasP, passado:true };
+    }
+    if(f===0){
       var c=calcularPrevisao();
       return { saldoInicial:c.saldo, entradas:c.entradas, saidas:c.saidas, faturas:c.faturas, previsao:c.previsao };
     }
@@ -3039,14 +3115,25 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var saldoInicial=prev.previsao;
     return { saldoInicial:saldoInicial, entradas:entradas, saidas:saidas, assinaturas:assin, faturas:faturas, previsao:saldoInicial+entradas-saidas-assin-faturas };
   }
-  // Lista de meses pro filtro da Previsão (atual + N futuros)
+  // Quantos meses PASSADOS ficam guardados no filtro da Previsão. O histórico nunca some:
+  // junho/26, por exemplo, continua registrado mesmo depois de virar o mês.
+  var PREV_MESES_PASSADOS = 12;
+  // Lista de meses pro filtro da Previsão: N meses passados + atual + nFut futuros.
+  // (f = offset em relação ao mês financeiro atual; pode ser negativo = passado.)
   function mesesPrevisao(nFut){
     var base=baseMesReferencia(), out=[];
-    for(var f=0; f<=nFut; f++){
+    for(var f=-PREV_MESES_PASSADOS; f<=nFut; f++){
       var d=new Date(base.getFullYear(), base.getMonth()+f, 1);
       out.push({ f:f, mes:d.getMonth(), ano:d.getFullYear() });
     }
     return out;
+  }
+  // Info do mês (mes/ano) a partir do offset — usado no lugar de indexar mesesP por offset,
+  // já que agora o array inclui meses passados (o índice deixou de ser igual ao offset).
+  function mesInfoOffset(offset){
+    var base=baseMesReferencia();
+    var d=new Date(base.getFullYear(), base.getMonth()+offset, 1);
+    return { f:offset, mes:d.getMonth(), ano:d.getFullYear() };
   }
 
   // Retorna a chave "AAAA-MM" do mês de referência atual (respeita o dia de corte)
@@ -3113,6 +3200,94 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
   }
 
+  /* ===== Faturas: marcar como PAGA por mês (previsibilidade) =====
+     Store PRÓPRIO (separado das marcações de recorrentes) porque o store de recorrentes é
+     sobrescrito pela planilha a cada load. Para faturas REAIS (com billId), também grava o
+     status na aba Faturas (fonte de verdade, multi-dispositivo — reflete nos Cartões). */
+  var FAT_CHECK_KEY='fatChecksPorMes_v1';
+  function fatMarcKey(item){
+    if(item && item.id) return 'bill:'+item.id;
+    return (item&&item.tipo||'x')+':'+normalizarNomeCartao((item&&item.cartao)||'');
+  }
+  function lerFatMarc(mesKey){
+    try{ var raw=JSON.parse(localStorage.getItem(FAT_CHECK_KEY))||{}; return raw[mesKey||mesAtualKey()]||{}; }catch(e){ return {}; }
+  }
+  function salvarFatMarc(map, mesKey){
+    try{
+      var raw={}; try{ raw=JSON.parse(localStorage.getItem(FAT_CHECK_KEY))||{}; }catch(e){ raw={}; }
+      if(!raw||typeof raw!=='object') raw={};
+      raw[mesKey||mesAtualKey()]=map;
+      var limite=mesKeyOffset(-(PREV_MESES_PASSADOS+6));
+      Object.keys(raw).forEach(function(k){ if(String(k)<limite) delete raw[k]; });
+      localStorage.setItem(FAT_CHECK_KEY, JSON.stringify(raw));
+    }catch(e){}
+  }
+  // Paga = status da planilha diz "paga" OU marcada localmente naquele mês.
+  function faturaMarcadaPaga(item, mesKey){
+    if(item && item.paga) return true;
+    return !!lerFatMarc(mesKey)[fatMarcKey(item)];
+  }
+  function gravarFaturaPagaSheet(id, pago, valor, callback){
+    if(!id || !GAS_EXEC_URL || GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){ callback&&callback(false); return; }
+    var url=GAS_EXEC_URL+'?action=setFaturaPaga&id='+encodeURIComponent(id)+'&pago='+(pago?'1':'0')+(valor!=null?'&valor='+encodeURIComponent(valor):'');
+    fetch(url,{method:'GET'}).then(function(r){ callback&&callback(r.ok); }).catch(function(){ callback&&callback(false); });
+  }
+  function toggleFatMarc(item){
+    var mesKey=mesKeyOffset(prevMesOffset);
+    var m=lerFatMarc(mesKey), k=fatMarcKey(item), novo=!m[k];
+    if(novo) m[k]=true; else delete m[k];
+    salvarFatMarc(m, mesKey);
+    if(item.id) gravarFaturaPagaSheet(item.id, novo?1:0, item.valor); // fatura real: persiste na planilha
+    renderPrevisoesParcial();
+  }
+  // Lista de faturas (aberta/fechada/projetada) que VENCEM no mês do offset, com marcar pago.
+  var _fatItens=[];
+  function gerarFatListaHtml(offset){
+    var base=baseMesReferencia();
+    var alvo=new Date(base.getFullYear(), base.getMonth()+offset+1, 1); // faturas vencem no mês seguinte ao mês financeiro
+    var r=faturasVencendoNoMes(alvo.getFullYear(), alvo.getMonth(), false);
+    var mesKey=mesKeyOffset(offset);
+    _fatItens=(r.itens||[]).slice().sort(function(a,b){
+      var va=a.venc?a.venc.getTime():9e15, vb=b.venc?b.venc.getTime():9e15;
+      if(va!==vb) return va-vb;
+      return (a.cartao||'').localeCompare(b.cartao||'');
+    });
+    if(!_fatItens.length){
+      return '<div class="empty" style="padding:16px 0 4px"><div class="et">Nenhuma fatura registrada neste mês.</div></div>';
+    }
+    return _fatItens.map(function(item, idx){
+      var feito=faturaMarcadaPaga(item, mesKey);
+      var sheetPaga=!!item.paga;
+      var tipoLbl = item.tipo==='fechada' ? 'Fechada' : (item.tipo==='atual' ? 'Aberta · em formação' : 'Projetada');
+      var vencTxt = item.venc ? ('vence '+item.venc.getDate()+'/'+(item.venc.getMonth()+1)) : 'sem data';
+      var clsFeito = feito ? ' rec-feito rec-feito-out' : '';
+      var direita = sheetPaga
+        ? '<span class="fat-paga-chip">✓ Paga</span>'
+        : '<label class="rec-toggle out-toggle'+(feito?' checked':'')+'" title="Marcar fatura como paga">'+
+            '<input type="checkbox" data-fatidx="'+idx+'"'+(feito?' checked':'')+' style="display:none">'+
+            '<div class="rec-toggle-track"></div><div class="rec-toggle-thumb"></div>'+
+          '</label>';
+      return '<div class="rec-item fat-item'+clsFeito+'">'+
+        bankAvatarHtml(item.cartao)+
+        '<div class="rec-main">'+
+          '<div class="rec-name">'+escapeHtml(rotuloBanco(item.cartao))+'</div>'+
+          '<div class="rec-check-lbl">'+tipoLbl+' · '+vencTxt+(feito&&!sheetPaga?' · paga':'')+'</div>'+
+        '</div>'+
+        '<div class="rec-val out">-'+formatBRL(item.valor)+'</div>'+
+        direita+
+      '</div>';
+    }).join('');
+  }
+  function wireFatLista(){
+    document.querySelectorAll('#fatLista [data-fatidx]').forEach(function(inp){
+      inp.addEventListener('change', function(ev){
+        ev.stopPropagation();
+        var it=_fatItens[Number(inp.getAttribute('data-fatidx'))];
+        if(it) toggleFatMarc(it);
+      });
+    });
+  }
+
   // Atualiza só os números e os estilos dos itens sem destruir o DOM (para não perder foco)
   function renderPrevisoesParcial(){
     var calc     = calcularPrevisaoMes(prevMesOffset);
@@ -3122,7 +3297,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var saidas   = calc.saidas;
     var previsao = calc.previsao;
     var ehAtual  = (prevMesOffset===0);
-    var saldoLbl = ehAtual ? 'Saldo em conta' : 'Saldo inicial';
+    var saldoLbl = ehAtual ? 'Saldo em conta' : (prevMesOffset<0 ? 'Mês encerrado' : 'Saldo inicial');
     // As faturas do "mês financeiro X" são as que VENCEM no mês-calendário seguinte
     var mBaseP   = baseMesReferencia();
     var fatLbl   = 'Faturas · venc. '+MESES_ABREV[(mBaseP.getMonth()+prevMesOffset+1)%12];
@@ -3133,7 +3308,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var fkh=document.getElementById('prev-fat-k'); if(fkh) fkh.textContent=fatLbl;
     var csk=document.getElementById('calc-saldo-k'); if(csk) csk.textContent=saldoLbl;
     var cfk=document.getElementById('calc-fat-k'); if(cfk) cfk.textContent=fatLbl;
-    var ctk=document.getElementById('calc-total-k'); if(ctk) ctk.textContent=(ehAtual?'Previsão fim do mês':'Previsão de '+MESES_COMPLETO[mesesP[prevMesOffset].mes]);
+    var ctk=document.getElementById('calc-total-k'); if(ctk) ctk.textContent=(ehAtual?'Previsão fim do mês':(prevMesOffset<0?'Movimento de '+MESES_COMPLETO[mesInfoOffset(prevMesOffset).mes]:'Previsão de '+MESES_COMPLETO[mesInfoOffset(prevMesOffset).mes]));
 
     // Atualiza hero
     var ps = document.getElementById('prev-saldo-val'); if(ps) ps.textContent = formatBRLOuOculto(saldo);
@@ -3163,7 +3338,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
     // Atualiza o rótulo "Recorrentes <mês>" para o mês do FILTRO selecionado (não o mês real de hoje)
     var tagEl = document.getElementById('recMesTag');
-    if(tagEl) tagEl.textContent = MESES_COMPLETO[mesesP[prevMesOffset].mes]+' de '+mesesP[prevMesOffset].ano;
+    if(tagEl){ var miT=mesInfoOffset(prevMesOffset); tagEl.textContent = MESES_COMPLETO[miT.mes]+' de '+miT.ano; }
+    // Reconstrói a lista de faturas (aberta/fechada, com marcar pago) do mês selecionado
+    var fatLista = document.getElementById('fatLista');
+    if(fatLista){ fatLista.innerHTML = gerarFatListaHtml(prevMesOffset); wireFatLista(); }
 
     // Reconstrói a lista de recorrentes do zero para o mês selecionado — é isso que faltava:
     // antes, só os números do topo recalculavam; a lista continuava com os itens do mês
@@ -3453,7 +3631,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var assinaturas = pf.assinaturas || 0;
     var previsao = pf.previsao;
     var ehAtual  = (prevMesOffset===0);
-    var saldoLbl = ehAtual ? 'Saldo em conta' : 'Saldo inicial';
+    var saldoLbl = ehAtual ? 'Saldo em conta' : (prevMesOffset<0 ? 'Mês encerrado' : 'Saldo inicial');
     // As faturas do "mês financeiro X" são as que VENCEM no mês-calendário seguinte
     var mBaseP   = baseMesReferencia();
     var fatLbl   = 'Faturas · venc. '+MESES_ABREV[(mBaseP.getMonth()+prevMesOffset+1)%12];
@@ -3461,9 +3639,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
     // Rótulo da seção "Recorrentes" = mês SELECIONADO no filtro (antes usava sempre a data
     // real de hoje, por isso ficava mostrando "junho de 2026" mesmo com Agosto selecionado).
-    var mes = MESES_COMPLETO[mesesP[prevMesOffset].mes]+' de '+mesesP[prevMesOffset].ano;
+    var miSel = mesInfoOffset(prevMesOffset);
+    var mes = MESES_COMPLETO[miSel.mes]+' de '+miSel.ano;
 
     var recHtml = gerarRecListaHtml(prevMesOffset);
+    var fatHtml = gerarFatListaHtml(prevMesOffset);
 
     return ''+
     // Hero fixo no topo: filtro de mês + 3 informações (Saldo + Faturas + Previsão)
@@ -3498,10 +3678,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '<div class="calc-row" id="calc-row-saidas"'+(saidas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot neg"></span>Saídas a pagar</span><span class="amt neg" id="calc-saidas">−'+formatBRL(saidas)+'</span></div>'+
       '<div class="calc-row" id="calc-row-assin"'+(assinaturas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot neg"></span>Assinaturas</span><span class="amt neg" id="calc-assin">−'+formatBRL(assinaturas)+'</span></div>'+
       '<div class="calc-row"><span class="lbl"><span class="cr-dot neg"></span><span id="calc-fat-k">'+fatLbl+'</span></span><span class="amt neg" id="calc-faturas">−'+formatBRL(faturas)+'</span></div>'+
-      '<div class="calc-total-row '+(previsao<0?'neg':'pos')+'" id="calc-total-row"><span class="lbl-total"><span id="calc-total-k">'+(ehAtual?'Previsão fim do mês':'Previsão de '+MESES_COMPLETO[mesesP[prevMesOffset].mes])+'</span><small>com recorrentes e faturas</small></span><span class="amt amt-total '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
+      '<div class="calc-total-row '+(previsao<0?'neg':'pos')+'" id="calc-total-row"><span class="lbl-total"><span id="calc-total-k">'+(ehAtual?'Previsão fim do mês':(prevMesOffset<0?'Movimento de '+MESES_COMPLETO[miSel.mes]:'Previsão de '+MESES_COMPLETO[miSel.mes]))+'</span><small>com recorrentes e faturas</small></span><span class="amt amt-total '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
     '</div>'+
+    // Seção faturas (aberta/fechada por mês, com marcar pago)
+    '<div class="section-head" style="margin-top:2px"><h2>Faturas <span class="rec-mes-tag">'+MESES_COMPLETO_CAP((miSel.mes+1)%12)+'</span></h2></div>'+
+    '<div id="fatLista">'+fatHtml+'</div>'+
     // Seção recorrentes
-    '<div class="section-head" style="margin-top:2px"><h2>Recorrentes <span class="rec-mes-tag" id="recMesTag">'+mes+'</span></h2>'+
+    '<div class="section-head" style="margin-top:12px"><h2>Recorrentes <span class="rec-mes-tag" id="recMesTag">'+mes+'</span></h2>'+
       '<span class="link" id="recAddBtn">+ Cadastrar</span>'+
     '</div>'+
     // Filtro de tipo (Todos / Entrada / Saída) — mesmo estilo das sub-abas de Parcelamentos
@@ -3571,6 +3754,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       });
     });
     wireRecLista();
+    wireFatLista();
+    // Rola a faixa de meses até o mês atual (que começa selecionado), já que agora há meses
+    // passados à esquerda — sem isso o filtro abriria mostrando o mês mais antigo.
+    var strip=document.getElementById('prevMonthScroll');
+    if(strip){
+      var ativo=strip.querySelector('.cc-month-pill.active');
+      if(ativo){ try{ ativo.scrollIntoView({inline:'center',block:'nearest'}); }catch(e){ strip.scrollLeft=ativo.offsetLeft-strip.clientWidth/2; } }
+    }
     // (botão sync da planilha removido)
   }
 
@@ -3795,6 +3986,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* Posiciona o popover (color-pop/banks-pop) com position:fixed ancorado no botão que abriu —
      evita que ele fique "atrás" dos cards por causa do overflow:clip do cabeçalho .top. */
   function posicionarPopover(btn,pop){
+    // No mobile, o card de bancos vira painel lateral (CSS cuida do posicionamento):
+    // limpamos qualquer posição inline pra não sobrescrever o layout de folha lateral.
+    if(pop&&pop.classList.contains("banks-pop")&&window.matchMedia("(max-width:600px)").matches){
+      pop.style.top=pop.style.right=pop.style.left=pop.style.bottom="";
+      return;
+    }
     var r=btn.getBoundingClientRect();
     var topVal=r.bottom+8;
     // garante que não vá negativo nem para cima da barra de status
@@ -3804,9 +4001,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     pop.style.left="auto";
     pop.style.bottom="auto";
   }
+  function atualizarScrim(){
+    var scrim=document.getElementById("popScrim");
+    if(!scrim) return;
+    var algumAberto=(colorPop&&colorPop.classList.contains("show"))||(banksPop&&banksPop.classList.contains("show"));
+    scrim.classList.toggle("show",!!algumAberto);
+  }
   function fecharTodosPopovers(){
     if(colorPop) colorPop.classList.remove("show");
     if(banksPop) banksPop.classList.remove("show");
+    atualizarScrim();
   }
 
   var colorToggle=$("#colorToggle"), colorPop=$("#colorPop"), colorCustom=$("#colorCustom");
@@ -3818,6 +4022,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var opening=!colorPop.classList.contains("show");
       fecharTodosPopovers();
       if(opening){ posicionarPopover(colorToggle,colorPop); colorPop.classList.add("show"); }
+      atualizarScrim();
     });
     document.querySelectorAll(".swatch[data-c]").forEach(function(sw){
       sw.addEventListener("click",function(){
@@ -3838,6 +4043,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* ===== bancos conectados (badge + popover) ===== */
   var ultimaAtualizacao=null;
 
+  // Maior "Atualizado em" entre os cartões da aba "Fatura Em Aberto" — é o horário do último
+  // sync de verdade com o banco (o Apps Script só regrava essa coluna ao sincronizar).
+  function ultimaAtualizacaoDoBanco(){
+    var melhor=null, m=state.faturaEmAberto||{};
+    for(var k in m){
+      var d=m[k]&&m[k].atualizado;
+      if(d instanceof Date && !isNaN(d) && (!melhor || d>melhor)) melhor=d;
+    }
+    return melhor;
+  }
   function tempoRelativo(data){
     if(!data) return '—';
     var min=Math.floor((Date.now()-data.getTime())/60000);
@@ -3887,6 +4102,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var opening=!banksPop.classList.contains("show");
       fecharTodosPopovers();
       if(opening){ posicionarPopover(banksToggle,banksPop); banksPop.classList.add("show"); }
+      atualizarScrim();
     });
   }
 
@@ -3941,10 +4157,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function sincronizarComBanco(action){
     syncEmAndamento=true;
     action=action||'';
-    var icForce=document.getElementById("refreshForceIc");
-    if(action==='forcarSync'){if(icForce)icForce.classList.add("spin");}
-    else{if(refreshSyncIc)refreshSyncIc.classList.add("spin");}
-    var labelBase=action==='forcarSync'?"Forçando sync… ":"Sincronizando… ";
+    if(refreshSyncIc)refreshSyncIc.classList.add("spin");
+    var labelBase="Sincronizando… ";
     var inicio=Date.now();
     setRefreshStatus(labelBase+"0s","loading");
     syncTimerInt=setInterval(function(){
@@ -3961,7 +4175,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         var total=Math.round((Date.now()-inicio)/1000);
         syncEmAndamento=false;
         if(refreshSyncIc)refreshSyncIc.classList.remove("spin");
-        if(typeof icForce!=="undefined"&&icForce)icForce.classList.remove("spin");
         setRefreshStatus("Concluído em "+total+"s — atualizando…","done");
         loadAll();
         setTimeout(function(){ if(refreshStatusEl) refreshStatusEl.style.display="none"; },4000);
@@ -3970,7 +4183,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         clearInterval(syncTimerInt);
         syncEmAndamento=false;
         if(refreshSyncIc)refreshSyncIc.classList.remove("spin");
-        if(typeof icForce!=="undefined"&&icForce)icForce.classList.remove("spin");
         setRefreshStatus("Erro ao sincronizar: "+err.message,"error");
       });
   }
@@ -3983,18 +4195,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         setRefreshStatus("Configure GAS_EXEC_URL com o link /exec da implantação do Apps Script.","error");
         return;
       }
-      sincronizarComBanco();
-    });
-  }
-  var refreshForceBtn=document.getElementById("refreshForce");
-  if(refreshForceBtn){
-    refreshForceBtn.addEventListener("click",function(ev){
-      ev.stopPropagation();
-      if(syncEmAndamento) return;
-      if(!GAS_EXEC_URL || GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){
-        setRefreshStatus("Configure GAS_EXEC_URL com o link /exec da implantação do Apps Script.","error");
-        return;
-      }
+      // Botão unificado: "Sincronizar com o banco" agora executa a atualização FORÇADA
+      // (limpa o cache do Pluggy e busca dados frescos), que era o antigo "Forçar atualização".
       sincronizarComBanco('forcarSync');
     });
   }
@@ -4122,7 +4324,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         aplicarApelidosDaPlanilha(r[9]);   // nomes personalizados vindos da aba "Apelidos" (multi-dispositivo)
         if(r[10] && r[10].length) processarPrevisoesSheet(r[10]); // recorrentes + marcações (Pago/Recebido) da aba Previsões
         migrarApelidosParcelamentos();     // garante que renomeações antigas de Parcelas apareçam nos Cartões
-        ultimaAtualizacao = new Date();
+        // "Atualizado há X" reflete o ÚLTIMO SYNC REAL com o banco — não o último reload da página.
+        // Usa o carimbo "Atualizado em" que o Apps Script grava na aba "Fatura Em Aberto" só quando
+        // sincroniza (botão "Sincronizar com o banco"). Assim "Atualizar página" não mexe nesse tempo.
+        ultimaAtualizacao = ultimaAtualizacaoDoBanco() || ultimaAtualizacao;
         renderBancos();
         if(btn) btn.classList.remove("loading");
         irPara(telaAtual);
