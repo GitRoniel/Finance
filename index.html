@@ -2089,8 +2089,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     return out;
   }
+  // Pagamento da fatura (lançamento de CRÉDITO/"Entrada" no cartão, feito quando você paga a
+  // fatura do mês anterior). Não é uma compra nem um estorno — não deve entrar na fatura atual
+  // nem na soma dos lançamentos. Identificado por ser Entrada com categoria/descrição de pagamento.
+  function ehPagamentoDeFatura(t){
+    if(!t || t.tipo!=='Entrada') return false;
+    var s=((t.categoria||'')+' '+(t.descricao||'')).toLowerCase();
+    return /pagamento|pagto|fatura|cart[aã]o de cr[eé]dito|credit\s*card\s*payment|invoice\s*payment/.test(s);
+  }
   function transacoesDoCartaoJanela(nomeCartao,janela){
-    return txDoCartao(nomeCartao).filter(function(t){return t.data&&t.data>=janela.start&&t.data<=janela.end;}).sort(function(a,b){return b.data-a.data;});
+    return txDoCartao(nomeCartao).filter(function(t){return t.data&&t.data>=janela.start&&t.data<=janela.end&&!ehPagamentoDeFatura(t);}).sort(function(a,b){return b.data-a.data;});
   }
 
   // Converte uma lista de pontos {x,y} numa curva suave (Catmull-Rom -> Bézier), sem precisar
