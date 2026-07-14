@@ -101,6 +101,40 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   opacity:0;transform:translateY(-6px) scale(0.96);pointer-events:none;transition:opacity .2s,transform .2s;}
 .color-pop.show{opacity:1;transform:none;pointer-events:auto;}
 .color-pop-title{font-size:13px;font-weight:500;color:var(--text-dim);margin-bottom:10px;}
+/* ===== caixa de Configurações (mesmo material de vidro dos bancos) ===== */
+.settings-pop{width:266px;}
+.set-sec{margin-bottom:13px;}
+.set-lbl{font-size:11px;color:var(--text-faint);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
+.set-seg{display:flex;gap:5px;background:var(--track-bg);border-radius:12px;padding:4px;}
+.set-seg-opt{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 6px;border-radius:9px;border:none;background:transparent;color:var(--text-dim);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .16s,color .16s;}
+.set-seg-opt svg{width:15px;height:15px;}
+.set-seg-opt.active{background:var(--lime);color:#07130d;}
+.set-row{display:flex;align-items:center;gap:11px;}
+.set-row-ic{width:30px;height:30px;border-radius:50%;background:var(--track-bg);display:flex;align-items:center;justify-content:center;color:var(--text-dim);flex:0 0 auto;}
+.set-row-txt{flex:1;min-width:0;}
+.set-row-t{font-size:13.5px;font-weight:600;}
+.set-row-s{font-size:11px;color:var(--text-faint);margin-top:1px;line-height:1.25;}
+.set-switch{width:44px;height:26px;border-radius:20px;background:var(--track-bg);border:1px solid var(--glass-border);position:relative;cursor:pointer;flex:0 0 auto;transition:background .2s;}
+.set-switch span{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.set-switch.on{background:var(--lime);border-color:var(--lime);}
+.set-switch.on span{left:20px;}
+/* ===== modo compacto: densidade máxima em toda a página ===== */
+[data-compacto="on"] .top{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:8px;}
+[data-compacto="on"] h1{font-size:19px;}
+[data-compacto="on"] .section-head{margin:11px 4px 7px;}
+[data-compacto="on"] .tcard,[data-compacto="on"] .tile,[data-compacto="on"] .fatura-card,[data-compacto="on"] .cc-hero,[data-compacto="on"] .cards-resumo,[data-compacto="on"] .prev-duo,[data-compacto="on"] .calc-card,[data-compacto="on"] .parc-stats,[data-compacto="on"] .pcard,[data-compacto="on"] .acard,[data-compacto="on"] .inv-hero,[data-compacto="on"] .tx-list{padding:10px 12px!important;margin-bottom:8px!important;}
+[data-compacto="on"] .calc-card{padding:2px 12px!important;}
+[data-compacto="on"] .calc-row{padding:6px 0!important;}
+[data-compacto="on"] .rec-item{padding:6px 10px!important;margin-bottom:4px!important;}
+[data-compacto="on"] .fat-item{padding:6px 10px!important;}
+[data-compacto="on"] .cc-day-group{margin-bottom:10px!important;}
+[data-compacto="on"] .cctx{padding:8px 0!important;}
+[data-compacto="on"] .gcat-tx{padding:7px 12px 7px 46px!important;}
+[data-compacto="on"] .trio .c{padding:11px 10px!important;}
+[data-compacto="on"] .fatura-reconc{padding:10px 12px!important;margin-bottom:9px!important;}
+[data-compacto="on"] .cc-hero-v{font-size:clamp(15px,4vw,20px);}
+[data-compacto="on"] .tile{border-radius:14px;}
+[data-compacto="on"] #content{padding-bottom:64px;}
 .swatches{display:flex;flex-wrap:wrap;gap:10px;}
 .swatch{width:30px;height:30px;border-radius:50%;border:2px solid var(--glass-border);cursor:pointer;padding:0;flex:0 0 auto;}
 .swatch:active{transform:scale(0.9);}
@@ -971,18 +1005,38 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
      de tudo. Ficando como filhos diretos do body, o position:fixed funciona corretamente
      relativo à viewport. O JS continua posicionando via getBoundingClientRect do botão. -->
 <div class="pop-scrim" id="popScrim"></div>
-<div class="color-pop" id="colorPop">
-  <div class="color-pop-title">Cor de destaque</div>
-  <div class="swatches">
-    <button class="swatch" data-c="#3fe0a3" style="background:#3fe0a3" title="Verde menta"></button>
-    <button class="swatch" data-c="#4da3ff" style="background:#4da3ff" title="Azul"></button>
-    <button class="swatch" data-c="#c44bff" style="background:#c44bff" title="Roxo"></button>
-    <button class="swatch" data-c="#ff4d8d" style="background:#ff4d8d" title="Rosa"></button>
-    <button class="swatch" data-c="#ff8a3d" style="background:#ff8a3d" title="Laranja"></button>
-    <button class="swatch" data-c="#ff6060" style="background:#ff6060" title="Vermelho"></button>
-    <label class="swatch custom-swatch" title="Escolher outra cor">
-      <input type="color" id="colorCustom" value="#3fe0a3">
-    </label>
+<div class="color-pop settings-pop" id="settingsPop">
+  <div class="color-pop-title">Configurações</div>
+  <div class="set-sec">
+    <div class="set-lbl">Tema</div>
+    <div class="set-seg" id="temaSeg">
+      <button class="set-seg-opt" data-tema="light"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Claro</button>
+      <button class="set-seg-opt" data-tema="dark"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Escuro</button>
+    </div>
+  </div>
+  <div class="banks-divider"></div>
+  <div class="set-sec">
+    <div class="set-lbl">Cor de destaque</div>
+    <div class="swatches">
+      <button class="swatch" data-c="#3fe0a3" style="background:#3fe0a3" title="Verde menta"></button>
+      <button class="swatch" data-c="#4da3ff" style="background:#4da3ff" title="Azul"></button>
+      <button class="swatch" data-c="#c44bff" style="background:#c44bff" title="Roxo"></button>
+      <button class="swatch" data-c="#ff4d8d" style="background:#ff4d8d" title="Rosa"></button>
+      <button class="swatch" data-c="#ff8a3d" style="background:#ff8a3d" title="Laranja"></button>
+      <button class="swatch" data-c="#ff6060" style="background:#ff6060" title="Vermelho"></button>
+      <label class="swatch custom-swatch" title="Escolher outra cor">
+        <input type="color" id="colorCustom" value="#3fe0a3">
+      </label>
+    </div>
+  </div>
+  <div class="banks-divider"></div>
+  <div class="set-row" id="compactRow">
+    <div class="set-row-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></div>
+    <div class="set-row-txt">
+      <div class="set-row-t">Modo compacto</div>
+      <div class="set-row-s">Deixa tudo mais denso na tela</div>
+    </div>
+    <div class="set-switch" id="compactSwitch" role="switch" tabindex="0" aria-label="Modo compacto"><span></span></div>
   </div>
 </div>
 <div class="color-pop banks-pop" id="banksPop">
@@ -1018,19 +1072,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       <div class="sub" id="appSub"></div>
     </div>
     <div class="top-actions">
-      <div class="icon-btn pill theme-toggle" id="themeToggle" title="Tema">
-        <svg class="ic-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        <svg class="ic-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-      </div>
-      <div class="icon-btn-wrap">
-        <div class="icon-btn pill" id="colorToggle" title="Cor de destaque">
-          <span class="color-dot"></span>
-        </div>
-      </div>
       <div class="icon-btn-wrap">
         <div class="icon-btn privacy-toggle" id="privacyToggle" title="Ocultar valores">
           <svg class="ic-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           <svg class="ic-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+        </div>
+      </div>
+      <div class="icon-btn-wrap">
+        <div class="icon-btn pill" id="settingsToggle" title="Configurações">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </div>
       </div>
       <div class="icon-btn-wrap">
@@ -1644,10 +1694,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return parcelasContribuindoNoMes(card, f).reduce(function(s,x){return s+x.valorParcela;},0);
   }
   // Soma das faturas projetadas de TODOS os cartões ativos daqui a "f" meses.
-  function faturasProjetadasMes(f){
-    return state.cartoes.filter(function(c){return c.ativo!=="Não";})
-      .reduce(function(s,c){return s+faturaProjetadaCartao(c,f);},0);
-  }
   function limiteTotal(){ return state.cartoes.filter(function(c){return c.ativo!=="Não";}).reduce(function(s,c){return s+(c.limite||0);},0); }
   function limiteDisponivel(){ return limiteTotal()-totalFaturasAbertas(); }
 
@@ -2103,22 +2149,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   // Converte uma lista de pontos {x,y} numa curva suave (Catmull-Rom -> Bézier), sem precisar
   // de bibliotecas externas. Usada pra desenhar a "onda" do resumo mês a mês.
-  function caminhoSuave(pts){
-    if(pts.length<2) return pts.length?('M'+pts[0].x.toFixed(2)+','+pts[0].y.toFixed(2)):'';
-    var d='M'+pts[0].x.toFixed(2)+','+pts[0].y.toFixed(2);
-    for(var i=0;i<pts.length-1;i++){
-      var p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
-      var c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
-      var c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
-      d+=' C'+c1x.toFixed(2)+','+c1y.toFixed(2)+' '+c2x.toFixed(2)+','+c2y.toFixed(2)+' '+p2.x.toFixed(2)+','+p2.y.toFixed(2);
-    }
-    return d;
-  }
 
-  // Valor compacto (sem centavos) pra caber nas caixinhas estreitas de cada mês.
-  function formatBRLInt(n){
-    return 'R$ '+Math.round(Number(n)||0).toLocaleString('pt-BR');
-  }
 
   // Gera a timeline "Evolução da fatura" igual à referência: cada mês é um CARD VERTICAL alto e
   // clicável (nome no topo, valor embaixo) e a curva Bézier suave passa POR DENTRO dos cards,
@@ -3821,12 +3852,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // só pela ordem dos elementos .nav-item no HTML, não pelo índice aqui.
   var telaAtual=0;
 
-  function dataHoje(){
-    var d=new Date();
-    var dias=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
-    var meses=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-    return dias[d.getDay()]+', '+d.getDate()+' de '+meses[d.getMonth()];
-  }
 
   function saudacao(){
     var h=new Date().getHours();
@@ -4017,11 +4042,42 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
   var temaSalvo; try{temaSalvo=localStorage.getItem(THEME_KEY);}catch(e){}
   aplicarTema(temaSalvo||"dark");
-  $("#themeToggle").addEventListener("click",function(){
+  // Tema agora vive dentro da caixa de Configurações (segmento Claro/Escuro).
+  function marcarTemaAtivo(){
     var atual=document.documentElement.getAttribute("data-theme")==="light"?"light":"dark";
-    var novo=atual==="light"?"dark":"light"; aplicarTema(novo);
-    try{localStorage.setItem(THEME_KEY,novo);}catch(e){}
+    document.querySelectorAll("#temaSeg .set-seg-opt").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-tema")===atual);
+    });
+  }
+  document.querySelectorAll("#temaSeg .set-seg-opt").forEach(function(b){
+    b.addEventListener("click",function(ev){
+      ev.stopPropagation();
+      var novo=b.getAttribute("data-tema");
+      aplicarTema(novo);
+      try{localStorage.setItem(THEME_KEY,novo);}catch(e){}
+      marcarTemaAtivo();
+    });
   });
+  marcarTemaAtivo();
+  // Modo compacto — densidade máxima na página, persistido.
+  var COMPACT_KEY="financeiro-compacto";
+  function aplicarCompacto(on){
+    if(on) document.documentElement.setAttribute("data-compacto","on");
+    else document.documentElement.removeAttribute("data-compacto");
+    var sw=$("#compactSwitch"); if(sw) sw.classList.toggle("on",!!on);
+  }
+  var compactoSalvo; try{compactoSalvo=localStorage.getItem(COMPACT_KEY)==="1";}catch(e){}
+  aplicarCompacto(compactoSalvo);
+  (function(){
+    var sw=$("#compactSwitch"); if(!sw) return;
+    function toggleCompacto(ev){ if(ev) ev.stopPropagation();
+      var on=document.documentElement.getAttribute("data-compacto")!=="on";
+      aplicarCompacto(on);
+      try{localStorage.setItem(COMPACT_KEY, on?"1":"0");}catch(e){}
+    }
+    sw.addEventListener("click",toggleCompacto);
+    sw.addEventListener("keydown",function(e){ if(e.key===" "||e.key==="Enter"){e.preventDefault();toggleCompacto(e);} });
+  })();
 
   /* Posiciona o popover (color-pop/banks-pop) com position:fixed ancorado no botão que abriu —
      evita que ele fique "atrás" dos cards por causa do overflow:clip do cabeçalho .top. */
@@ -4044,32 +4100,33 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function atualizarScrim(){
     var scrim=document.getElementById("popScrim");
     if(!scrim) return;
-    var algumAberto=(colorPop&&colorPop.classList.contains("show"))||(banksPop&&banksPop.classList.contains("show"));
+    var algumAberto=(settingsPop&&settingsPop.classList.contains("show"))||(banksPop&&banksPop.classList.contains("show"));
     scrim.classList.toggle("show",!!algumAberto);
   }
   function fecharTodosPopovers(){
-    if(colorPop) colorPop.classList.remove("show");
+    if(settingsPop) settingsPop.classList.remove("show");
     if(banksPop) banksPop.classList.remove("show");
     atualizarScrim();
   }
 
-  var colorToggle=$("#colorToggle"), colorPop=$("#colorPop"), colorCustom=$("#colorCustom");
+  var settingsToggle=$("#settingsToggle"), settingsPop=$("#settingsPop"), colorCustom=$("#colorCustom");
   var banksToggle=$("#banksToggle"), banksPop=$("#banksPop");
 
-  if(colorToggle&&colorPop){
-    colorToggle.addEventListener("click",function(ev){
+  if(settingsToggle&&settingsPop){
+    settingsToggle.addEventListener("click",function(ev){
       ev.stopPropagation();
-      var opening=!colorPop.classList.contains("show");
+      var opening=!settingsPop.classList.contains("show");
       fecharTodosPopovers();
-      if(opening){ posicionarPopover(colorToggle,colorPop); colorPop.classList.add("show"); }
+      if(opening){ marcarTemaAtivo(); posicionarPopover(settingsToggle,settingsPop); settingsPop.classList.add("show"); }
       atualizarScrim();
     });
+    // swatches de cor (agora dentro das Configurações) — não fecham a caixa ao escolher
     document.querySelectorAll(".swatch[data-c]").forEach(function(sw){
-      sw.addEventListener("click",function(){
+      sw.addEventListener("click",function(ev){
+        ev.stopPropagation();
         var hex=sw.getAttribute("data-c");
         aplicarAcento(hex);
         try{localStorage.setItem(ACCENT_KEY,hex);}catch(e){}
-        colorPop.classList.remove("show");
       });
     });
     if(colorCustom){
@@ -4148,14 +4205,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   // Fecha qualquer popover aberto ao clicar/tocar fora (click + touchstart para mobile)
   function outsideClickHandler(ev){
-    var inColor=colorPop&&(colorPop.contains(ev.target)||colorToggle&&colorToggle.contains(ev.target));
+    var inSettings=settingsPop&&(settingsPop.contains(ev.target)||settingsToggle&&settingsToggle.contains(ev.target));
     var inBanks=banksPop&&(banksPop.contains(ev.target)||banksToggle&&banksToggle.contains(ev.target));
-    if(!inColor&&!inBanks) fecharTodosPopovers();
+    if(!inSettings&&!inBanks) fecharTodosPopovers();
   }
   document.addEventListener("click",outsideClickHandler);
   document.addEventListener("touchstart",outsideClickHandler,{passive:true});
   window.addEventListener("resize",function(){
-    if(colorPop&&colorPop.classList.contains("show")) posicionarPopover(colorToggle,colorPop);
+    if(settingsPop&&settingsPop.classList.contains("show")) posicionarPopover(settingsToggle,settingsPop);
     if(banksPop&&banksPop.classList.contains("show")) posicionarPopover(banksToggle,banksPop);
   });
   // "+ Adicionar conta" — abre o fluxo de conexão Open Finance (mesmo onde os bancos atuais foram cadastrados).
@@ -4400,10 +4457,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function estaAutenticado(){
     try{ return localStorage.getItem('financeiro-auth')==='1' || sessionStorage.getItem('financeiro-auth')==='1'; }catch(e){ return false; }
   }
-  function logout(){
-    try{ localStorage.removeItem('financeiro-auth'); sessionStorage.removeItem('financeiro-auth'); }catch(e){}
-    location.reload();
-  }
   function mostrarLogin(){
     var ov=document.createElement('div'); ov.className='login-ov'; ov.id='loginOv';
     var sun='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -4640,7 +4693,6 @@ body{text-rendering:optimizeLegibility;}
 (function(){
 'use strict';
 var RAF=window.requestAnimationFrame||function(fn){setTimeout(fn,16);};
-function lerp(a,b,t){return a+(b-a)*t;}
 
 /* ── PILL: Dynamic Highlight + Ripple + Ambient Shimmer ─────
    Sem squash/stretch — movimento suave como o switcher do FM.
