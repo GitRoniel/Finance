@@ -118,6 +118,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .set-switch span{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
 .set-switch.on{background:var(--lime);border-color:var(--lime);}
 .set-switch.on span{left:20px;}
+/* Padroniza linhas: textos de UMA linha só (não quebram em 2, mantendo o layout estável) */
+.rec-name,.rec-check-lbl,.set-row-t,.set-row-s,.bname,.bupd,.ro-t,.ro-s,.cctx-desc,.cctx-meta,.fat-item .rn,.fat-item .rs,.fatura-reconc .rec-row>span,.gcat-tx-desc,.gcat-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.cc-tipo-filtro{margin-top:8px;}
 /* ===== modo compacto: densidade máxima em toda a página ===== */
 [data-compacto="on"] .top{padding-top:calc(8px + env(safe-area-inset-top,0px))!important;padding-bottom:6px!important;}
 [data-compacto="on"] h1{font-size:18px!important;}
@@ -394,20 +397,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   box-shadow:0 6px 16px rgba(40,60,50,0.10),0 1px 3px rgba(0,0,0,0.05);
   --glass-gloss:rgba(255,255,255,0.22);
 }
-.frow{display:flex;align-items:center;gap:10px;padding:8px 13px;cursor:pointer;transition:background .15s;}
+.frow{display:flex;align-items:center;gap:10px;padding:6px 12px;cursor:pointer;transition:background .15s;}
 .frow:not(:last-child){border-bottom:1px solid var(--glass-border);}
 .frow:active{background:rgba(255,255,255,0.04);}
-.frow .fbadge{width:34px;height:34px;}
+.frow .fbadge{width:30px;height:30px;}
 .fbadge{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff;}
 .fbadge svg{width:56%;height:56%;}
 .fbadge .txt{font-weight:700;font-size:12px;font-family:var(--font-display);}
 .fmain{flex:1 1 auto;min-width:0;}
-.frow .ftitle{font-size:14.5px;}
-.frow .fsub{font-size:12px;margin:2px 0 5px;}
-.frow .fval{font-size:18px;}
+.frow .ftitle{font-size:14px;}
+.frow .fsub{font-size:11.5px;margin:1px 0 4px;}
+.frow .fval{font-size:16px;}
 .frow .fchev{font-size:15px;}
 .ftitle{font-size:16px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fsub{font-size:13px;color:var(--text-faint);margin:2px 0 7px;font-weight:500;}
+.fsub{font-size:13px;color:var(--text-faint);margin:2px 0 7px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ftrack{height:4px;border-radius:4px;background:var(--track-bg);overflow:hidden;}
 .ffill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--lime-deep),var(--lime));}
 .fval{font-size:20px;font-weight:700;flex:0 0 auto;font-family:var(--font-display);letter-spacing:-0.02em;}
@@ -459,6 +462,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .fatura-reconc .rec-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;}
 .fatura-reconc .rec-badge.ok{color:var(--lime-deep);background:rgba(63,224,163,0.13);}
 .fatura-reconc .rec-badge.diff{color:var(--orange);background:rgba(240,121,31,0.12);}
+.fatura-reconc .rec-paga{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px solid var(--hairline);font-size:12.5px;color:var(--text-dim);font-weight:600;}
 .cc-disp{font-size:12.5px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
 .cc-glow{position:absolute;right:-30px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.20),transparent 70%);pointer-events:none;}
 /* Card global (Todos os cartões) — visual escuro/elegante e stack de logos dos bancos */
@@ -1072,10 +1076,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     <div class="set-switch" id="compactSwitch" role="switch" tabindex="0" aria-label="Modo compacto"><span></span></div>
   </div>
 </div>
-<div class="color-pop banks-pop" id="banksPop">
+<div class="color-pop banks-pop settings-pop" id="banksPop">
   <div class="color-pop-title">Contas conectadas</div>
-  <div id="banksList"></div>
+  <div class="set-sec"><div id="banksList"></div></div>
   <div class="banks-divider"></div>
+  <div class="set-lbl">Sincronização</div>
   <div class="refresh-opt" id="refreshSync">
     <div class="ro-ic" id="refreshSyncIc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M3 16v5h5M21 8V3h-5"/></svg></div>
     <div class="ro-txt">
@@ -1475,16 +1480,45 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
      A aba Faturas espelha 1:1 o histórico dos apps dos bancos (valor/vencimento oficiais).
      É a fonte de verdade do histórico; a "Fatura Em Aberto" complementa com a fatura
      FECHADA não paga e a fatura ATUAL (em formação), calculadas por regra de banco. */
-  function faturaPaga(f){ return /paga/i.test((f && f.status) || ''); }
+  // Marcação de fatura paga feita à MÃO no app (otimista/local), por billId. Vale na hora,
+  // enquanto o banco/planilha ainda não confirmou. faturaPaga() considera isto + o status real.
+  var FATPAGA_LOCAL_KEY='financeiro-fatpaga-local';
+  function lerFatPagaLocal(){ try{ return JSON.parse(localStorage.getItem(FATPAGA_LOCAL_KEY))||{}; }catch(e){ return {}; } }
+  function marcarFatPagaLocal(id, on){
+    if(!id) return; var m=lerFatPagaLocal(); if(on) m[id]=1; else delete m[id];
+    try{ localStorage.setItem(FATPAGA_LOCAL_KEY, JSON.stringify(m)); }catch(e){}
+  }
+  function faturaPaga(f){
+    if(f && f.id && lerFatPagaLocal()[f.id]) return true;
+    return /paga/i.test((f && f.status) || '');
+  }
   function faturasDoCartao(nomeCartao){
     var alvo = normalizarNomeCartao(nomeCartao);
     return (state.faturasReais||[]).filter(function(f){ return normalizarNomeCartao(f.cartao)===alvo; });
+  }
+  // A fatura fechada de um cartão (venc X) foi paga? (status da planilha OU marcação manual)
+  function fechadaFoiPaga(card, venc){
+    if(!venc) return false;
+    var alvo=venc.getFullYear()*12+venc.getMonth();
+    return faturasDoCartao(card.nome).some(function(fb){
+      return fb.venc && (fb.venc.getFullYear()*12+fb.venc.getMonth())===alvo && faturaPaga(fb);
+    });
+  }
+  // Bill (fatura real da aba Faturas) que vence no mesmo mês do item selecionado.
+  function billDoMes(card, mSel){
+    if(!mSel || !mSel.vencimento) return null;
+    var alvo=mSel.vencimento.getFullYear()*12+mSel.vencimento.getMonth(), achado=null;
+    faturasDoCartao(card.nome).forEach(function(fb){
+      if(fb.venc && (fb.venc.getFullYear()*12+fb.venc.getMonth())===alvo) achado=fb;
+    });
+    return achado;
   }
   // Fatura FECHADA e ainda não paga (a que o app do banco mostra aguardando pagamento).
   function faturaFechadaCard(card){
     var info = buscarFaturaEmAberto(card.nome);
     if(info && info.fechada != null){
-      return info.fechada > 0 ? { valor: info.fechada, venc: info.vencFechada || null } : null;
+      if(info.fechada > 0 && !fechadaFoiPaga(card, info.vencFechada)) return { valor: info.fechada, venc: info.vencFechada || null };
+      return null;
     }
     var hoje = new Date();
     var min = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()-60);
@@ -1742,6 +1776,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var contasAtivas=state.contas.filter(function(c){return c.ativa!=="Não";});
     var investAtual=state.investimentos.reduce(function(s,i){return s+(i.valorAtual||0);},0);
     var investAplicado=state.investimentos.reduce(function(s,i){return s+(i.valorAplicado||0);},0);
+    // Ganho JÁ LÍQUIDO (o que sobra se sacar hoje, descontado o IR) e seu percentual.
+    var investLiquido=state.investimentos.reduce(function(s,i){return s+((i.valorLiquido&&i.valorLiquido>0)?i.valorLiquido:(i.valorAtual||0));},0);
+    var investGanho=investLiquido-investAplicado;
+    var investPct=investAplicado>0?(investGanho/investAplicado*100):0;
+    var investGanhoTxt=(investGanho>=0?'+':'−')+formatBRLOuOculto(Math.abs(investGanho))+' · '+(investGanho>=0?'+':'−')+Math.abs(investPct).toFixed(1).replace('.',',')+'%';
+    var investGanhoCor=investGanho>=0?'var(--lime-deep)':'var(--red)';
 
     var logosTopo=contasAtivas.slice(0,4).map(function(c){
       var info=bancoDe(c.instituicao||c.nome);
@@ -1797,7 +1837,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '<div class="spacer"></div><div class="tk">Parcelamentos</div><div class="tv">'+parcAtivos.length+' ativos</div><div class="ts">'+formatBRL(totalParcelasMes())+' / mês</div></div>'+
       (state.investimentos.length?'<div class="glass tile invest-tile" data-go="3" style="grid-column:1 / -1"><span class="chev">›</span>'+
         '<div class="tile-icon" style="background:rgba(180,244,74,0.18);color:var(--lime-deep)"><svg viewBox="0 0 24 24" stroke="currentColor"><path d="M3 17l5-5 4 4 8-8"/><path d="M21 8v5h-5"/></svg></div>'+
-        '<div class="invest-tile-main"><div class="tk">Investimentos</div><div class="ts">'+formatBRLOuOculto(investAplicado)+' investido</div></div>'+
+        '<div class="invest-tile-main"><div class="tk">Investimentos</div><div class="ts">'+formatBRLOuOculto(investAplicado)+' investido · <span style="color:'+investGanhoCor+';font-weight:600">'+investGanhoTxt+'</span></div></div>'+
         '<div class="tv">'+formatBRLOuOculto(investAtual)+'</div></div>':'')+
     '</div>'+
     '<div class="section-head"><h2>Faturas em aberto</h2><span class="link" data-go="1">Ver cartões</span></div>'+
@@ -1807,6 +1847,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* ===== TELA EXTRA: CONTA CORRENTE ===== */
   var contaFiltro=''; // '' = todos os bancos; senão a chave do banco (ex 'nubank','itau','mercado')
   var contaMesFiltro=''; // '' = todos os meses; senão 'AAAA-M'
+  var contaTipoFiltro='all'; // 'all' | 'in' (Entradas) | 'out' (Saídas)
   function normNome(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim(); }
   // Identifica o banco de uma transação de conta: tenta pelo nome da conta; se não casar com
   // nenhum banco conhecido, usa o próprio nome como rótulo (pra não sumir nada).
@@ -1854,6 +1895,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return state.transacoes.filter(function(t){
       if(t.origem!=='conta') return false;
       if(contaFiltro && bancoDaTransacaoConta(t).chave!==contaFiltro) return false;
+      if(contaTipoFiltro==='in' && t.tipo!=='Entrada') return false;
+      if(contaTipoFiltro==='out' && t.tipo!=='Saída') return false;
       if(contaMesFiltro){
         if(!t.data) return false;
         if((t.data.getFullYear()+'-'+t.data.getMonth())!==contaMesFiltro) return false;
@@ -1936,7 +1979,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         '</div>'+
         accountsHtml+
       '</div>'+
-      '<div class="cc-filters">'+mesHtml+bancoHtml+'</div>'+
+      '<div class="cc-filters">'+mesHtml+bancoHtml+
+        '<div class="subtabs cc-tipo-filtro" id="ccTipoFiltro">'+
+          '<div class="subtab'+(contaTipoFiltro==='all'?' active':'')+'" data-tipo="all">Todos</div>'+
+          '<div class="subtab'+(contaTipoFiltro==='in'?' active':'')+'" data-tipo="in">Entradas</div>'+
+          '<div class="subtab'+(contaTipoFiltro==='out'?' active':'')+'" data-tipo="out">Saídas</div>'+
+        '</div>'+
+      '</div>'+
       '<div class="cc-movs-head"><span class="cc-movs-title" id="ccTitle">Movimentações</span><span class="cnt" id="ccCount"></span></div>'+
       '</div>'+
       '<div id="ccList"></div>';
@@ -2024,6 +2073,19 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           bankStrip.querySelectorAll('.cc-bank-chip,.cc-bank-chip-all').forEach(function(c){ c.classList.remove('active'); });
           chip.classList.add('active');
           contaFiltro=chip.getAttribute('data-banco');
+          aplicarFiltros();
+        });
+      });
+    }
+
+    // Filtro Entradas/Saídas
+    var tipoFiltro=document.getElementById('ccTipoFiltro');
+    if(tipoFiltro){
+      tipoFiltro.querySelectorAll('.subtab').forEach(function(tab){
+        tab.addEventListener('click',function(){
+          tipoFiltro.querySelectorAll('.subtab').forEach(function(t){ t.classList.remove('active'); });
+          tab.classList.add('active');
+          contaTipoFiltro=tab.getAttribute('data-tipo')||'all';
           aplicarFiltros();
         });
       });
@@ -2374,7 +2436,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // Fatura Em Aberto) inclui encargos que NÃO são transações (IOF, juros, anuidade, seguro)
   // e desconta estornos/créditos. Aqui explicitamos cada parte pra o número SEMPRE fechar:
   //   compras (Saída) − estornos (Entrada) + encargos/ajustes = fatura oficial.
-  function reconciliacaoFaturaHtml(mSel, txs){
+  function reconciliacaoFaturaHtml(mSel, txs, card){
     if(!mSel) return '';
     var oficial=Number(mSel.total)||0;
     if(oficial<=0 && (!txs||!txs.length)) return '';
@@ -2396,11 +2458,35 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var selo=bate
       ? '<span class="rec-badge ok">✓ Bate com a fatura</span>'
       : '<span class="rec-badge diff">Inclui encargos/ajustes</span>';
+    // Toggle "marcar como paga" — só para fatura REAL (tem billId na aba Faturas).
+    var bill=card?billDoMes(card,mSel):null;
+    var pagaHtml='';
+    if(bill&&bill.id){
+      var paga=faturaPaga(bill);
+      pagaHtml='<div class="rec-paga"><span>'+(paga?'Fatura paga':'Marcar como paga')+'</span>'+
+        '<div class="set-switch'+(paga?' on':'')+'" role="switch" data-fatpaga="'+escapeHtml(bill.id)+'"><span></span></div></div>';
+    }
     return '<div class="fatura-reconc">'+
       '<div class="rec-top"><span class="rec-tit">Fatura oficial</span><span class="rec-oficial">'+formatBRL(oficial)+'</span></div>'+
       linhas+
       '<div class="rec-foot">'+selo+'</div>'+
+      pagaHtml+
     '</div>';
+  }
+  // Liga o toggle "marcar como paga" da fatura (aba Cartões): marca local (na hora),
+  // grava na planilha (aba Faturas via setFaturaPaga) e re-renderiza o detalhe.
+  function wireFatPagaCartao(tl, card){
+    if(!tl) return;
+    var sw=tl.querySelector('[data-fatpaga]');
+    if(!sw) return;
+    sw.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      var id=sw.getAttribute('data-fatpaga');
+      var on=!sw.classList.contains('on');
+      marcarFatPagaLocal(id, on);
+      gravarFaturaPagaSheet(id, on?1:0);
+      renderDetalheCartao(card);
+    });
   }
   function renderDetalheCartao(card){
     if(!card)return;
@@ -2460,11 +2546,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var txs=transacoesDoCartaoJanela(card.nome,mSel.janela);
     if(tt) tt.textContent=mSel.atual?'Transações':'Transações · fatura de '+MESES_COMPLETO[mSel.mes];
     if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
-    var reconHtml=reconciliacaoFaturaHtml(mSel, txs);
-    if(!txs.length){ tl.innerHTML=reconHtml+'<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; return; }
+    var reconHtml=reconciliacaoFaturaHtml(mSel, txs, card);
+    if(!txs.length){ tl.innerHTML=reconHtml+'<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; wireFatPagaCartao(tl, card); return; }
 
     renderTxAgrupadasEm(tl, txs, { reRender: function(){ renderDetalheCartao(card); } });
     if(reconHtml) tl.insertAdjacentHTML('afterbegin', reconHtml);
+    wireFatPagaCartao(tl, card);
   }
 
   // Renderiza uma lista de transações agrupadas por dia (visual dos Cartões/Conta), com clique
@@ -3046,12 +3133,28 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
   // Resolve um apelido a partir de uma chave já pronta.
   function apelidoPorChave(key){ var ap=lerApelidos()[key]; return (ap && String(ap).trim()) ? String(ap).trim() : ''; }
+  // Apelido de PARCELA tolerante ao valor: casa por descrição normalizada + nº de parcelas,
+  // IGNORANDO o bucket de valor. Assim, mesmo que as parcelas tenham centavos diferentes
+  // (1ª de 134,49 e as demais de 134,41, etc.), o renomeado numa parcela vale para TODAS —
+  // e o que foi renomeado na aba Parcelamentos aparece na aba Cartões, sempre.
+  function apelidoParcelaTolerante(descricao, total){
+    var pre='P|'+normDescParc(descricao)+'|'+(total||0)+'|';
+    var mapa=lerApelidos();
+    for(var k in mapa){ if(k.indexOf(pre)===0 && mapa[k] && String(mapa[k]).trim()) return String(mapa[k]).trim(); }
+    return '';
+  }
   // Nome a exibir de uma TRANSAÇÃO: apelido salvo (se houver) ou a descrição original.
-  function nomeTx(t){ return apelidoPorChave(txAliasKey(t)) || (sentenceCase(t.descricao)||'—'); }
-  function temApelido(t){ return !!apelidoPorChave(txAliasKey(t)); }
+  function nomeTx(t){
+    if(t.parcela) return apelidoParcelaTolerante(t.descricao, t.parcela.total) || (sentenceCase(t.descricao)||'—');
+    return apelidoPorChave(txAliasKey(t)) || (sentenceCase(t.descricao)||'—');
+  }
+  function temApelido(t){
+    if(t.parcela) return !!apelidoParcelaTolerante(t.descricao, t.parcela.total);
+    return !!apelidoPorChave(txAliasKey(t));
+  }
   // Nome a exibir de um PARCELAMENTO (aba Parcelamentos / previsões de fatura).
   function nomeParcela(descricao, valorParcela, total){
-    return apelidoPorChave(parcAliasKey(descricao, valorParcela, total)) || (sentenceCase(descricao)||'—');
+    return apelidoParcelaTolerante(descricao, total) || (sentenceCase(descricao)||'—');
   }
 
   // ── Sincronização dos apelidos com a planilha (aba "Apelidos") ────────
