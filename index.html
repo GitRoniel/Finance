@@ -3091,8 +3091,32 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var marcados = lerMarcacoes(mesKeyOffset(0));
     var entradas = recs.reduce(function(s,r,i){ return (r.tipo==='in'  && recAtivaNoMes(r,0) && !marcados[recMarcKey(r,i)]) ? s+r.valor : s; }, 0);
     var saidas   = recs.reduce(function(s,r,i){ return (r.tipo==='out' && recAtivaNoMes(r,0) && !marcados[recMarcKey(r,i)]) ? s+r.valor : s; }, 0);
-    var assin    = assinStatsData().total; // assinaturas mensais (débitos em conta) entram na previsão
+    var assin    = assinaturasPrevisao(0); // só as assinaturas que ainda vão ser cobradas neste mês
     return { saldo:saldo, faturas:faturas, entradas:entradas, saidas:saidas, assinaturas:assin, previsao: saldo + entradas - saidas - assin - faturas };
+  }
+  // Assinaturas que entram na PREVISÃO do mês "f":
+  //  • Passado (f<0): 0 — já aconteceram, não são previsão (ficam no histórico/fatura).
+  //  • Futuro (f>0): valor mensal cheio de todas as assinaturas ativas.
+  //  • Atual (f=0): só as que ainda NÃO foram cobradas (dia de cobrança >= hoje) — vai
+  //    descontando conforme cada assinatura é cobrada no cartão/conta ao longo do mês.
+  function assinaturasPrevisao(f){
+    if(f<0) return 0;
+    var ativas=(state.assinaturas||[]).filter(function(a){return a.ativa!=="Não";});
+    var mensalDe=function(a){ return a.frequencia==="Anual" ? a.valor/12 : a.valor; };
+    if(f>0) return ativas.reduce(function(s,a){ return s+mensalDe(a); },0);
+    var hojeDia=new Date().getDate();
+    return ativas.reduce(function(s,a){
+      var dia=Number(a.diaCobranca)||0;
+      if(!dia) return s+mensalDe(a);              // sem dia definido: conta cheio
+      return (dia>=hojeDia) ? s+mensalDe(a) : s;  // já passou o dia => já foi cobrada => não conta de novo
+    },0);
+  }
+  // Total das faturas que VENCEM no mês do offset f (pagas ou não) — usado no resumo dos
+  // meses passados, onde a fatura já foi paga mas ainda conta como gasto daquele mês.
+  function faturasTotaisDoMes(f){
+    var base=baseMesReferencia();
+    var alvo=new Date(base.getFullYear(), base.getMonth()+f+1, 1);
+    return faturasVencendoNoMes(alvo.getFullYear(), alvo.getMonth(), false).total;
   }
   // Previsão para o mês "f" à frente (0 = atual). Usa só as recorrentes ATIVAS naquele mês +
   // as faturas que vencem no mês correspondente (fonte única: faturasAPagarPrevisao),
@@ -3102,12 +3126,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     // daquele mês (recorrentes ativos − marcados + faturas que venceram nele).
     if(f<0){
       var recsP=lerRecorrentes();
-      var marcP=lerMarcacoes(mesKeyOffset(f));
-      var entradasP=recsP.reduce(function(s,r,i){return (r.tipo==='in'  && recAtivaNoMes(r,f) && !marcP[recMarcKey(r,i)])?s+r.valor:s;},0);
-      var saidasP=recsP.reduce(function(s,r,i){return (r.tipo==='out' && recAtivaNoMes(r,f) && !marcP[recMarcKey(r,i)])?s+r.valor:s;},0);
-      var assinP=assinStatsData().total;
-      var faturasP=faturasAPagarPrevisao(f);
-      return { saldoInicial:0, entradas:entradasP, saidas:saidasP, assinaturas:assinP, faturas:faturasP, previsao: entradasP - saidasP - assinP - faturasP, passado:true };
+      // Resumo do mês FECHADO: total do que estava previsto no mês (não desconta marcações — é
+      // histórico) + faturas que venceram nele. Assinaturas NÃO entram (não são previsão do passado).
+      var entradasP=recsP.reduce(function(s,r,i){return (r.tipo==='in'  && recAtivaNoMes(r,f))?s+r.valor:s;},0);
+      var saidasP=recsP.reduce(function(s,r,i){return (r.tipo==='out' && recAtivaNoMes(r,f))?s+r.valor:s;},0);
+      var faturasP=faturasTotaisDoMes(f);
+      return { saldoInicial:null, entradas:entradasP, saidas:saidasP, assinaturas:0, faturas:faturasP, previsao: entradasP - saidasP - faturasP, passado:true };
     }
     if(f===0){
       var c=calcularPrevisao();
@@ -3118,7 +3142,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var marcados=lerMarcacoes(mesKeyOffset(f)); // respeita o que já foi marcado como pago/recebido NAQUELE mês
     var entradas=recs.reduce(function(s,r,i){return (r.tipo==='in'  && recAtivaNoMes(r,f) && !marcados[recMarcKey(r,i)])?s+r.valor:s;},0);
     var saidas=recs.reduce(function(s,r,i){return (r.tipo==='out' && recAtivaNoMes(r,f) && !marcados[recMarcKey(r,i)])?s+r.valor:s;},0);
-    var assin=assinStatsData().total;
+    var assin=assinaturasPrevisao(f);
     var faturas=faturasAPagarPrevisao(f);
     var saldoInicial=prev.previsao;
     return { saldoInicial:saldoInicial, entradas:entradas, saidas:saidas, assinaturas:assin, faturas:faturas, previsao:saldoInicial+entradas-saidas-assin-faturas };
@@ -3305,7 +3329,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var saidas   = calc.saidas;
     var previsao = calc.previsao;
     var ehAtual  = (prevMesOffset===0);
-    var saldoLbl = ehAtual ? 'Saldo em conta' : (prevMesOffset<0 ? 'Mês encerrado' : 'Saldo inicial');
+    var ehPassado= (prevMesOffset<0);
+    var saldoLbl = ehAtual ? 'Saldo em conta' : (ehPassado ? 'Recebido no mês' : 'Saldo inicial');
+    var saldoMostrado = ehPassado ? entradas : saldo;
+    var previsaoLbl = ehPassado ? 'Resultado do mês' : 'Previsão';
     // As faturas do "mês financeiro X" são as que VENCEM no mês-calendário seguinte
     var mBaseP   = baseMesReferencia();
     var fatLbl   = 'Faturas · venc. '+MESES_ABREV[(mBaseP.getMonth()+prevMesOffset+1)%12];
@@ -3316,12 +3343,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var fkh=document.getElementById('prev-fat-k'); if(fkh) fkh.textContent=fatLbl;
     var csk=document.getElementById('calc-saldo-k'); if(csk) csk.textContent=saldoLbl;
     var cfk=document.getElementById('calc-fat-k'); if(cfk) cfk.textContent=fatLbl;
-    var ctk=document.getElementById('calc-total-k'); if(ctk) ctk.textContent=(ehAtual?'Previsão fim do mês':(prevMesOffset<0?'Movimento de '+MESES_COMPLETO[mesInfoOffset(prevMesOffset).mes]:'Previsão de '+MESES_COMPLETO[mesInfoOffset(prevMesOffset).mes]));
+    var ctk=document.getElementById('calc-total-k'); if(ctk) ctk.textContent=(ehAtual?'Previsão fim do mês':(ehPassado?'Resultado de '+MESES_COMPLETO[mesInfoOffset(prevMesOffset).mes]:'Previsão de '+MESES_COMPLETO[mesInfoOffset(prevMesOffset).mes]));
+    var pk=document.getElementById('prev-previsao-k'); if(pk) pk.textContent=previsaoLbl;
+    var crsaldo=document.getElementById('calc-row-saldo'); if(crsaldo) crsaldo.style.display = ehPassado ? 'none' : '';
 
     // Atualiza hero
-    var ps = document.getElementById('prev-saldo-val'); if(ps) ps.textContent = formatBRLOuOculto(saldo);
+    var ps = document.getElementById('prev-saldo-val'); if(ps) ps.textContent = formatBRLOuOculto(saldoMostrado);
     var pfat = document.getElementById('prev-faturas-val'); if(pfat) pfat.textContent = '−'+formatBRL(faturas);
-    var ps2 = document.getElementById('prev-saldo-val2'); if(ps2) ps2.textContent = formatBRLOuOculto(saldo);
+    var ps2 = document.getElementById('prev-saldo-val2'); if(ps2) ps2.textContent = formatBRLOuOculto(saldoMostrado);
     var pv = document.getElementById('prev-previsao-val'); if(pv){ pv.textContent = formatBRL(previsao); pv.className='pd-v '+(previsao<0?'neg':'pos'); }
 
     // Atualiza linhas do cálculo
@@ -3639,7 +3668,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var assinaturas = pf.assinaturas || 0;
     var previsao = pf.previsao;
     var ehAtual  = (prevMesOffset===0);
-    var saldoLbl = ehAtual ? 'Saldo em conta' : (prevMesOffset<0 ? 'Mês encerrado' : 'Saldo inicial');
+    var ehPassado= (prevMesOffset<0);
+    var saldoLbl = ehAtual ? 'Saldo em conta' : (ehPassado ? 'Recebido no mês' : 'Saldo inicial');
+    var saldoMostrado = ehPassado ? entradas : saldo;
+    var previsaoLbl = ehPassado ? 'Resultado do mês' : 'Previsão';
     // As faturas do "mês financeiro X" são as que VENCEM no mês-calendário seguinte
     var mBaseP   = baseMesReferencia();
     var fatLbl   = 'Faturas · venc. '+MESES_ABREV[(mBaseP.getMonth()+prevMesOffset+1)%12];
@@ -3659,7 +3691,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '<div class="prev-duo prev-trio3 glass">'+
       '<div class="prev-duo-blk">'+
         '<div class="pd-k" id="prev-saldo-k">'+saldoLbl+'</div>'+
-        '<div class="pd-v" id="prev-saldo-val">'+formatBRLOuOculto(saldo)+'</div>'+
+        '<div class="pd-v" id="prev-saldo-val">'+formatBRLOuOculto(saldoMostrado)+'</div>'+
       '</div>'+
       '<div class="prev-duo-div"></div>'+
       '<div class="prev-duo-blk">'+
@@ -3668,7 +3700,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       '</div>'+
       '<div class="prev-duo-div"></div>'+
       '<div class="prev-duo-blk">'+
-        '<div class="pd-k">Previsão</div>'+
+        '<div class="pd-k" id="prev-previsao-k">'+previsaoLbl+'</div>'+
         '<div class="pd-v '+(previsao<0?'neg':'pos')+'" id="prev-previsao-val">'+formatBRL(previsao)+'</div>'+
       '</div>'+
     '</div>'+
@@ -3681,12 +3713,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '</div>'+
     // Cálculo
     '<div class="glass calc-card">'+
-      '<div class="calc-row"><span class="lbl"><span class="cr-dot neutral"></span><span id="calc-saldo-k">'+saldoLbl+'</span></span><span class="amt" id="prev-saldo-val2">'+formatBRLOuOculto(saldo)+'</span></div>'+
+      '<div class="calc-row" id="calc-row-saldo"'+(ehPassado?' style="display:none"':'')+'><span class="lbl"><span class="cr-dot neutral"></span><span id="calc-saldo-k">'+saldoLbl+'</span></span><span class="amt" id="prev-saldo-val2">'+formatBRLOuOculto(saldoMostrado)+'</span></div>'+
       '<div class="calc-row" id="calc-row-entradas"'+(entradas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot pos"></span>Entradas a receber</span><span class="amt pos" id="calc-entradas">+'+formatBRLOuOculto(entradas)+'</span></div>'+
       '<div class="calc-row" id="calc-row-saidas"'+(saidas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot neg"></span>Saídas a pagar</span><span class="amt neg" id="calc-saidas">−'+formatBRL(saidas)+'</span></div>'+
       '<div class="calc-row" id="calc-row-assin"'+(assinaturas?'':' style="display:none"')+'><span class="lbl"><span class="cr-dot neg"></span>Assinaturas</span><span class="amt neg" id="calc-assin">−'+formatBRL(assinaturas)+'</span></div>'+
       '<div class="calc-row"><span class="lbl"><span class="cr-dot neg"></span><span id="calc-fat-k">'+fatLbl+'</span></span><span class="amt neg" id="calc-faturas">−'+formatBRL(faturas)+'</span></div>'+
-      '<div class="calc-total-row '+(previsao<0?'neg':'pos')+'" id="calc-total-row"><span class="lbl-total"><span id="calc-total-k">'+(ehAtual?'Previsão fim do mês':(prevMesOffset<0?'Movimento de '+MESES_COMPLETO[miSel.mes]:'Previsão de '+MESES_COMPLETO[miSel.mes]))+'</span><small>com recorrentes e faturas</small></span><span class="amt amt-total '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
+      '<div class="calc-total-row '+(previsao<0?'neg':'pos')+'" id="calc-total-row"><span class="lbl-total"><span id="calc-total-k">'+(ehAtual?'Previsão fim do mês':(ehPassado?'Resultado de '+MESES_COMPLETO[miSel.mes]:'Previsão de '+MESES_COMPLETO[miSel.mes]))+'</span><small>'+(ehPassado?'entradas − saídas − faturas do mês':'com recorrentes e faturas')+'</small></span><span class="amt amt-total '+(previsao<0?'neg':'pos')+'" id="calc-total">'+formatBRL(previsao)+'</span></div>'+
     '</div>'+
     // Seção faturas (aberta/fechada por mês, com marcar pago)
     '<div class="section-head" style="margin-top:2px"><h2>Faturas <span class="rec-mes-tag">'+MESES_COMPLETO_CAP((miSel.mes+1)%12)+'</span></h2></div>'+
