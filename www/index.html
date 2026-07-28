@@ -121,14 +121,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* Padroniza linhas: textos de UMA linha só (não quebram em 2, mantendo o layout estável) */
 .rec-name,.rec-check-lbl,.set-row-t,.set-row-s,.bname,.bupd,.ro-t,.ro-s,.cctx-desc,.cctx-meta,.fat-item .rn,.fat-item .rs,.fatura-reconc .rec-row>span,.gcat-tx-desc,.gcat-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .cc-tipo-filtro{margin-top:8px;}
-/* Logos oficiais dos bancos: círculo branco + marca nas cores originais, sem distorcer. */
-.bank-logo-img{width:100%;height:100%;object-fit:contain;padding:16%;display:block;}
-.has-logo{overflow:hidden;}
-.has-logo svg,.has-logo .txt{width:auto;height:auto;}
-.banks-stack .bs-logo.has-logo .bank-logo-img{padding:11%;}
-/* No cartão de crédito (fundo colorido) a logo vira uma pastilha branca discreta. */
-.cc-logo-chip.has-logo{background:rgba(255,255,255,0.96);border-radius:7px;padding:0;overflow:hidden;}
-.cc-logo-chip.has-logo .bank-logo-img{padding:13%;}
+/* Logos oficiais dos bancos: círculo na cor da marca + logo BRANCA centralizada.
+   O filtro força a imagem (SVG ou PNG, colorida) a virar branco puro. */
+.has-logo{overflow:hidden;border-radius:50%!important;display:flex;align-items:center;justify-content:center;padding:0!important;}
+.bank-logo-img{width:70%;height:70%;object-fit:contain;display:block;margin:auto;
+  filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);}
+.banks-stack .bs-logo.has-logo .bank-logo-img{width:76%;height:76%;}
+/* No cartão de crédito o fundo já é a cor da marca — a logo branca fica direto sobre ele. */
+.cc-logo-chip.has-logo{background:transparent!important;}
+.cc-logo-chip.has-logo .bank-logo-img{width:100%;height:100%;}
+/* Todo avatar de banco é redondo (com ou sem logo oficial) */
+.bank-ic,.fat-item .cat-ic{border-radius:50%!important;}
 /* ===== modo compacto: densidade máxima em toda a página ===== */
 [data-compacto="on"] .top{padding-top:calc(8px + env(safe-area-inset-top,0px))!important;padding-bottom:6px!important;}
 [data-compacto="on"] h1{font-size:18px!important;}
@@ -1665,9 +1668,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* ===== logos / bancos ===== */
   var BANCO_INFO = {
     nubank:   { cor1:"#820ad1", cor2:"#5b0a93", logo:"logo-nubank",      flag:"Mastercard" },
-    itau:     { cor1:"#ec7000", cor2:"#b35400", logo:"txt-i",            flag:"Mastercard" },
-    mercado:  { cor1:"#00b1ea", cor2:"#0086b3", logo:"logo-mercadopago", flag:"Visa" },
+    itau:     { cor1:"#003d8f", cor2:"#002a63", logo:"txt-i",            flag:"Mastercard" },
+    mercado:  { cor1:"#009ee3", cor2:"#0076a8", logo:"logo-mercadopago", flag:"Visa" },
     inter:    { cor1:"#ff7a00", cor2:"#cc5f00", logo:"logo-inter",       flag:"Mastercard" },
+    interpj:  { cor1:"#8a3f00", cor2:"#5e2b00", logo:"logo-inter",       flag:"Mastercard" },
     bradesco: { cor1:"#cc092f", cor2:"#8f0620", logo:"txt-c",            flag:"Visa" },
     santander:{ cor1:"#ec0000", cor2:"#a80000", logo:"txt-c",            flag:"Mastercard" },
     caixa:    { cor1:"#0070af", cor2:"#004e7a", logo:"txt-c",            flag:"Elo" },
@@ -1687,9 +1691,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
      com as cores corretas. Se a imagem não carregar (offline), cai no desenho/iniciais locais. */
   var BANCO_LOGO_URL = {
     itau:    'https://upload.wikimedia.org/wikipedia/commons/1/19/Ita%C3%BA_Unibanco_logo_2023.svg',
-    inter:   'https://upload.wikimedia.org/wikipedia/commons/8/8f/Logo_do_banco_Inter_%282023%29.svg',
-    interpj: 'https://developers.inter.co/img/inter-empresas-logo.svg',
-    mercado: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Mercado_Pago.svg'
+    inter:   'https://upload.wikimedia.org/wikipedia/commons/3/31/Inter%26Co_logo_icon.svg',
+    interpj: 'https://upload.wikimedia.org/wikipedia/commons/3/31/Inter%26Co_logo_icon.svg',
+    mercado: 'https://images.seeklogo.com/logo-png/65/1/mercado-pago-logo-png_seeklogo-653482.png'
   };
   function bancoLogoUrl(nome){
     var n=(nome||'').toLowerCase();
@@ -1702,7 +1706,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var n=(nome||'').toLowerCase();
     if(n.indexOf('nubank')!==-1||n.indexOf('nu pagamentos')!==-1) return BANCO_INFO.nubank;
     if(n.indexOf('mercado')!==-1) return BANCO_INFO.mercado;
-    if(n.indexOf('inter')!==-1) return BANCO_INFO.inter;
+    if(n.indexOf('inter')!==-1) return (n.indexOf('pj')!==-1||n.indexOf('empresa')!==-1) ? BANCO_INFO.interpj : BANCO_INFO.inter;
     if(n.indexOf('ita')!==-1) return BANCO_INFO.itau;
     if(n.indexOf('bradesco')!==-1) return BANCO_INFO.bradesco;
     if(n.indexOf('santander')!==-1) return BANCO_INFO.santander;
@@ -4388,10 +4392,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     return logoLocalHtml(nome);
   }
-  // Estilo de fundo do avatar: branco quando tem logo oficial, cor da marca quando não tem.
+  // Fundo do avatar = sempre a cor da marca (a logo é renderizada em branco por cima).
   function bancoAvatarStyle(nome){
-    var info=bancoDe(nome);
-    return bancoLogoUrl(nome) ? 'background:#fff' : ('background:'+info.cor1);
+    return 'background:'+bancoDe(nome).cor1;
   }
   function bancoAvatarCls(nome){ return bancoLogoUrl(nome) ? ' has-logo' : ''; }
   function renderBancos(){
