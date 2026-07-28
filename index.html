@@ -195,9 +195,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 [data-compacto="on"] .pd-v{font-size:16px!important;margin-top:1px!important;}
 [data-compacto="on"] .prev-trio3 .pd-v{font-size:13px!important;}
 [data-compacto="on"] .trio .c{padding:8px 8px!important;}
-[data-compacto="on"] .calc-card{padding:1px 12px!important;}
+/* O card do cálculo precisa manter respiro EMBAIXO — sem isso o bloco do "Resultado do mês"
+   encostava na borda e ficava com as margens assimétricas no modo compacto. */
+[data-compacto="on"] .calc-card{padding:3px 12px 10px!important;}
 [data-compacto="on"] .calc-row{padding:5px 0!important;font-size:12.5px!important;}
-[data-compacto="on"] .calc-total-row{padding:6px 10px!important;margin-top:5px!important;}
+[data-compacto="on"] .calc-total-row{padding:8px 12px!important;margin:6px 0 0!important;border-radius:12px;}
 [data-compacto="on"] .rec-item,[data-compacto="on"] .fat-item{padding:5px 9px!important;margin-bottom:3px!important;}
 [data-compacto="on"] #content{padding-bottom:56px!important;}
 .swatches{display:flex;flex-wrap:wrap;gap:10px;}
@@ -566,6 +568,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 3px 7px;
   transition:border-color .3s,background .3s,transform .3s;}
 .ftl-col:active{transform:scale(0.97);}
+/* Mês com a fatura PAGA fica verde mesmo sem estar selecionado. */
+.ftl-col.pago{border-color:color-mix(in srgb,var(--lime) 30%,transparent);background:rgba(131,214,38,0.07);}
+.ftl-col.pago .ftl-lbl,.ftl-col.pago .ftl-val{color:var(--lime-deep);}
 /* Mês selecionado: aberto=azul, pago=verde, futuro=neutro tracejado. */
 .ftl-col.sel.aberto{border-color:var(--blue);background:rgba(77,163,255,0.12);}
 .ftl-col.sel.pago{border-color:var(--lime-deep);background:rgba(131,214,38,0.12);}
@@ -1646,7 +1651,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var alvo = ano*12 + mes0;
     var itens = [];
     var hojeK = (function(){ var h=new Date(); return h.getFullYear()*12 + h.getMonth(); })();
-    cartoesAtivosReais().forEach(function(card){
+    // Percorre TODOS os cartões ativos: cartões hoje zerados (ex.: Inter) ainda têm faturas
+    // pagas no histórico, e elas precisam aparecer nos meses anteriores da Previsão.
+    cartoesAtivosTodos().forEach(function(card){
       // 1) FATURA REAL do banco que vence neste mês — sempre tem prioridade (fonte de verdade).
       var reais = faturasDoCartao(card.nome).filter(function(fb){
         return fb.venc && (fb.venc.getFullYear()*12 + fb.venc.getMonth()) === alvo;
@@ -2424,6 +2431,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // Cartões zerados (sem uso ou já quitados) somem da tela pra não poluir.
   function cartaoTemValor(c){ return faturaAtual(c) > 0.005; }
   function cartoesAtivosReais(){ return state.cartoes.filter(function(c){return c.ativo!=="Não" && cartaoTemValor(c);}); }
+  // TODOS os cartões ativos, mesmo zerados. Usado onde o HISTÓRICO importa (Previsões):
+  // um cartão sem fatura em aberto hoje pode ter faturas pagas em meses anteriores.
+  function cartoesAtivosTodos(){ return state.cartoes.filter(function(c){return c.ativo!=="Não";}); }
   // Lista exibida no carrossel: com 2+ cartões, inclui o "card global" (Todos) na frente.
   function cartoesParaExibir(){
     var reais=cartoesAtivosReais();
