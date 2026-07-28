@@ -123,13 +123,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cc-tipo-filtro{margin-top:8px;}
 /* Logos oficiais dos bancos: círculo na cor da marca + logo BRANCA centralizada.
    O filtro força a imagem (SVG ou PNG, colorida) a virar branco puro. */
-.has-logo{overflow:hidden;border-radius:50%!important;display:flex;align-items:center;justify-content:center;padding:0!important;}
-.bank-logo-img{width:70%;height:70%;object-fit:contain;display:block;margin:auto;
-  filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);}
-.banks-stack .bs-logo.has-logo .bank-logo-img{width:76%;height:76%;}
+.has-logo{overflow:hidden;border-radius:50%!important;display:flex!important;align-items:center;
+  justify-content:center;padding:0!important;line-height:0;}
+.bank-logo-img{width:70%;height:70%;object-fit:contain;object-position:center;display:block;
+  flex:0 0 auto;margin:0;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);}
+/* Fallback local: some enquanto a logo oficial estiver carregada. */
+.bank-logo-fb{display:none;align-items:center;justify-content:center;width:100%;height:100%;}
+.has-logo>.bank-logo-fb{display:none;}
+:not(.has-logo)>.bank-logo-fb{display:flex;}
+:not(.has-logo)>.bank-logo-fb svg{width:56%;height:56%;}
 /* No cartão de crédito o fundo já é a cor da marca — a logo branca fica direto sobre ele. */
 .cc-logo-chip.has-logo{background:transparent!important;}
-.cc-logo-chip.has-logo .bank-logo-img{width:100%;height:100%;}
 /* Todo avatar de banco é redondo (com ou sem logo oficial) */
 .bank-ic,.fat-item .cat-ic{border-radius:50%!important;}
 /* ===== modo compacto: densidade máxima em toda a página ===== */
@@ -4385,12 +4389,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // aparecer nas cores certas). Se a imagem falhar (offline), volta pro desenho local.
   function logoOuIniciais(nome){
     var url=bancoLogoUrl(nome);
-    if(url){
-      return '<img class="bank-logo-img" src="'+url+'" alt="'+escapeHtml(nome||'')+'" loading="lazy" '+
-             'onerror="this.parentNode.classList.remove(\'has-logo\');this.outerHTML=\''+
-             logoLocalHtml(nome).replace(/'/g,"\\'")+'\'">';
-    }
-    return logoLocalHtml(nome);
+    if(!url) return logoLocalHtml(nome);
+    // A logo oficial e o fallback convivem: se a imagem falhar, o onerror a remove e tira a
+    // classe "has-logo", fazendo o desenho local aparecer. (O onerror usa só aspas simples
+    // pra não quebrar o atributo — era isso que fazia aparecer um `">` solto na tela.)
+    return '<img class="bank-logo-img" src="'+url+'" alt="" loading="lazy" '+
+           'onerror="this.remove();this.parentNode.classList.remove(\'has-logo\')">'+
+           '<span class="bank-logo-fb">'+logoLocalHtml(nome)+'</span>';
   }
   // Fundo do avatar = sempre a cor da marca (a logo é renderizada em branco por cima).
   function bancoAvatarStyle(nome){
