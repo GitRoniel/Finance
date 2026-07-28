@@ -132,8 +132,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .has-logo>.bank-logo-fb{display:none;}
 :not(.has-logo)>.bank-logo-fb{display:flex;}
 :not(.has-logo)>.bank-logo-fb svg{width:50%;height:50%;}
-/* Símbolos SVG embutidos (Nubank, Mercado Pago) na mesma escala das logos oficiais */
-.bs-logo>svg,.bic>svg,.fbadge>svg,.lg>svg,.bank-ic>svg,.cc-hero-acc-dot>svg{width:50%;height:50%;}
+/* ===== PADRÃO ÚNICO das logos de banco: SEMPRE 50% x 50% do círculo, centralizado =====
+   Vale para os símbolos embutidos (Nubank, Mercado Pago), as logos remotas (Itaú, Inter,
+   Inter PJ) e o fallback de iniciais — em qualquer tela do app. */
+.bp-ic,.bs-logo,.bic,.fbadge,.lg,.bank-ic,.cc-hero-acc-dot,.fat-item .cat-ic,.cc-logo{
+  display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden;}
+.bp-ic>svg,.bs-logo>svg,.bic>svg,.fbadge>svg,.lg>svg,.bank-ic>svg,.cc-hero-acc-dot>svg,
+.fat-item .cat-ic>svg,.cc-logo>svg,.bank-logo-fb>svg{
+  width:50%!important;height:50%!important;flex:0 0 auto;display:block;}
+.bp-ic>.bank-logo-img,.bs-logo>.bank-logo-img,.bic>.bank-logo-img,.fbadge>.bank-logo-img,
+.lg>.bank-logo-img,.bank-ic>.bank-logo-img,.cc-hero-acc-dot>.bank-logo-img,
+.fat-item .cat-ic>.bank-logo-img,.cc-logo>.bank-logo-img{width:50%!important;height:50%!important;}
+/* Iniciais (bancos sem logo) proporcionais ao círculo, pra não destoarem */
+.bp-ic>.txt,.bs-logo>.txt,.bic>.txt,.fbadge>.txt,.lg>.txt,.bank-ic>.txt,.cc-hero-acc-dot>.txt{
+  line-height:1;display:block;}
 /* No cartão de crédito o fundo já é a cor da marca — a logo branca fica direto sobre ele. */
 .cc-logo-chip.has-logo{background:transparent!important;}
 /* Todo avatar de banco é redondo (com ou sem logo oficial) */
@@ -216,8 +228,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .banks-add{margin-top:10px;padding:10px;border-radius:12px;background:var(--track-bg);text-align:center;font-size:13px;font-weight:500;color:var(--text-dim);cursor:pointer;}
 .banks-add:active{transform:scale(0.97);}
 /* Fundo desfocado enquanto um popover (bancos/cor) está aberto — deixa a caixa em evidência. */
-.pop-scrim{position:fixed;inset:0;z-index:240;background:rgba(0,0,0,0.30);
-  backdrop-filter:blur(8px) saturate(115%);-webkit-backdrop-filter:blur(8px) saturate(115%);
+.pop-scrim{position:fixed;inset:0;z-index:240;background:rgba(0,0,0,0.10);
+  backdrop-filter:blur(3px) saturate(100%);-webkit-backdrop-filter:blur(3px) saturate(100%);
   opacity:0;pointer-events:none;transition:opacity .22s;}
 .pop-scrim.show{opacity:1;pointer-events:auto;}
 /* ===== Card de contas conectadas — compacto, flutuante e com alvos grandes no celular ===== */
@@ -276,11 +288,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .refresh-opt .ro-txt{flex:1;min-width:0;}
 .refresh-opt .ro-t{font-size:13.5px;font-weight:600;}
 .refresh-opt .ro-s{font-size:11px;color:var(--text-faint);margin-top:1px;line-height:1.25;}
-.refresh-status{margin-top:8px;padding:9px 10px;border-radius:11px;background:var(--track-bg);font-size:12px;
-  color:var(--text-dim);display:flex;align-items:center;gap:7px;}
+.refresh-status{margin-top:8px!important;padding:7px 10px!important;border-radius:10px;background:var(--track-bg);
+  font-size:11.5px!important;color:var(--text-dim);display:flex!important;flex-direction:row!important;
+  align-items:center;justify-content:flex-start;gap:7px;text-align:left!important;line-height:1.2;}
+.refresh-status::before,.refresh-status::after{content:none!important;display:none!important;}
 .refresh-status .rs-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex:0 0 auto;animation:rsPulse 1.1s infinite;}
-.refresh-status.done .rs-dot{background:var(--lime);animation:none;}
-.refresh-status.error .rs-dot{background:var(--red);animation:none;}
+.refresh-status.rs-done .rs-dot{background:var(--lime);animation:none;}
+.refresh-status.rs-error .rs-dot{background:var(--red);animation:none;}
 @keyframes rsPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 .screen{display:none;}
 .screen.active{display:block;animation:fadeUp .45s cubic-bezier(0.16,1,0.3,1) both;}
@@ -4482,7 +4496,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function setRefreshStatus(texto, tipo){
     if(!refreshStatusEl) return;
     refreshStatusEl.style.display="flex";
-    refreshStatusEl.className="refresh-status"+(tipo?" "+tipo:"");
+    // Prefixo "rs-" pra NÃO colidir com a classe global .loading (o loader de tela cheia,
+    // que tem padding de 72px e um spinner grande — era isso que inchava a caixinha).
+    refreshStatusEl.className="refresh-status"+(tipo?" rs-"+tipo:"");
     refreshStatusEl.innerHTML="<span class=\"rs-dot\"></span><span>"+escapeHtml(texto)+"</span>";
   }
 
