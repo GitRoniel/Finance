@@ -121,6 +121,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* Padroniza linhas: textos de UMA linha só (não quebram em 2, mantendo o layout estável) */
 .rec-name,.rec-check-lbl,.set-row-t,.set-row-s,.bname,.bupd,.ro-t,.ro-s,.cctx-desc,.cctx-meta,.fat-item .rn,.fat-item .rs,.fatura-reconc .rec-row>span,.gcat-tx-desc,.gcat-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .cc-tipo-filtro{margin-top:8px;}
+/* Logos oficiais dos bancos: círculo branco + marca nas cores originais, sem distorcer. */
+.bank-logo-img{width:100%;height:100%;object-fit:contain;padding:16%;display:block;}
+.has-logo{overflow:hidden;}
+.has-logo svg,.has-logo .txt{width:auto;height:auto;}
+.banks-stack .bs-logo.has-logo .bank-logo-img{padding:11%;}
+/* No cartão de crédito (fundo colorido) a logo vira uma pastilha branca discreta. */
+.cc-logo-chip.has-logo{background:rgba(255,255,255,0.96);border-radius:7px;padding:0;overflow:hidden;}
+.cc-logo-chip.has-logo .bank-logo-img{padding:13%;}
 /* ===== modo compacto: densidade máxima em toda a página ===== */
 [data-compacto="on"] .top{padding-top:calc(8px + env(safe-area-inset-top,0px))!important;padding-bottom:6px!important;}
 [data-compacto="on"] h1{font-size:18px!important;}
@@ -1560,17 +1568,23 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
   // Mês (1º dia) em que VENCE a fatura ATUAL (em formação) do cartão.
   function mesVencCicloAtual(card){
-    var fech = faturaFechadaCard(card);
-    var baseVenc = (fech && fech.venc) ? fech.venc : null;
-    if(!baseVenc){
-      var fs = faturasDoCartao(card.nome);
-      if(fs.length) baseVenc = fs[fs.length-1].venc;
+    // Base: o mês seguinte ao da ÚLTIMA fatura real conhecida (não a mais antiga em aberto —
+    // uma fatura antiga não paga jogava o ciclo meses pra trás e fazia a Previsão projetar
+    // parcelas por vários meses seguidos, inflando o total).
+    var fs = faturasDoCartao(card.nome);
+    var baseVenc = fs.length ? fs[fs.length-1].venc : null;
+    var alvo;
+    if(baseVenc){
+      alvo = new Date(baseVenc.getFullYear(), baseVenc.getMonth()+1, 1);
+    } else {
+      var h = new Date();
+      var venc = new Date(h.getFullYear(), h.getMonth(), card.vencimento || 1);
+      if(venc <= h) venc.setMonth(venc.getMonth()+1);
+      alvo = new Date(venc.getFullYear(), venc.getMonth(), 1);
     }
-    if(baseVenc) return new Date(baseVenc.getFullYear(), baseVenc.getMonth()+1, 1);
-    var hoje = new Date();
-    var venc = new Date(hoje.getFullYear(), hoje.getMonth(), card.vencimento || 1);
-    if(venc <= hoje) venc.setMonth(venc.getMonth()+1);
-    return new Date(venc.getFullYear(), venc.getMonth(), 1);
+    // Trava de segurança: o ciclo em formação nunca fica no passado.
+    var hoje = new Date(), mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    return (alvo < mesAtual) ? mesAtual : alvo;
   }
   // Data completa do vencimento da fatura atual (em formação).
   function vencCicloAtualData(card){
@@ -1586,22 +1600,30 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function faturasVencendoNoMes(ano, mes0, somenteNaoPagas){
     var alvo = ano*12 + mes0;
     var itens = [];
+    var hojeK = (function(){ var h=new Date(); return h.getFullYear()*12 + h.getMonth(); })();
     cartoesAtivosReais().forEach(function(card){
+      // 1) FATURA REAL do banco que vence neste mês — sempre tem prioridade (fonte de verdade).
+      var reais = faturasDoCartao(card.nome).filter(function(fb){
+        return fb.venc && (fb.venc.getFullYear()*12 + fb.venc.getMonth()) === alvo;
+      });
+      if(reais.length){
+        reais.forEach(function(fb){
+          var paga = faturaPaga(fb);
+          if(somenteNaoPagas && paga) return;
+          itens.push({ cartao:card.nome, valor:fb.valor, tipo:'fechada', venc:fb.venc, paga:paga, id:fb.id||null });
+        });
+        return;
+      }
+      // 2) Sem fatura real: é o ciclo em formação ou uma projeção pelas parcelas.
       var ciclo = mesVencCicloAtual(card);
       var chaveCiclo = ciclo.getFullYear()*12 + ciclo.getMonth();
+      if(alvo < hojeK) return; // mês passado sem fatura real: não inventa valor
       if(alvo === chaveCiclo){
         var v = faturaCorrenteCard(card);
         if(v > 0.005) itens.push({ cartao:card.nome, valor:v, tipo:'atual', venc:vencCicloAtualData(card), paga:false, id:null });
       } else if(alvo > chaveCiclo){
         var v2 = faturaProjetadaCartao(card, alvo - chaveCiclo);
         if(v2 > 0.005) itens.push({ cartao:card.nome, valor:v2, tipo:'projetada', venc:null, paga:false, id:null });
-      } else {
-        faturasDoCartao(card.nome).forEach(function(fb){
-          if(!fb.venc || fb.venc.getFullYear()*12 + fb.venc.getMonth() !== alvo) return;
-          var paga = faturaPaga(fb);
-          if(somenteNaoPagas && paga) return;
-          itens.push({ cartao:card.nome, valor:fb.valor, tipo:'fechada', venc:fb.venc, paga:paga, id:fb.id||null });
-        });
       }
     });
     return { total: itens.reduce(function(s,x){ return s+x.valor; },0), itens: itens };
@@ -1661,6 +1683,21 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     sicredi:  { cor1:"#3fa535", cor2:"#2b7225", logo:"txt-c",            flag:"Visa" },
     default:  { cor1:"#3a3a40", cor2:"#222226", logo:"txt-c",            flag:"Cartão" }
   };
+  /* Logos oficiais das marcas (SVG remoto). Ficam num círculo BRANCO pra a marca aparecer
+     com as cores corretas. Se a imagem não carregar (offline), cai no desenho/iniciais locais. */
+  var BANCO_LOGO_URL = {
+    itau:    'https://upload.wikimedia.org/wikipedia/commons/1/19/Ita%C3%BA_Unibanco_logo_2023.svg',
+    inter:   'https://upload.wikimedia.org/wikipedia/commons/8/8f/Logo_do_banco_Inter_%282023%29.svg',
+    interpj: 'https://developers.inter.co/img/inter-empresas-logo.svg',
+    mercado: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Mercado_Pago.svg'
+  };
+  function bancoLogoUrl(nome){
+    var n=(nome||'').toLowerCase();
+    if(n.indexOf('inter')!==-1) return (n.indexOf('pj')!==-1||n.indexOf('empresa')!==-1) ? BANCO_LOGO_URL.interpj : BANCO_LOGO_URL.inter;
+    if(n.indexOf('mercado')!==-1) return BANCO_LOGO_URL.mercado;
+    if(n.indexOf('ita')!==-1) return BANCO_LOGO_URL.itau;
+    return '';
+  }
   function bancoDe(nome){
     var n=(nome||'').toLowerCase();
     if(n.indexOf('nubank')!==-1||n.indexOf('nu pagamentos')!==-1) return BANCO_INFO.nubank;
@@ -1688,9 +1725,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return '<svg><use href="#'+info.logo+'"/></svg>';
   }
   function badgeHtml(nome, cls){
-    var info=bancoDe(nome);
-    var inner = (info.logo==='txt-i')?'<span class="txt">i</span>':(info.logo==='txt-c')?'<span class="txt">'+initials(nome)+'</span>':'<svg><use href="#'+info.logo+'"/></svg>';
-    return '<div class="'+(cls||'fbadge')+'" style="background:'+info.cor1+'">'+inner+'</div>';
+    return '<div class="'+(cls||'fbadge')+bancoAvatarCls(nome)+'" style="'+bancoAvatarStyle(nome)+'">'+logoOuIniciais(nome)+'</div>';
   }
 
   /* ===== ícones por categoria ===== */
@@ -1815,7 +1850,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var logosTopo=contasAtivas.slice(0,4).map(function(c){
       var info=bancoDe(c.instituicao||c.nome);
       var inner=(info.logo==='txt-i')?'<span class="txt">i</span>':(info.logo==='txt-c')?'<span class="txt">'+initials(c.nome)+'</span>':'<svg><use href="#'+info.logo+'"/></svg>';
-      return '<div class="lg" style="background:'+info.cor1+'">'+inner+'</div>';
+      return '<div class="lg'+bancoAvatarCls(c.instituicao||c.nome)+'" style="'+bancoAvatarStyle(c.instituicao||c.nome)+'">'+logoOuIniciais(c.instituicao||c.nome)+'</div>';
     }).join("");
 
     var pctLim=limTot>0?clamp((limDisp/limTot)*100,0,100):0;
@@ -1966,7 +2001,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           var inner=(info.logo==='txt-i')?'<span class="txt">i</span>':(info.logo==='txt-c')?'<span class="txt">'+initials(c.nome)+'</span>':'<svg><use href="#'+info.logo+'"/></svg>';
           var pos=(c.saldo||0)>=0;
           return '<div class="cc-hero-acc">'+
-            '<div class="cc-hero-acc-dot" style="background:'+info.cor1+'">'+inner+'</div>'+
+            '<div class="cc-hero-acc-dot'+bancoAvatarCls(c.instituicao||c.nome)+'" style="'+bancoAvatarStyle(c.instituicao||c.nome)+'">'+logoOuIniciais(c.instituicao||c.nome)+'</div>'+
             '<span class="cc-hero-acc-name">'+escapeHtml(c.nome)+'</span>'+
             '<span class="cc-hero-acc-val" style="color:'+(pos?'var(--lime-deep)':'var(--red)')+'">'+formatBRLOuOculto(c.saldo||0)+'</span>'+
           '</div>';
@@ -2355,8 +2390,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   }
   // Avatar com a logo do banco (usado na lista do card global pra diferenciar cada cartão).
   function bankAvatarHtml(nomeCartao){
-    var info=bancoDe(nomeCartao);
-    return '<div class="cat-ic bank-ic" style="background:'+info.cor1+';color:#fff">'+logoOuIniciais(nomeCartao)+'</div>';
+    return '<div class="cat-ic bank-ic'+bancoAvatarCls(nomeCartao)+'" style="'+bancoAvatarStyle(nomeCartao)+';color:#fff">'+logoOuIniciais(nomeCartao)+'</div>';
   }
   // Série mês a mês agregada de TODOS os cartões — por mês de VENCIMENTO, usando as
   // faturas REAIS (histórico), a fatura atual em formação e as projeções por parcelas.
@@ -2450,7 +2484,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         (fechC?('<span class="cc-bd-item">Fechada '+formatBRL(fechC.valor)+(fechC.venc?(' · vence '+fechC.venc.toLocaleDateString('pt-BR').slice(0,5)):'')+'</span>'):'')+
         '<span class="cc-bd-item">Atual '+formatBRL(atualC)+'</span></div>';
       return '<div class="ccard" style="background:linear-gradient(140deg,'+info.cor1+','+info.cor2+')"><div class="cc-glow"></div>'+
-        '<div class="cc-top"><div class="cc-bank"><div class="cc-logo">'+logoHtml(info)+'</div><div class="cc-bank-txt"><div class="cc-name">'+escapeHtml(card.nome)+'</div><div class="cc-flag">'+info.flag+'</div></div></div>'+
+        '<div class="cc-top"><div class="cc-bank"><div class="cc-logo cc-logo-chip'+bancoAvatarCls(card.nome)+'">'+logoOuIniciais(card.nome)+'</div><div class="cc-bank-txt"><div class="cc-name">'+escapeHtml(card.nome)+'</div><div class="cc-flag">'+info.flag+'</div></div></div>'+
           (venc?'<div class="cc-venc">'+venc+'</div>':'')+'</div>'+
         '<div class="cc-bottom">'+
           '<div class="cc-bot-main"><div class="cc-label">Fatura em aberto</div><div class="cc-fatura">'+formatBRL(fat)+'</div>'+brk+notaHtml+'</div>'+
@@ -4338,24 +4372,42 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     state.cartoes.forEach(function(c){ add(c.instituicao||c.nome); });
     return ordem.map(function(n){ return mapa[n]; });
   }
-  function logoOuIniciais(nome){
+  // Conteúdo interno do avatar SEM a logo oficial (desenho local / iniciais) — é o fallback.
+  function logoLocalHtml(nome){
     var info=bancoDe(nome);
     return (info.logo==='txt-i')?'<span class="txt">i</span>':(info.logo==='txt-c')?'<span class="txt">'+initials(nome)+'</span>':'<svg><use href="#'+info.logo+'"/></svg>';
   }
+  // Avatar do banco: usa a LOGO OFICIAL da marca quando existe (num círculo branco, pra a marca
+  // aparecer nas cores certas). Se a imagem falhar (offline), volta pro desenho local.
+  function logoOuIniciais(nome){
+    var url=bancoLogoUrl(nome);
+    if(url){
+      return '<img class="bank-logo-img" src="'+url+'" alt="'+escapeHtml(nome||'')+'" loading="lazy" '+
+             'onerror="this.parentNode.classList.remove(\'has-logo\');this.outerHTML=\''+
+             logoLocalHtml(nome).replace(/'/g,"\\'")+'\'">';
+    }
+    return logoLocalHtml(nome);
+  }
+  // Estilo de fundo do avatar: branco quando tem logo oficial, cor da marca quando não tem.
+  function bancoAvatarStyle(nome){
+    var info=bancoDe(nome);
+    return bancoLogoUrl(nome) ? 'background:#fff' : ('background:'+info.cor1);
+  }
+  function bancoAvatarCls(nome){ return bancoLogoUrl(nome) ? ' has-logo' : ''; }
   function renderBancos(){
     var bancos=bancosUnicos();
     var stack=$("#banksStack");
     if(stack){
       stack.innerHTML=bancos.length?bancos.slice(0,3).map(function(b){
         var info=bancoDe(b.nome);
-        return '<div class="bs-logo" style="background:'+info.cor1+'">'+logoOuIniciais(b.nome)+'</div>';
+        return '<div class="bs-logo'+bancoAvatarCls(b.nome)+'" style="'+bancoAvatarStyle(b.nome)+'">'+logoOuIniciais(b.nome)+'</div>';
       }).join(""):'<div class="bs-logo" style="background:#3a3a40"><span class="txt">$</span></div>';
     }
     var list=$("#banksList");
     if(list){
       list.innerHTML=bancos.length?bancos.map(function(b){
         var info=bancoDe(b.nome);
-        return '<div class="bank-row"><div class="bic" style="background:'+info.cor1+'">'+logoOuIniciais(b.nome)+'</div>'+
+        return '<div class="bank-row"><div class="bic'+bancoAvatarCls(b.nome)+'" style="'+bancoAvatarStyle(b.nome)+'">'+logoOuIniciais(b.nome)+'</div>'+
           '<div class="bmain"><div class="bname">'+escapeHtml(b.nome)+'</div><div class="bupd"><span class="bdot"></span>Atualizado '+tempoRelativo(ultimaAtualizacao)+'</div></div></div>';
       }).join(""):'<div class="empty" style="padding:14px"><div class="et">Nenhuma conta conectada ainda.</div></div>';
     }
