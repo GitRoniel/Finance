@@ -125,13 +125,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
    O filtro força a imagem (SVG ou PNG, colorida) a virar branco puro. */
 .has-logo{overflow:hidden;border-radius:50%!important;display:flex!important;align-items:center;
   justify-content:center;padding:0!important;line-height:0;}
-.bank-logo-img{width:70%;height:70%;object-fit:contain;object-position:center;display:block;
+.bank-logo-img{width:50%;height:50%;object-fit:contain;object-position:center;display:block;
   flex:0 0 auto;margin:0;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);}
 /* Fallback local: some enquanto a logo oficial estiver carregada. */
 .bank-logo-fb{display:none;align-items:center;justify-content:center;width:100%;height:100%;}
 .has-logo>.bank-logo-fb{display:none;}
 :not(.has-logo)>.bank-logo-fb{display:flex;}
-:not(.has-logo)>.bank-logo-fb svg{width:56%;height:56%;}
+:not(.has-logo)>.bank-logo-fb svg{width:50%;height:50%;}
+/* Símbolos SVG embutidos (Nubank, Mercado Pago) na mesma escala das logos oficiais */
+.bs-logo>svg,.bic>svg,.fbadge>svg,.lg>svg,.bank-ic>svg,.cc-hero-acc-dot>svg{width:50%;height:50%;}
 /* No cartão de crédito o fundo já é a cor da marca — a logo branca fica direto sobre ele. */
 .cc-logo-chip.has-logo{background:transparent!important;}
 /* Todo avatar de banco é redondo (com ou sem logo oficial) */
@@ -1696,13 +1698,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   var BANCO_LOGO_URL = {
     itau:    'https://upload.wikimedia.org/wikipedia/commons/1/19/Ita%C3%BA_Unibanco_logo_2023.svg',
     inter:   'https://upload.wikimedia.org/wikipedia/commons/3/31/Inter%26Co_logo_icon.svg',
-    interpj: 'https://upload.wikimedia.org/wikipedia/commons/3/31/Inter%26Co_logo_icon.svg',
-    mercado: 'https://images.seeklogo.com/logo-png/65/1/mercado-pago-logo-png_seeklogo-653482.png'
+    interpj: 'https://upload.wikimedia.org/wikipedia/commons/3/31/Inter%26Co_logo_icon.svg'
   };
+  // Mercado Pago e Nubank usam o símbolo SVG que já vem embutido no app: são transparentes e
+  // vetoriais, então saem brancos e nítidos. (O PNG do MP tinha fundo opaco e, ao ser forçado
+  // pra branco, virava um quadrado branco — por isso não é usado aqui.)
   function bancoLogoUrl(nome){
     var n=(nome||'').toLowerCase();
     if(n.indexOf('inter')!==-1) return (n.indexOf('pj')!==-1||n.indexOf('empresa')!==-1) ? BANCO_LOGO_URL.interpj : BANCO_LOGO_URL.inter;
-    if(n.indexOf('mercado')!==-1) return BANCO_LOGO_URL.mercado;
     if(n.indexOf('ita')!==-1) return BANCO_LOGO_URL.itau;
     return '';
   }
