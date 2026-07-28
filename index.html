@@ -4576,9 +4576,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         setRefreshStatus("Configure GAS_EXEC_URL com o link /exec da implantação do Apps Script.","error");
         return;
       }
-      // Botão unificado: "Sincronizar com o banco" agora executa a atualização FORÇADA
-      // (limpa o cache do Pluggy e busca dados frescos), que era o antigo "Forçar atualização".
-      sincronizarComBanco('forcarSync');
+      // Usa syncCompleto (LEITURA dos dados já consolidados no Pluggy): é rápido e consistente.
+      // O "forçar" (PATCH nos items) é assíncrono — o Pluggy leva minutos pra concluir — e, se
+      // lêssemos logo em seguida, pegaríamos dados pela metade (ex.: fatura sem o pagamento),
+      // fazendo o status de "paga" oscilar. A atualização forçada fica com o gatilho de 1h.
+      sincronizarComBanco();
     });
   }
 
