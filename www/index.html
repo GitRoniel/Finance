@@ -1413,7 +1413,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function mapFaturasReais(rows){
     return rows.map(function(c){
       return { id:strVal(c,0), cartao:strVal(c,1), venc:dateVal(c,2), valor:numVal(c,3),
-               minimo:numVal(c,4), status:strVal(c,5), valorPago:numVal(c,6), dataPagamento:dateVal(c,7) };
+               minimo:numVal(c,4), status:strVal(c,5), valorPago:numVal(c,6), dataPagamento:dateVal(c,7),
+               encargos:numVal(c,9) }; // coluna J — encargos informados pelo banco
     }).filter(function(f){ return f.cartao && f.venc && f.valor > 0; })
       .sort(function(a,b){ return a.venc - b.venc; });
   }
@@ -2591,20 +2592,29 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       if(t.tipo==='Entrada') somaEntrada+=v; else somaSaida+=v;
     });
     var liquido=somaSaida-somaEntrada;
-    var ajuste=Math.round((oficial-liquido)*100)/100;
-    var bate=Math.abs(ajuste)<0.01;
+    // Encargos REAIS informados pelo banco (aba Faturas, coluna "Encargos" — vem do Pluggy).
+    var billRec=card?billDoMes(card,mSel):null;
+    var encargos=billRec?(Number(billRec.encargos)||0):0;
+    // O que sobra DEPOIS de descontar compras, estornos e os encargos reais. Se sobrar algo,
+    // é diferença que não sabemos explicar (lançamento faltando, ciclo trocado, etc.) — e a
+    // gente diz isso com todas as letras em vez de chamar de "encargo".
+    var resto=Math.round((oficial-liquido-encargos)*100)/100;
+    var bate=Math.abs(resto)<0.01;
     var linhas='';
     linhas+='<div class="rec-row"><span>Compras lançadas</span><span class="rec-neg">−'+formatBRL(somaSaida)+'</span></div>';
     if(somaEntrada>0.005) linhas+='<div class="rec-row"><span>Estornos e créditos</span><span class="rec-pos">+'+formatBRL(somaEntrada)+'</span></div>';
+    if(Math.abs(encargos)>0.005){
+      linhas+='<div class="rec-row"><span>Encargos do banco (IOF, juros, anuidade)</span><span class="'+(encargos>0?'rec-neg':'rec-pos')+'">'+(encargos>0?'−':'+')+formatBRL(Math.abs(encargos))+'</span></div>';
+    }
     if(!bate){
-      var rotulo=ajuste>0?'Encargos, IOF, juros e anuidade':'Ajustes e créditos do banco';
-      linhas+='<div class="rec-row"><span>'+rotulo+'</span><span class="'+(ajuste>0?'rec-neg':'rec-pos')+'">'+(ajuste>0?'−':'+')+formatBRL(Math.abs(ajuste))+'</span></div>';
+      var rotulo=resto>0?'Diferença não identificada':'Crédito não identificado';
+      linhas+='<div class="rec-row"><span title="Pode ser um lançamento que ainda não sincronizou ou uma compra atribuída a outro ciclo">'+rotulo+'</span><span class="'+(resto>0?'rec-neg':'rec-pos')+'">'+(resto>0?'−':'+')+formatBRL(Math.abs(resto))+'</span></div>';
     }
     var selo=bate
       ? '<span class="rec-badge ok">✓ Bate com a fatura</span>'
-      : '<span class="rec-badge diff">Inclui encargos/ajustes</span>';
+      : '<span class="rec-badge diff">Diferença de '+formatBRL(Math.abs(resto))+'</span>';
     // Toggle "marcar como paga" — só para fatura REAL (tem billId na aba Faturas).
-    var bill=card?billDoMes(card,mSel):null;
+    var bill=billRec;
     var pagaHtml='';
     if(bill&&bill.id){
       var paga=faturaPaga(bill);
