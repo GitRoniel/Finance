@@ -121,6 +121,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* Padroniza linhas: textos de UMA linha só (não quebram em 2, mantendo o layout estável) */
 .rec-name,.rec-check-lbl,.set-row-t,.set-row-s,.bname,.bupd,.ro-t,.ro-s,.cctx-desc,.cctx-meta,.fat-item .rn,.fat-item .rs,.fatura-reconc .rec-row>span,.gcat-tx-desc,.gcat-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .cc-tipo-filtro{margin-top:8px;}
+/* Fatura clicável na lista "Todos os cartões" — leva ao cartão no mesmo mês */
+.cctx-fatura{cursor:pointer;transition:background .15s;}
+.cctx-fatura:active{background:rgba(255,255,255,0.05);}
+[data-theme="light"] .cctx-fatura:active{background:rgba(0,0,0,0.04);}
+.cctx-chev{color:var(--text-faint);font-size:17px;flex:0 0 auto;margin-left:6px;line-height:1;}
 /* Logos oficiais dos bancos: círculo na cor da marca + logo BRANCA centralizada.
    O filtro força a imagem (SVG ou PNG, colorida) a virar branco puro. */
 .has-logo{overflow:hidden;border-radius:50%!important;display:flex!important;align-items:center;
@@ -128,17 +133,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .bank-logo-img{width:50%;height:50%;object-fit:contain;object-position:center;display:block;
   flex:0 0 auto;margin:0;filter:brightness(0) invert(1);-webkit-filter:brightness(0) invert(1);}
 /* Fallback local: some enquanto a logo oficial estiver carregada. */
-.bank-logo-fb{display:none;align-items:center;justify-content:center;width:100%;height:100%;}
-.has-logo>.bank-logo-fb{display:none;}
-:not(.has-logo)>.bank-logo-fb{display:flex;}
-:not(.has-logo)>.bank-logo-fb svg{width:50%;height:50%;}
 /* ===== PADRÃO ÚNICO das logos de banco: SEMPRE 50% x 50% do círculo, centralizado =====
    Vale para os símbolos embutidos (Nubank, Mercado Pago), as logos remotas (Itaú, Inter,
    Inter PJ) e o fallback de iniciais — em qualquer tela do app. */
 .bp-ic,.bs-logo,.bic,.fbadge,.lg,.bank-ic,.cc-hero-acc-dot,.fat-item .cat-ic,.cc-logo{
   display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden;}
 .bp-ic>svg,.bs-logo>svg,.bic>svg,.fbadge>svg,.lg>svg,.bank-ic>svg,.cc-hero-acc-dot>svg,
-.fat-item .cat-ic>svg,.cc-logo>svg,.bank-logo-fb>svg{
+.fat-item .cat-ic>svg,.cc-logo>svg{
   width:50%!important;height:50%!important;flex:0 0 auto;display:block;}
 .bp-ic>.bank-logo-img,.bs-logo>.bank-logo-img,.bic>.bank-logo-img,.fbadge>.bank-logo-img,
 .lg>.bank-logo-img,.bank-ic>.bank-logo-img,.cc-hero-acc-dot>.bank-logo-img,
@@ -2253,7 +2254,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* ===== TELA 2: CARTÕES ===== */
   var cartaoAtivo=0;
   var subtabAlvo=null; // guarda qual sub-aba (parc/assin) abrir ao entrar na tela "Parcelas"
-  var mesSelecionado=null; // índice dentro do array de 6 ciclos do gráfico; null = ciclo atual (a última barra)
+  var mesSelecionado=null; // índice dentro do array de ciclos do gráfico; null = ciclo atual (a última barra)
+  var mesAlvoPendente=null; // {mes,ano} a selecionar ao abrir um cartão vindo da lista "Todos os cartões"
   var prevMesOffset=0; // mês selecionado na aba Previsões (0 = mês atual; 1.. = meses futuros)
   var prevTipoFiltro='all'; // filtro de tipo na aba Previsões: 'all' | 'in' (Entrada) | 'out' (Saída)
   // Dia em que o "mês financeiro" vira: salário cai e as faturas/contas do mês anterior são
@@ -2460,15 +2462,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var d=new Date(hoje.getFullYear(),hoje.getMonth()+i,1);
       var r=faturasVencendoNoMes(d.getFullYear(),d.getMonth(),false);
       var temAtualForm=r.itens.some(function(x){return x.tipo==='atual';});
-      out.push({ mes:d.getMonth(), ano:d.getFullYear(), total:r.total, itens:r.itens,
-                 atual:(i===0), futuro:(i>0 && !temAtualForm), f:(i>0?i:0), janela:null });
+      // Mês fica VERDE quando todas as faturas dele já foram pagas (e não há nada em formação).
+      var todasPagas=r.itens.length>0 && !temAtualForm && r.itens.every(function(x){return x.paga===true;});
+      out.push({ mes:d.getMonth(), ano:d.getFullYear(), total:r.total, itens:r.itens, paga:todasPagas,
+                 atual:(i===0 && temAtualForm), futuro:(i>0 && !temAtualForm), f:(i>0?i:0), janela:null });
     }
     return out;
   }
   // Detalhe do CARD GLOBAL: gráfico agregado por mês de VENCIMENTO + a lista das FATURAS
   // (por cartão) que compõem o mês selecionado — igual ao seletor de faturas do banco.
   function renderDetalheGlobal(card){
-    var meses=seriesGlobalCartoes(3,6);
+    var meses=seriesGlobalCartoes(6,6);
     var idxAtualReal=-1; for(var ii=0;ii<meses.length;ii++){ if(meses[ii].atual){ idxAtualReal=ii; break; } }
     if(idxAtualReal===-1) idxAtualReal=Math.max(0, meses.length-7);
     var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtualReal;
@@ -2495,11 +2499,28 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         var metaTxt = x.tipo==='fechada' ? ((x.paga?'Paga':'Fechada · em aberto')+(x.venc?' · vence '+x.venc.toLocaleDateString('pt-BR'):'')) :
                       x.tipo==='atual' ? ('Atual (em formação)'+(x.venc?' · vence '+x.venc.toLocaleDateString('pt-BR'):'')) :
                       'Projeção pelas parcelas em aberto';
-        return '<div class="cctx">'+bankAvatarHtml(x.cartao)+
+        return '<div class="cctx cctx-fatura" data-cartao="'+escapeHtml(x.cartao)+'" title="Ver os gastos desta fatura">'+bankAvatarHtml(x.cartao)+
           '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(rotuloBanco(x.cartao))+'</div>'+
           '<div class="cctx-meta">'+escapeHtml(metaTxt)+'</div></div>'+
-          '<div class="cctx-right"><div class="cctx-val'+(x.tipo==='fechada'&&x.paga?'':'')+'">'+formatBRL(x.valor)+'</div></div></div>';
+          '<div class="cctx-right"><div class="cctx-val">'+formatBRL(x.valor)+'</div></div>'+
+          '<span class="cctx-chev">›</span></div>';
       }).join('')+'</div></div>';
+
+    // Clicar numa fatura abre o cartão dela já no MESMO mês selecionado aqui.
+    tl.querySelectorAll('.cctx-fatura').forEach(function(el){
+      el.addEventListener('click',function(){
+        var nome=el.getAttribute('data-cartao');
+        var lista=cartoesParaExibir();
+        for(var i=0;i<lista.length;i++){
+          if(!lista[i].global && lista[i].nome===nome){
+            cartaoAtivo=i;
+            mesAlvoPendente={mes:mSel.mes, ano:mSel.ano}; // renderDetalheCartao seleciona esse mês
+            irPara(1); // re-renderiza a tela de Cartões já no cartão certo
+            return;
+          }
+        }
+      });
+    });
   }
 
   function renderCartoes(){
@@ -2615,7 +2636,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function renderDetalheCartao(card){
     if(!card)return;
     if(card.global) return renderDetalheGlobal(card);
-    var meses=gastosPorMesCartao(card,3,6);
+    var meses=gastosPorMesCartao(card,6,6);
+    // Veio da lista "Todos os cartões": abre já no mesmo mês que estava selecionado lá.
+    if(mesAlvoPendente){
+      for(var qa=0;qa<meses.length;qa++){
+        if(meses[qa].mes===mesAlvoPendente.mes && meses[qa].ano===mesAlvoPendente.ano){ mesSelecionado=qa; break; }
+      }
+      mesAlvoPendente=null;
+    }
     // Fatura padrão a mostrar: a que está EM FORMAÇÃO agora (flag "atual", construída a partir
     // de hoje de verdade em janelasFaturaCartao/getInvoiceWindow). Antes tentávamos "a fatura
     // mais antiga que ainda não venceu", mas essa comparação dependia do dia de fechamento
@@ -2734,7 +2762,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     });
   }
   function wireCartoes(){
-    mesSelecionado=null; // volta a mostrar o mês atual ao entrar na tela
+    // Volta a mostrar o mês atual ao entrar na tela — exceto quando o usuário acabou de
+    // clicar numa fatura em "Todos os cartões" (aí respeitamos o mês escolhido lá).
+    if(!mesAlvoPendente) mesSelecionado=null;
     var ativos=cartoesParaExibir();
     if(cartaoAtivo>=ativos.length) cartaoAtivo=0;
     renderDetalheCartao(ativos[cartaoAtivo]);
@@ -4434,13 +4464,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function logoOuIniciais(nome){
     var url=bancoLogoUrl(nome);
     if(!url) return logoLocalHtml(nome);
-    // A logo oficial e o fallback convivem: se a imagem falhar, o onerror a remove e tira a
-    // classe "has-logo", fazendo o desenho local aparecer. (O onerror usa só aspas simples
-    // pra não quebrar o atributo — era isso que fazia aparecer um `">` solto na tela.)
-    return '<img class="bank-logo-img" src="'+url+'" alt="" loading="lazy" '+
-           'onerror="this.remove();this.parentNode.classList.remove(\'has-logo\')">'+
-           '<span class="bank-logo-fb">'+logoLocalHtml(nome)+'</span>';
+    // Só a imagem — sem elemento de fallback ao lado (era ele que aparecia como um "i"
+    // solto ao lado da logo). Se a imagem falhar, o JS troca pelo desenho local.
+    return '<img class="bank-logo-img" src="'+url+'" alt="" loading="lazy" data-banco="'+
+           escapeHtml(nome||'')+'" onerror="bankLogoFallback(this)">';
   }
+  // Chamado pelo onerror da logo: substitui a imagem quebrada pelo símbolo/iniciais locais.
+  window.bankLogoFallback=function(img){
+    try{
+      var pai=img.parentNode; if(!pai) return;
+      var nome=img.getAttribute('data-banco')||'';
+      pai.classList.remove('has-logo');
+      pai.innerHTML=logoLocalHtml(nome);
+    }catch(e){ if(img && img.remove) img.remove(); }
+  };
   // Fundo do avatar = sempre a cor da marca (a logo é renderizada em branco por cima).
   function bancoAvatarStyle(nome){
     return 'background:'+bancoDe(nome).cor1;
