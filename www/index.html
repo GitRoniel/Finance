@@ -288,7 +288,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .refresh-opt .ro-txt{flex:1;min-width:0;}
 .refresh-opt .ro-t{font-size:13.5px;font-weight:600;}
 .refresh-opt .ro-s{font-size:11px;color:var(--text-faint);margin-top:1px;line-height:1.25;}
-.refresh-status{margin-top:8px!important;padding:7px 10px!important;border-radius:10px;background:var(--track-bg);
+/* Fica OCULTA por padrão; só aparece com a classe .rs-on (posta pelo botão de sincronizar). */
+.refresh-status{display:none!important;}
+.refresh-status.rs-on{margin-top:8px!important;padding:7px 10px!important;border-radius:10px;background:var(--track-bg);
   font-size:11.5px!important;color:var(--text-dim);display:flex!important;flex-direction:row!important;
   align-items:center;justify-content:flex-start;gap:7px;text-align:left!important;line-height:1.2;}
 .refresh-status::before,.refresh-status::after{content:none!important;display:none!important;}
@@ -2403,11 +2405,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     '</svg>';
     var dots=pts.map(function(p,i){
       var sel=(i===idxSel), m=meses[i];
-      var cls='ftl-dot'+(sel?' sel':'')+(m.futuro?' futuro':(m.atual?' aberto':' pago'));
+      // Fatura já PAGA fica verde mesmo sendo o mês corrente (antes o mês atual saía sempre azul).
+      var cls='ftl-dot'+(sel?' sel':'')+(m.paga?' pago':(m.futuro?' futuro':(m.atual?' aberto':' pago')));
       return '<div class="'+cls+'" style="left:'+p.x.toFixed(2)+'%;top:'+p.y.toFixed(2)+'px"></div>';
     }).join("");
     var cols=meses.map(function(m,i){
-      var cls='ftl-col'+(i===idxSel?' sel':'')+(m.futuro?' futuro':(m.atual?' aberto':' pago'));
+      var cls='ftl-col'+(i===idxSel?' sel':'')+(m.paga?' pago':(m.futuro?' futuro':(m.atual?' aberto':' pago')));
       return '<div class="'+cls+'" data-i="'+i+'">'+
         '<div class="ftl-lbl">'+MESES_ABREV[m.mes]+'</div>'+
         '<div class="ftl-dotzone"></div>'+
@@ -4463,7 +4466,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       // A faixa de status pertence só ao botão de sincronizar: ao (re)abrir o card ela some,
       // a não ser que exista uma sincronização acontecendo agora.
       var rs=document.getElementById("refreshStatus");
-      if(rs && !syncEmAndamento) rs.style.display="none";
+      if(rs && !syncEmAndamento) rs.classList.remove("rs-on");
       if(opening){ posicionarPopover(banksToggle,banksPop); banksPop.classList.add("show"); }
       atualizarScrim();
     });
@@ -4512,10 +4515,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   function setRefreshStatus(texto, tipo){
     if(!refreshStatusEl) return;
-    refreshStatusEl.style.display="flex";
-    // Prefixo "rs-" pra NÃO colidir com a classe global .loading (o loader de tela cheia,
-    // que tem padding de 72px e um spinner grande — era isso que inchava a caixinha).
-    refreshStatusEl.className="refresh-status"+(tipo?" rs-"+tipo:"");
+    // "rs-on" é o que TORNA a faixa visível (o CSS a esconde por padrão). O prefixo "rs-" no
+    // tipo evita colidir com a classe global .loading (loader de tela cheia).
+    refreshStatusEl.className="refresh-status rs-on"+(tipo?" rs-"+tipo:"");
     refreshStatusEl.innerHTML="<span class=\"rs-dot\"></span><span>"+escapeHtml(texto)+"</span>";
   }
 
@@ -4555,14 +4557,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         if(refreshSyncIc)refreshSyncIc.classList.remove("spin");
         setRefreshStatus("Concluído em "+total+"s — atualizando…","done");
         loadAll();
-        setTimeout(function(){ if(refreshStatusEl) refreshStatusEl.style.display="none"; },4000);
+        setTimeout(function(){ if(refreshStatusEl) refreshStatusEl.classList.remove("rs-on"); },4000);
       })
       .catch(function(err){
         clearInterval(syncTimerInt);
         syncEmAndamento=false;
         if(refreshSyncIc)refreshSyncIc.classList.remove("spin");
         setRefreshStatus("Erro ao sincronizar: "+err.message,"error");
-        setTimeout(function(){ if(refreshStatusEl && !syncEmAndamento) refreshStatusEl.style.display="none"; },6000);
+        setTimeout(function(){ if(refreshStatusEl && !syncEmAndamento) refreshStatusEl.classList.remove("rs-on"); },6000);
       });
   }
 
