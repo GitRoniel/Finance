@@ -220,14 +220,41 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   backdrop-filter:blur(8px) saturate(115%);-webkit-backdrop-filter:blur(8px) saturate(115%);
   opacity:0;pointer-events:none;transition:opacity .22s;}
 .pop-scrim.show{opacity:1;pointer-events:auto;}
-/* Mobile: o card de bancos vira um painel lateral que pega a lateral inteira do celular. */
+/* ===== Card de contas conectadas — compacto, flutuante e com alvos grandes no celular ===== */
+.banks-pop{width:min(92vw,330px);padding:12px;border-radius:22px;}
+.bp-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px 10px;}
+.bp-title{font-size:13px;font-weight:600;color:var(--text-dim);}
+.bp-head-actions{display:flex;align-items:center;gap:6px;}
+.bp-count{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;
+  color:var(--text-dim);background:var(--track-bg);padding:4px 9px;border-radius:20px;font-variant-numeric:tabular-nums;}
+.bp-count-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);flex:0 0 auto;}
+.bp-sync{width:32px;height:32px;border-radius:50%;border:none;background:var(--track-bg);color:var(--text-dim);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;
+  -webkit-tap-highlight-color:transparent;transition:background .15s,transform .12s;}
+.bp-sync:active{transform:scale(.9);background:var(--glass-border);}
+.bp-sync-ic{display:flex;align-items:center;justify-content:center;}
+.bp-sync-ic.spin svg{animation:spin360 .9s linear infinite;}
+/* linhas de banco */
+.bp-row{display:flex;align-items:center;gap:11px;padding:9px 4px;border-radius:12px;transition:background .15s;}
+.bp-row+.bp-row{border-top:1px solid var(--hairline);}
+.bp-row:active{background:var(--track-bg);}
+.bp-ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 auto;}
+.bp-main{flex:1;min-width:0;}
+.bp-name{font-size:14.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bp-sub{font-size:11.5px;color:var(--text-faint);margin-top:1px;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.bp-sub .bp-live{width:6px;height:6px;border-radius:50%;background:var(--lime);flex:0 0 auto;}
+/* botões do rodapé */
+.bp-add{display:block;width:100%;margin-top:10px;padding:13px;border-radius:14px;border:none;
+  background:var(--text);color:var(--bg);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:transform .12s,opacity .15s;}
+.bp-add:active{transform:scale(.97);opacity:.9;}
+.bp-link{display:block;width:100%;margin-top:6px;padding:9px;border:none;background:transparent;
+  color:var(--text-faint);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;border-radius:10px;}
+.bp-link:active{background:var(--track-bg);}
 @media (max-width:600px){
-  .banks-pop{width:min(87vw,340px);transform:translateX(26px);}
-  .banks-pop.show{position:fixed;top:0;right:0;left:auto;bottom:0;height:100vh;height:100dvh;
-    max-width:none;border-radius:22px 0 0 22px;transform:none;
-    box-shadow:-18px 0 46px rgba(0,0,0,0.42);overflow-y:auto;
-    padding-top:calc(env(safe-area-inset-top,0px) + 18px);
-    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 18px);}
+  .banks-pop{width:min(94vw,340px);}
+  .bp-row{padding:10px 4px;}
 }
 @keyframes spin360{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 .ro-ic.spin svg{animation:spin360 .9s linear infinite;}
@@ -1093,27 +1120,20 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     <div class="set-switch" id="compactSwitch" role="switch" tabindex="0" aria-label="Modo compacto"><span></span></div>
   </div>
 </div>
-<div class="color-pop banks-pop settings-pop" id="banksPop">
-  <div class="color-pop-title">Contas conectadas</div>
-  <div class="set-sec"><div id="banksList"></div></div>
-  <div class="banks-divider"></div>
-  <div class="set-lbl">Sincronização</div>
-  <div class="refresh-opt" id="refreshSync">
-    <div class="ro-ic" id="refreshSyncIc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M3 16v5h5M21 8V3h-5"/></svg></div>
-    <div class="ro-txt">
-      <div class="ro-t">Sincronizar com o banco</div>
-      <div class="ro-s">Limpa o cache e busca saldo e dados novos via Open Finance</div>
+<div class="color-pop banks-pop" id="banksPop">
+  <div class="bp-head">
+    <span class="bp-title">Contas conectadas</span>
+    <div class="bp-head-actions">
+      <span class="bp-count"><span class="bp-count-dot"></span><span id="banksCountTxt">0/0</span></span>
+      <button type="button" class="bp-sync" id="refreshSync" title="Sincronizar com o banco" aria-label="Sincronizar com o banco">
+        <span class="bp-sync-ic" id="refreshSyncIc"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M3 16v5h5M21 8V3h-5"/></svg></span>
+      </button>
     </div>
   </div>
-  <div class="refresh-opt" id="refreshPage">
-    <div class="ro-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
-    <div class="ro-txt">
-      <div class="ro-t">Atualizar página</div>
-      <div class="ro-s">Só recarrega o que já está na planilha</div>
-    </div>
-  </div>
+  <div id="banksList"></div>
   <div class="refresh-status" id="refreshStatus" style="display:none"></div>
-  <div class="banks-add" id="banksAdd" title="Conectar um novo banco via Open Finance">+ Adicionar conta</div>
+  <button type="button" class="bp-add" id="banksAdd" title="Conectar um novo banco via Open Finance">Adicionar conta</button>
+  <button type="button" class="bp-link" id="refreshPage">Atualizar página</button>
 </div>
 <div class="statusbar-bg"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -4295,12 +4315,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   /* Posiciona o popover (color-pop/banks-pop) com position:fixed ancorado no botão que abriu —
      evita que ele fique "atrás" dos cards por causa do overflow:clip do cabeçalho .top. */
   function posicionarPopover(btn,pop){
-    // No mobile, o card de bancos vira painel lateral (CSS cuida do posicionamento):
-    // limpamos qualquer posição inline pra não sobrescrever o layout de folha lateral.
-    if(pop&&pop.classList.contains("banks-pop")&&window.matchMedia("(max-width:600px)").matches){
-      pop.style.top=pop.style.right=pop.style.left=pop.style.bottom="";
-      return;
-    }
     var r=btn.getBoundingClientRect();
     var topVal=r.bottom+8;
     // garante que não vá negativo nem para cima da barra de status
@@ -4418,10 +4432,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(list){
       list.innerHTML=bancos.length?bancos.map(function(b){
         var info=bancoDe(b.nome);
-        return '<div class="bank-row"><div class="bic'+bancoAvatarCls(b.nome)+'" style="'+bancoAvatarStyle(b.nome)+'">'+logoOuIniciais(b.nome)+'</div>'+
-          '<div class="bmain"><div class="bname">'+escapeHtml(b.nome)+'</div><div class="bupd"><span class="bdot"></span>Atualizado '+tempoRelativo(ultimaAtualizacao)+'</div></div></div>';
+        return '<div class="bp-row"><div class="bp-ic'+bancoAvatarCls(b.nome)+'" style="'+bancoAvatarStyle(b.nome)+'">'+logoOuIniciais(b.nome)+'</div>'+
+          '<div class="bp-main"><div class="bp-name">'+escapeHtml(b.nome)+'</div>'+
+          '<div class="bp-sub"><span class="bp-live"></span>Atualizado '+tempoRelativo(ultimaAtualizacao)+'</div></div></div>';
       }).join(""):'<div class="empty" style="padding:14px"><div class="et">Nenhuma conta conectada ainda.</div></div>';
     }
+    var cnt=$("#banksCountTxt");
+    if(cnt) cnt.textContent=bancos.length+'/'+bancos.length;
   }
   if(banksToggle&&banksPop){
     banksToggle.addEventListener("click",function(ev){
