@@ -4460,19 +4460,36 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       renderBancos(); // recalcula o "atualizado há Xmin" no momento em que abre
       var opening=!banksPop.classList.contains("show");
       fecharTodosPopovers();
+      // A faixa de status pertence só ao botão de sincronizar: ao (re)abrir o card ela some,
+      // a não ser que exista uma sincronização acontecendo agora.
+      var rs=document.getElementById("refreshStatus");
+      if(rs && !syncEmAndamento) rs.style.display="none";
       if(opening){ posicionarPopover(banksToggle,banksPop); banksPop.classList.add("show"); }
       atualizarScrim();
     });
   }
 
-  // Fecha qualquer popover aberto ao clicar/tocar fora (click + touchstart para mobile)
+  // Fecha o popover ao tocar fora. O toque é ABSORVIDO pelo scrim: sem isso, o touchstart
+  // fechava o card e o "click" seguinte caía no elemento que estava atrás do desfoque,
+  // acionando o botão errado (bug do clique fantasma no celular).
+  (function(){
+    var scrim=document.getElementById("popScrim");
+    if(!scrim) return;
+    function engolir(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      fecharTodosPopovers();
+    }
+    scrim.addEventListener("click",engolir);
+    scrim.addEventListener("touchstart",engolir,{passive:false});
+  })();
+  // Fora do scrim (ex.: desktop, clique na barra do topo) continua fechando normalmente.
   function outsideClickHandler(ev){
     var inSettings=settingsPop&&(settingsPop.contains(ev.target)||settingsToggle&&settingsToggle.contains(ev.target));
     var inBanks=banksPop&&(banksPop.contains(ev.target)||banksToggle&&banksToggle.contains(ev.target));
     if(!inSettings&&!inBanks) fecharTodosPopovers();
   }
   document.addEventListener("click",outsideClickHandler);
-  document.addEventListener("touchstart",outsideClickHandler,{passive:true});
   window.addEventListener("resize",function(){
     if(settingsPop&&settingsPop.classList.contains("show")) posicionarPopover(settingsToggle,settingsPop);
     if(banksPop&&banksPop.classList.contains("show")) posicionarPopover(banksToggle,banksPop);
@@ -4545,6 +4562,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         syncEmAndamento=false;
         if(refreshSyncIc)refreshSyncIc.classList.remove("spin");
         setRefreshStatus("Erro ao sincronizar: "+err.message,"error");
+        setTimeout(function(){ if(refreshStatusEl && !syncEmAndamento) refreshStatusEl.style.display="none"; },6000);
       });
   }
 
@@ -4716,6 +4734,16 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         var sc = window.scrollY;
         loadAll(function(){ window.scrollTo(0, sc); });
       }, 5*60*1000);
+      // Ao voltar pro app (trocou de aplicativo / desbloqueou o celular), recarrega se os dados
+      // estiverem velhos — é o que faz o "Atualizado há X" refletir o sync automático de 1h
+      // do Apps Script assim que você abre o app.
+      document.addEventListener('visibilitychange', function(){
+        if(document.visibilityState !== 'visible') return;
+        var idadeMin = ultimaAtualizacao ? (Date.now()-ultimaAtualizacao.getTime())/60000 : 999;
+        if(idadeMin < 2) return;
+        var sc = window.scrollY;
+        loadAll(function(){ window.scrollTo(0, sc); });
+      });
     }
   }
   function estaAutenticado(){
