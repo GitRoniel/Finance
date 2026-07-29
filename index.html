@@ -1357,6 +1357,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         data: data, descricao: strVal(c,2), categoria: strVal(c,3),
         conta: strVal(c,4), cartao: strVal(c,5), tipo: strVal(c,6) || "Saída",
         valor: numVal(c,7), parcela: parcela, faturaId: faturaId, faturaPrev: faturaPrev,
+        totalCompra: numVal(c,13), // coluna N — valor total da compra parcelada
         parcelamentoId: parcela ? ('Parcela '+parcela.num+' de '+parcela.total) : '',
         obs: strVal(c,9),
         origem: origem || "conta"
@@ -2363,6 +2364,83 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function transacoesDoCartaoJanela(nomeCartao,janela){
     return txDoCartao(nomeCartao).filter(function(t){return t.data&&t.data>=janela.start&&t.data<=janela.end&&!ehPagamentoDeFatura(t);}).sort(function(a,b){return b.data-a.data;});
   }
+  /* ===== MOTOR DE FATURA MÊS A MÊS =====================================================
+     Monta a lista de lançamentos de QUALQUER mês (passado, atual ou futuro), igual ao app
+     do banco, combinando três fontes:
+       1) Lançamentos já atribuídos pelo banco (Fatura ID) — faturas fechadas.
+       2) Pendentes com PREVISÃO (Fatura Prevista = "AAAA-MM") — separa 1/6 de 2/6, 3/6...
+       3) PROJEÇÃO das parcelas que o banco ainda não emitiu: sabendo que a parcela k caiu
+          no mês X, a parcela k+n cai em X+n. Assim dá pra ver os próximos meses.
+     ===================================================================================== */
+  function difMesesChave(a,b){ // b - a, em meses, entre "AAAA-MM"
+    if(!a||!b) return 0;
+    var pa=a.split('-'), pb=b.split('-');
+    return (parseInt(pb[0],10)-parseInt(pa[0],10))*12 + (parseInt(pb[1],10)-parseInt(pa[1],10));
+  }
+  function chaveCompraParc(t){
+    return normDescParc(t.descricao)+'|'+((t.parcela&&t.parcela.total)||0);
+  }
+  // Mês da fatura ("AAAA-MM") em que um lançamento REAL foi (ou será) cobrado.
+  function mesFaturaDaTx(nomeCartao, t){
+    if(t.faturaPrev) return t.faturaPrev;
+    if(t.faturaId){
+      var fs=faturasDoCartao(nomeCartao);
+      for(var i=0;i<fs.length;i++){ if(fs[i].id===t.faturaId) return mesChaveDeData(fs[i].venc); }
+    }
+    return '';
+  }
+  // Âncora de cada compra parcelada: uma parcela com mês conhecido, pra projetar as demais.
+  function ancorasParceladas(nomeCartao){
+    var mapa={};
+    txDoCartao(nomeCartao).forEach(function(t){
+      if(!t.parcela || !t.parcela.total || t.parcela.total<2) return;
+      var mes=mesFaturaDaTx(nomeCartao,t);
+      if(!mes) return;
+      var k=chaveCompraParc(t);
+      // Guarda a parcela de maior número conhecido (a mais recente do cronograma).
+      if(!mapa[k] || t.parcela.num>mapa[k].num){
+        mapa[k]={ num:t.parcela.num, total:t.parcela.total, mes:mes, valor:t.valor,
+                  descricao:t.descricao, totalCompra:t.totalCompra||0, categoria:t.categoria };
+      }
+    });
+    return mapa;
+  }
+  // Valor da parcela seguinte: a 1ª costuma absorver o arredondamento (134,49 → 134,41).
+  function valorParcelaSeguinte(a){
+    if(a.num===1 && a.totalCompra>0 && a.total>1){
+      return Math.round(((a.totalCompra-a.valor)/(a.total-1))*100)/100;
+    }
+    return a.valor;
+  }
+  /* Lista completa de uma fatura. mesAlvo = "AAAA-MM"; billId (opcional) = fatura já fechada;
+     mesPrimeiroAberto = mês do ciclo em formação (pra alocar compras à vista sem previsão). */
+  function itensDaFaturaMes(card, mesAlvo, billId, corte, mesPrimeiroAberto){
+    var itens=[], jaTem={};
+    txDoCartao(card.nome).forEach(function(t){
+      if(ehPagamentoDeFatura(t)) return;
+      var pertence=false;
+      if(billId && t.faturaId===billId) pertence=true;
+      else if(!t.faturaId && t.faturaPrev && t.faturaPrev===mesAlvo) pertence=true;
+      else if(!t.faturaId && !t.faturaPrev && !t.parcela && corte && t.data && t.data>corte &&
+              mesAlvo===mesPrimeiroAberto) pertence=true;
+      if(!pertence) return;
+      itens.push({ descricao:t.descricao, categoria:t.categoria, valor:t.valor, data:t.data,
+                   parcela:t.parcela, tipo:t.tipo, projetada:false, ref:t });
+      if(t.parcela) jaTem[chaveCompraParc(t)]=true;
+    });
+    // Projeção das parcelas que o banco ainda não lançou
+    var anc=ancorasParceladas(card.nome);
+    Object.keys(anc).forEach(function(k){
+      if(jaTem[k]) return;
+      var a=anc[k];
+      var num=a.num+difMesesChave(a.mes,mesAlvo);
+      if(num<1 || num>a.total) return;
+      if(num<=a.num) return; // no passado o dado real já existe; não inventamos
+      itens.push({ descricao:a.descricao, categoria:a.categoria, valor:valorParcelaSeguinte(a),
+                   data:null, parcela:{num:num,total:a.total}, tipo:'Saída', projetada:true });
+    });
+    return itens.sort(function(x,y){ return y.valor-x.valor; });
+  }
   // Lançamentos EXATOS de uma fatura: pelo ID (faturas já fechadas) ou pelo mês previsto
   // "AAAA-MM" (fatura ainda aberta — é assim que separamos as parcelas futuras, que o Pluggy
   // devolve todas juntas na data da compra).
@@ -2727,26 +2805,44 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var tl=document.getElementById('txList'); if(!tl)return;
 
     // Mês FUTURO selecionado: mostra as PARCELAS que vão compor a fatura projetada.
-    if(mSel.futuro){
-      var parc=parcelasContribuindoNoMes(card,mSel.f);
+    // ── Monta a fatura do mês com o motor único (real + previsto + projetado) ──
+    var billSel=billDoMes(card,mSel);
+    var mesPrev=mesChaveDeData(mSel.vencimento||(mSel.janela&&mSel.janela.end));
+    if(!mesPrev && mSel.mes!=null && mSel.ano!=null){
+      mesPrev=mSel.ano+'-'+(mSel.mes<9?'0':'')+(mSel.mes+1);
+    }
+    var ultFech=faturaFechadaCard(card);
+    var corteCard=(mSel.janela&&mSel.janela.start)?new Date(mSel.janela.start.getTime()-864e5):null;
+    var mesPrimeiroAberto=mesChaveDeData(vencCicloAtualData(card));
+    var itens=itensDaFaturaMes(card, mesPrev, (billSel&&billSel.id)||'', corteCard, mesPrimeiroAberto);
+
+    // Mês FUTURO (ou sem lançamentos reais): mostra a previsão montada pelas parcelas.
+    if(mSel.futuro || (!itens.length && !billSel)){
       if(tt) tt.textContent='Previsão · '+MESES_COMPLETO[mSel.mes];
-      if(tc) tc.textContent=parc.length+(parc.length===1?' parcela':' parcelas');
-      if(!parc.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Sem parcelas previstas para este mês.</div></div>'; return; }
-      tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Parcelas previstas</span><span class="cc-day-total neg">−'+formatBRL(parc.reduce(function(s,x){return s+x.valorParcela;},0))+'</span></div><div class="cc-day-txs">'+
-        parc.map(function(x){
-          return '<div class="cctx">'+categoriaIconeHtml('',false)+
-            '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeParcela(x.descricao,x.valorParcela,x.total))+'</div>'+
-            '<div class="cctx-meta">parcela '+x.num+' de '+x.total+'</div></div>'+
-            '<div class="cctx-right"><div class="cctx-val">'+formatBRL(x.valorParcela)+'</div></div></div>';
+      if(tc) tc.textContent=itens.length+(itens.length===1?' lançamento':' lançamentos');
+      if(!itens.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Sem lançamentos previstos para este mês.</div></div>'; return; }
+      var totPrev=itens.reduce(function(s,x){return s+x.valor;},0);
+      tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Previsto para esta fatura</span><span class="cc-day-total neg">−'+formatBRL(totPrev)+'</span></div><div class="cc-day-txs">'+
+        itens.map(function(x){
+          var meta=x.parcela?('parcela '+x.parcela.num+' de '+x.parcela.total):(x.categoria||'');
+          return '<div class="cctx">'+categoriaIconeHtml(x.categoria||'',false)+
+            '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(x.parcela?nomeParcela(x.descricao,x.valor,x.parcela.total):(sentenceCase(x.descricao)||'—'))+
+            (x.projetada?'<span class="tx-parcela">prevista</span>':'')+'</div>'+
+            '<div class="cctx-meta">'+escapeHtml(meta)+'</div></div>'+
+            '<div class="cctx-right"><div class="cctx-val">'+formatBRL(x.valor)+'</div></div></div>';
         }).join('')+'</div></div>';
       return;
     }
 
-    // Preferimos casar pelo ID da fatura (exato, vem do banco). Só quando esse vínculo não
-    // existe é que caímos na janela de datas — que é uma estimativa.
-    var billSel=billDoMes(card,mSel);
-    var mesPrev=mesChaveDeData(mSel.vencimento||(mSel.janela&&mSel.janela.end));
-    var txs=transacoesDaFatura(card.nome,(billSel&&billSel.id)||'',mesPrev);
+    // Mês atual/passado: usa os lançamentos reais; as parcelas ainda não emitidas entram
+    // marcadas como "prevista" (é o que o app do banco também mostra).
+    var dataPrev=mSel.vencimento||(mSel.janela&&mSel.janela.end)||new Date();
+    var txs=itens.map(function(x){
+      if(x.ref) return x.ref;
+      return { descricao:x.descricao, categoria:x.categoria, valor:x.valor, data:dataPrev,
+               parcela:x.parcela, tipo:x.tipo||'Saída', projetada:true,
+               parcelamentoId:(x.parcela?('Parcela '+x.parcela.num+' de '+x.parcela.total+' · prevista'):'prevista') };
+    });
     if(!txs.length) txs=transacoesDoCartaoJanela(card.nome,mSel.janela);
     if(tt) tt.textContent=mSel.atual?'Transações':'Transações · fatura de '+MESES_COMPLETO[mSel.mes];
     if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
