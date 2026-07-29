@@ -1867,22 +1867,29 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return parcelamentosAtivos().reduce(function(s,p){return s+p.valorParcela;},0);
   }
   // Parcelas de um cartão que ainda cairão daqui a "f" meses (f>=1 = próximo mês).
-  function parcelasContribuindoNoMes(card, f){
-    var alvo = normalizarNomeCartao(card.nome);
-    var hoje = new Date();
-    return state.parcelamentos.filter(function(p){
-      if(!p.inicio || normalizarNomeCartao(p.cartao)!==alvo) return false;
-      var pagas = clamp(monthsBetween(p.inicio, hoje)+1, 0, p.nParcelas);
-      var parcelaNoMes = pagas + f; // número da parcela que cairia nesse mês futuro
-      return parcelaNoMes>=1 && parcelaNoMes<=p.nParcelas;
-    }).map(function(p){
-      var pagas = clamp(monthsBetween(p.inicio, hoje)+1, 0, p.nParcelas);
-      return { descricao:p.descricao, valorParcela:p.valorParcela, num:pagas+f, total:p.nParcelas };
-    });
+  // Mês ("AAAA-MM") da fatura que vence daqui a "f" ciclos.
+  function mesAlvoDoOffset(card, f){
+    var m = mesVencCicloAtual(card);
+    var d = new Date(m.getFullYear(), m.getMonth()+f, 1);
+    return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
   }
-  // Fatura PROJETADA de um cartão daqui a "f" meses (só com base nas parcelas em aberto).
+  /* Parcelas que caem num mês futuro. Agora vem do MOTOR REAL (transações + previsão do banco
+     + cronograma das parcelas já cobradas), e não mais da aba Parcelamentos — que estimava as
+     parcelas pagas por data e mantinha "viva" uma compra já quitada (era daí que saía o
+     fantasma do AC COELHO de R$ 250,00, cuja 12ª e última parcela foi cobrada em junho). */
+  function parcelasContribuindoNoMes(card, f){
+    var mesAlvo=mesAlvoDoOffset(card,f);
+    var mesPrimeiroAberto=mesChaveDeData(vencCicloAtualData(card));
+    return itensDaFaturaMes(card, mesAlvo, '', null, mesPrimeiroAberto)
+      .filter(function(x){ return x.parcela; })
+      .map(function(x){ return { descricao:x.descricao, valorParcela:x.valor, num:x.parcela.num, total:x.parcela.total }; });
+  }
+  // Fatura PROJETADA de um cartão daqui a "f" meses — inclui parcelas E compras já previstas.
   function faturaProjetadaCartao(card, f){
-    return parcelasContribuindoNoMes(card, f).reduce(function(s,x){return s+x.valorParcela;},0);
+    var mesAlvo=mesAlvoDoOffset(card,f);
+    var mesPrimeiroAberto=mesChaveDeData(vencCicloAtualData(card));
+    return itensDaFaturaMes(card, mesAlvo, '', null, mesPrimeiroAberto)
+      .reduce(function(s,x){ return s+x.valor; },0);
   }
   // Soma das faturas projetadas de TODOS os cartões ativos daqui a "f" meses.
   function limiteTotal(){ return state.cartoes.filter(function(c){return c.ativo!=="Não";}).reduce(function(s,c){return s+(c.limite||0);},0); }
