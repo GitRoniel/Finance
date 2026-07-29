@@ -136,8 +136,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* ===== PADRÃO ÚNICO das logos de banco: SEMPRE 50% x 50% do círculo, centralizado =====
    Vale para os símbolos embutidos (Nubank, Mercado Pago), as logos remotas (Itaú, Inter,
    Inter PJ) e o fallback de iniciais — em qualquer tela do app. */
-.bp-ic,.bs-logo,.bic,.fbadge,.lg,.bank-ic,.cc-hero-acc-dot,.fat-item .cat-ic,.cc-logo{
+.bp-ic,.bs-logo,.bic,.fbadge,.lg,.bank-ic,.cc-hero-acc-dot,.fat-item .cat-ic,.cc-logo,.cc-bank-chip-dot{
   display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden;}
+.cc-bank-chip-dot>svg,.cc-bank-chip-dot>.bank-logo-img{width:50%!important;height:50%!important;}
 .bp-ic>svg,.bs-logo>svg,.bic>svg,.fbadge>svg,.lg>svg,.bank-ic>svg,.cc-hero-acc-dot>svg,
 .fat-item .cat-ic>svg,.cc-logo>svg{
   width:50%!important;height:50%!important;flex:0 0 auto;display:block;}
@@ -2082,10 +2083,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var bancoHtml = '<div class="cc-bank-strip">'+
       '<button class="cc-bank-chip-all'+(contaFiltro===''?' active':'')+'" data-banco="">Todos</button>'+
       bancos.map(function(b){
-        var info=bancoDe(b.rotulo);
-        var inner=(info.logo==='txt-i')?'<span class="txt">i</span>':(info.logo==='txt-c')?'<span class="txt">'+initials(b.rotulo)+'</span>':'<svg><use href="#'+info.logo+'"/></svg>';
         return '<button class="cc-bank-chip'+(contaFiltro===b.chave?' active':'')+'" data-banco="'+escapeHtml(b.chave)+'">'+
-          '<span class="cc-bank-chip-dot" style="background:'+info.cor1+'">'+inner+'</span>'+
+          '<span class="cc-bank-chip-dot'+bancoAvatarCls(b.rotulo)+'" style="'+bancoAvatarStyle(b.rotulo)+'">'+logoOuIniciais(b.rotulo)+'</span>'+
           escapeHtml(b.rotulo)+
         '</button>';
       }).join("")+
@@ -2383,6 +2382,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     }
     return d;
   }
+  /* Cor do mês na linha do tempo — regra única:
+       VERDE (pago)   = todas as faturas do mês estão quitadas
+       AZUL  (aberto) = tem fatura a pagar (fechada não paga OU em formação)
+       TRACEJADO      = mês futuro, só projeção pelas parcelas
+     Antes o padrão era "pago", então meses com fatura em aberto (ex.: agosto) saíam verdes. */
+  function classeMes(m){
+    if(!m) return 'aberto';
+    if(m.paga) return 'pago';
+    if(m.futuro) return 'futuro';
+    return 'aberto';
+  }
   function gerarTimelineHtml(meses, idxSel){
     var n=meses.length;
     var valores=meses.map(function(m){return m.total;});
@@ -2416,11 +2426,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var dots=pts.map(function(p,i){
       var sel=(i===idxSel), m=meses[i];
       // Fatura já PAGA fica verde mesmo sendo o mês corrente (antes o mês atual saía sempre azul).
-      var cls='ftl-dot'+(sel?' sel':'')+(m.paga?' pago':(m.futuro?' futuro':(m.atual?' aberto':' pago')));
+      var cls='ftl-dot'+(sel?' sel':'')+' '+classeMes(m);
       return '<div class="'+cls+'" style="left:'+p.x.toFixed(2)+'%;top:'+p.y.toFixed(2)+'px"></div>';
     }).join("");
     var cols=meses.map(function(m,i){
-      var cls='ftl-col'+(i===idxSel?' sel':'')+(m.paga?' pago':(m.futuro?' futuro':(m.atual?' aberto':' pago')));
+      var cls='ftl-col'+(i===idxSel?' sel':'')+' '+classeMes(m);
       return '<div class="'+cls+'" data-i="'+i+'">'+
         '<div class="ftl-lbl">'+MESES_ABREV[m.mes]+'</div>'+
         '<div class="ftl-dotzone"></div>'+
@@ -2474,7 +2484,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // (por cartão) que compõem o mês selecionado — igual ao seletor de faturas do banco.
   function renderDetalheGlobal(card){
     var meses=seriesGlobalCartoes(6,6);
-    var idxAtualReal=-1; for(var ii=0;ii<meses.length;ii++){ if(meses[ii].atual){ idxAtualReal=ii; break; } }
+    // Abre sempre no mês da fatura EM ABERTO (primeiro mês não pago e não futuro).
+    var idxAtualReal=-1;
+    for(var ii=0;ii<meses.length;ii++){
+      if(!meses[ii].paga && !meses[ii].futuro && (meses[ii].itens||[]).length){ idxAtualReal=ii; break; }
+    }
+    if(idxAtualReal===-1) for(var ib=0;ib<meses.length;ib++){ if(meses[ib].atual){ idxAtualReal=ib; break; } }
     if(idxAtualReal===-1) idxAtualReal=Math.max(0, meses.length-7);
     var idxSel=(mesSelecionado!=null&&mesSelecionado>=0&&mesSelecionado<meses.length)?mesSelecionado:idxAtualReal;
     var timeline=gerarTimelineHtml(meses,idxSel);
@@ -2529,10 +2544,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(!ativos.length) return '<div class="empty"><div class="ei">💳</div><div class="et">Nenhum cartão na planilha.</div></div>';
     var lista=cartoesParaExibir();
     if(cartaoAtivo>=lista.length) cartaoAtivo=0;
-    var totalFat=ativos.reduce(function(s,c){return s+faturaAtual(c);},0);
-    var totalLim=ativos.reduce(function(s,c){return s+(c.limite||0);},0);
+    // Os TOTAIS (fatura, limite, disponível) consideram TODOS os cartões ativos — inclusive os
+    // zerados, que não aparecem no carrossel mas têm limite. É o mesmo critério da Visão Geral,
+    // então os dois lugares mostram exatamente o mesmo número.
+    var todos=cartoesAtivosTodos();
+    var totalFat=todos.reduce(function(s,c){return s+faturaAtual(c);},0);
+    var totalLim=todos.reduce(function(s,c){return s+(c.limite||0);},0);
     var totalDisp=totalLim-totalFat;
-    var totalFech=ativos.reduce(function(s,c){var fx=faturaFechadaCard(c);return s+(fx?fx.valor:0);},0);
+    var totalFech=todos.reduce(function(s,c){var fx=faturaFechadaCard(c);return s+(fx?fx.valor:0);},0);
     var totalAtu=ativos.reduce(function(s,c){return s+faturaCorrenteCard(c);},0);
     var resumo='<div class="glass cards-resumo">'+
       '<div class="cr-blk"><div class="bk">Em aberto</div><div class="bv">'+formatBRL(totalFat)+'</div></div>'+
