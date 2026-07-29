@@ -1344,17 +1344,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return rows.map(function(c){
       var data = dateVal(c,1);
       var parcela = decodeParcela(strVal(c,8));
-      // A planilha registra TODAS as parcelas de uma compra na mesma data. Isso fazia a
-      // fatura do mês somar as 12 parcelas de uma vez. Aqui jogamos cada parcela para o
-      // mês em que ela realmente cai (parcela 1 = mês da compra, 2 = mês seguinte, …),
-      // assim cada fatura mostra só a parcela correspondente — igual à aba de previsão.
-      if(parcela && data){
+      var faturaId = strVal(c,11); // coluna L — fatura em que o BANCO cobrou este lançamento
+      // Sem "Fatura ID" (linhas antigas), caímos no antigo palpite: joga a parcela N para N-1
+      // meses à frente da compra. Esse chute erra por um mês quando a compra é feita depois do
+      // fechamento — era o que empurrava parcelas de agosto para julho. Com o Fatura ID
+      // preenchido, NÃO mexemos na data: a fatura correta vem do próprio banco.
+      if(!faturaId && parcela && data){
         data = new Date(data.getFullYear(), data.getMonth() + (parcela.num - 1), data.getDate());
       }
       return {
         data: data, descricao: strVal(c,2), categoria: strVal(c,3),
         conta: strVal(c,4), cartao: strVal(c,5), tipo: strVal(c,6) || "Saída",
-        valor: numVal(c,7), parcela: parcela,
+        valor: numVal(c,7), parcela: parcela, faturaId: faturaId,
         parcelamentoId: parcela ? ('Parcela '+parcela.num+' de '+parcela.total) : '',
         obs: strVal(c,9),
         origem: origem || "conta"
@@ -2361,6 +2362,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function transacoesDoCartaoJanela(nomeCartao,janela){
     return txDoCartao(nomeCartao).filter(function(t){return t.data&&t.data>=janela.start&&t.data<=janela.end&&!ehPagamentoDeFatura(t);}).sort(function(a,b){return b.data-a.data;});
   }
+  // Lançamentos EXATOS de uma fatura, pelo ID que o banco atribuiu (sem estimar por data).
+  function transacoesDaFatura(nomeCartao, billId){
+    if(!billId) return [];
+    return txDoCartao(nomeCartao).filter(function(t){
+      return t.faturaId===billId && !ehPagamentoDeFatura(t);
+    }).sort(function(a,b){ return b.data-a.data; });
+  }
 
   // Converte uma lista de pontos {x,y} numa curva suave (Catmull-Rom -> Bézier), sem precisar
   // de bibliotecas externas. Usada pra desenhar a "onda" do resumo mês a mês.
@@ -2724,7 +2732,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       return;
     }
 
-    var txs=transacoesDoCartaoJanela(card.nome,mSel.janela);
+    // Preferimos casar pelo ID da fatura (exato, vem do banco). Só quando esse vínculo não
+    // existe é que caímos na janela de datas — que é uma estimativa.
+    var billSel=billDoMes(card,mSel);
+    var txs=(billSel&&billSel.id)?transacoesDaFatura(card.nome,billSel.id):[];
+    if(!txs.length) txs=transacoesDoCartaoJanela(card.nome,mSel.janela);
     if(tt) tt.textContent=mSel.atual?'Transações':'Transações · fatura de '+MESES_COMPLETO[mSel.mes];
     if(tc) tc.textContent=txs.length+(txs.length===1?' lançamento':' lançamentos');
     var reconHtml=reconciliacaoFaturaHtml(mSel, txs, card);
