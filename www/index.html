@@ -121,6 +121,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 /* Padroniza linhas: textos de UMA linha só (não quebram em 2, mantendo o layout estável) */
 .rec-name,.rec-check-lbl,.set-row-t,.set-row-s,.bname,.bupd,.ro-t,.ro-s,.cctx-desc,.cctx-meta,.fat-item .rn,.fat-item .rs,.fatura-reconc .rec-row>span,.gcat-tx-desc,.gcat-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .cc-tipo-filtro{margin-top:8px;}
+/* "parcela X de Y" na linha da categoria */
+.cctx-parc{color:var(--text-dim);font-weight:600;}
 /* Fatura clicável na lista "Todos os cartões" — leva ao cartão no mesmo mês */
 .cctx-fatura{cursor:pointer;transition:background .15s;}
 .cctx-fatura:active{background:rgba(255,255,255,0.05);}
@@ -1526,14 +1528,17 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return (state.txPorCartao && state.txPorCartao[nomeCartao]) || [];
   }
   function faturaAtual(card){
-    // TOTAL devido no cartão agora = fatura FECHADA (não paga) + fatura ATUAL (em formação).
-    // É o mesmo total que o app do banco considera. Prioriza o valor calculado pela regra
-    // de cada banco (aba Fatura Em Aberto); fallback usa a fatura fechada real + janela.
+    /* TOTAL devido agora = fatura FECHADA não paga + fatura EM FORMAÇÃO.
+       A parte em formação é a SOMA DOS LANÇAMENTOS (faturaCorrenteCard), então o valor do
+       cartão sempre corresponde ao que está listado na tela. */
+    var fechAberta = faturaFechadaCard(card);
+    var corrente = faturaCorrenteCard(card);
+    if(corrente>0.005 || fechAberta){
+      return Math.round(((fechAberta?fechAberta.valor:0) + corrente)*100)/100;
+    }
     var real = buscarFaturaEmAberto(card.nome);
     if(real && real.valor != null){
-      if(real.fechada != null) return real.valor; // layout novo: valor já é fechada + atual
-      // layout antigo (antes do novo Apps Script): garante que o total nunca fique menor
-      // que a fatura fechada real da aba Faturas
+      if(real.fechada != null) return real.valor; // reserva: valor pronto da planilha
       var fx = faturaFechadaCard(card);
       return Math.max(real.valor, fx ? fx.valor : 0);
     }
@@ -1602,11 +1607,36 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return melhor;
   }
   // Fatura ATUAL (o ciclo em formação, que ainda não fechou).
+  // Fechamento mais recente já ocorrido — marca o início do ciclo em formação.
+  function corteUltimoFechamento(card){
+    var hoje=new Date(), melhor=null;
+    faturasDoCartao(card.nome).forEach(function(f){
+      var fech=f.fechamento || (f.venc? new Date(f.venc.getFullYear(),f.venc.getMonth(),f.venc.getDate()-9) : null);
+      if(!fech || isNaN(fech.getTime()) || fech>hoje) return;
+      if(!melhor || fech>melhor) melhor=fech;
+    });
+    return melhor;
+  }
+  // Lançamentos da fatura EM FORMAÇÃO (é a mesma lista mostrada na tela do cartão).
+  function itensFaturaAberta(card){
+    var mesAberto=mesChaveDeData(vencCicloAtualData(card));
+    if(!mesChaveValida(mesAberto)) return [];
+    return itensDaFaturaMes(card, mesAberto, '', corteUltimoFechamento(card), mesAberto);
+  }
+  /* Fatura ATUAL = SOMA DOS LANÇAMENTOS em aberto. Antes vinha pronta da aba "Fatura Em
+     Aberto"; agora o app soma o que ele mesmo lista, então o número do cartão e a lista de
+     transações nunca podem divergir. A planilha entra só como reserva (se não houver
+     nenhum lançamento carregado). */
+  var _cacheCorrente={}; // memo por cartão — a soma é chamada em vários lugares por render
+  function limparCacheFatura(){ _cacheCorrente={}; }
   function faturaCorrenteCard(card){
+    if(_cacheCorrente[card.nome]!=null) return _cacheCorrente[card.nome];
+    var soma=itensFaturaAberta(card).reduce(function(s,x){ return s+(Number(x.valor)||0); },0);
+    soma=Math.round(soma*100)/100;
+    if(soma>0.005){ _cacheCorrente[card.nome]=soma; return soma; }
     var info = buscarFaturaEmAberto(card.nome);
     if(info && info.atual != null) return Number(info.atual)||0;
-    var fech = faturaFechadaCard(card);
-    return Math.max(0, faturaAtual(card) - (fech ? fech.valor : 0));
+    return 0;
   }
   // Dia típico de fechamento derivado das faturas REAIS (vencimento − gap do banco),
   // sem depender da coluna "Dia Fechamento" da planilha (que pode estar desatualizada).
@@ -2455,6 +2485,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       itens.push({ descricao:t.descricao, categoria:t.categoria, valor:t.valor, data:t.data,
                    parcela:t.parcela, tipo:t.tipo, projetada:false, ref:t });
       if(t.parcela) jaTem[chaveCompraParc(t)]=true;
+      // Trava extra: marca também só pela descrição. Se o "Parcelamento ID" da planilha vier
+      // ilegível (a parcela não decodifica), isso evita somar de novo como projeção.
+      jaTem['d|'+normDescParc(t.descricao)]=true;
     });
     /* Projeção das parcelas que o banco ainda não lançou.
        FONTE PREFERIDA: a aba Parcelamentos, que o Apps Script monta com o cronograma real
@@ -2468,7 +2501,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var num=p.proxNum+difMesesChave(p.proxMes, mesAlvo);
       if(!isFinite(num) || num<p.proxNum || num>p.nParcelas) return;
       var k=normDescParc(p.descricao)+'|'+p.nParcelas;
-      if(jaTem[k]) return;              // o lançamento real desse mês já existe
+      if(jaTem[k] || jaTem['d|'+normDescParc(p.descricao)]) return; // o real desse mês já existe
       usouCronograma[k]=true;
       itens.push({ descricao:p.descricao, categoria:p.categoria, valor:p.valorParcela,
                    data:null, parcela:{num:num,total:p.nParcelas}, tipo:'Saída', projetada:true });
@@ -2479,6 +2512,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     Object.keys(anc).forEach(function(k){
       if(jaTem[k] || usouCronograma[k]) return;
       var a=anc[k];
+      if(jaTem['d|'+normDescParc(a.descricao)]) return; // já veio como lançamento real
       var num=a.num+difMesesChave(a.mes,mesAlvo);
       // isFinite é essencial: NaN não é pego por "num>total", e era isso que fazia parcelas
       // já encerradas (ex.: 12 de 12) voltarem a aparecer como "parcela NaN".
@@ -2922,7 +2956,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function renderTxAgrupadasEm(tl, txs, opts){
     opts = opts || {};
     var iconeFn = opts.icone || function(t,ent){ return categoriaIconeHtml(t.categoria, ent); };
-    var metaFn  = opts.meta  || function(t){ return escapeHtml(sentenceCase(t.categoria)||"Sem categoria"); };
+    // A linha de baixo mostra a categoria E, quando é compra parcelada, a parcela e o total.
+    var metaFn  = opts.meta  || function(t){
+      var cat=escapeHtml(sentenceCase(t.categoria)||"Sem categoria");
+      if(t.parcela && isFinite(t.parcela.num) && isFinite(t.parcela.total)){
+        cat+=' · <span class="cctx-parc">parcela '+t.parcela.num+' de '+t.parcela.total+
+             (t.projetada?' (prevista)':'')+'</span>';
+      }
+      return cat;
+    };
     if(!txs.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; return; }
     var dias=[],diaMap={};
     txs.forEach(function(t){
@@ -2947,7 +2989,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var txsHtml=grupo.txs.map(function(t){
         var ent=t.tipo==="Entrada";
         var idx=txFlat.push(t)-1;
-        var parc=t.parcelamentoId?'<span class="tx-parcela">'+escapeHtml(t.parcelamentoId)+'</span>':'';
+        // A parcela agora aparece na linha de baixo (junto da categoria), não ao lado do nome.
+        var parc=(!t.parcela && t.projetada)?'<span class="tx-parcela">prevista</span>':'';
         var apel=temApelido(t)?'<span class="cctx-apel" title="Nome personalizado">✎</span>':'';
         return '<div class="cctx cctx-edit" data-txidx="'+idx+'" title="Toque para renomear esta compra">'+iconeFn(t,ent)+
           '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeTx(t))+parc+apel+'</div>'+
@@ -4964,6 +5007,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         aplicarApelidosDaPlanilha(r[9]);   // nomes personalizados vindos da aba "Apelidos" (multi-dispositivo)
         if(r[10] && r[10].length) processarPrevisoesSheet(r[10]); // recorrentes + marcações (Pago/Recebido) da aba Previsões
         migrarApelidosParcelamentos();     // garante que renomeações antigas de Parcelas apareçam nos Cartões
+        limparCacheFatura();               // recalcula as somas de fatura com os dados novos
         // "Atualizado há X" reflete o ÚLTIMO SYNC REAL com o banco — não o último reload da página.
         // Usa o carimbo "Atualizado em" que o Apps Script grava na aba "Fatura Em Aberto" só quando
         // sincroniza (botão "Sincronizar com o banco"). Assim "Atualizar página" não mexe nesse tempo.
