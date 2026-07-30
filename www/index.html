@@ -1368,9 +1368,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function mapParcelamentos(rows){
     return rows.map(function(c){
       var total = numVal(c,4), nParcelas = numVal(c,5) || 1, inicio = dateVal(c,7);
+      var vParc = numVal(c,6) || (total / (nParcelas || 1));
       return {
         descricao: strVal(c,1), cartao: strVal(c,2), categoria: strVal(c,3),
-        valorTotal: total, nParcelas: nParcelas, valorParcela: total / (nParcelas || 1), inicio: inicio
+        valorTotal: total, nParcelas: nParcelas, valorParcela: vParc, inicio: inicio,
+        pagas: numVal(c,8), restantes: numVal(c,9), status: strVal(c,10),
+        proxNum: numVal(c,11),        // coluna L — nº da próxima parcela
+        proxMes: strVal(c,12)         // coluna M — "AAAA-MM" em que ela cai
       };
     }).filter(function(x){ return x.descricao; });
   }
@@ -2380,8 +2384,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
           no mês X, a parcela k+n cai em X+n. Assim dá pra ver os próximos meses.
      ===================================================================================== */
   function difMesesChave(a,b){ // b - a, em meses, entre "AAAA-MM"
-    if(!a||!b) return 0;
-    var pa=a.split('-'), pb=b.split('-');
+    if(!mesChaveValida(a)||!mesChaveValida(b)) return NaN; // inválido = não dá pra projetar
+    var pa=String(a).split('-'), pb=String(b).split('-');
     return (parseInt(pb[0],10)-parseInt(pa[0],10))*12 + (parseInt(pb[1],10)-parseInt(pa[1],10));
   }
   function chaveCompraParc(t){
@@ -2400,9 +2404,9 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function ancorasParceladas(nomeCartao){
     var mapa={};
     txDoCartao(nomeCartao).forEach(function(t){
-      if(!t.parcela || !t.parcela.total || t.parcela.total<2) return;
+      if(!t.parcela || !isFinite(t.parcela.num) || !isFinite(t.parcela.total) || t.parcela.total<2) return;
       var mes=mesFaturaDaTx(nomeCartao,t);
-      if(!mes) return;
+      if(!mesChaveValida(mes)) return; // sem mês confiável não há como projetar o cronograma
       var k=chaveCompraParc(t);
       // Guarda a parcela de maior número conhecido (a mais recente do cronograma).
       if(!mapa[k] || t.parcela.num>mapa[k].num){
@@ -2435,13 +2439,33 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
                    parcela:t.parcela, tipo:t.tipo, projetada:false, ref:t });
       if(t.parcela) jaTem[chaveCompraParc(t)]=true;
     });
-    // Projeção das parcelas que o banco ainda não lançou
+    /* Projeção das parcelas que o banco ainda não lançou.
+       FONTE PREFERIDA: a aba Parcelamentos, que o Apps Script monta com o cronograma real
+       (próxima parcela + mês dela). É mais confiável que deduzir das transações, porque lá
+       cada compra aparece UMA vez, já com parcelas pagas/restantes conferidas pelo banco. */
+    var usouCronograma={};
+    (state.parcelamentos||[]).forEach(function(p){
+      if(normalizarNomeCartao(p.cartao)!==normalizarNomeCartao(card.nome)) return;
+      if(!isFinite(p.proxNum) || p.proxNum<1 || !mesChaveValida(p.proxMes)) return;
+      if(!isFinite(p.nParcelas) || p.nParcelas<2) return;
+      var num=p.proxNum+difMesesChave(p.proxMes, mesAlvo);
+      if(!isFinite(num) || num<p.proxNum || num>p.nParcelas) return;
+      var k=normDescParc(p.descricao)+'|'+p.nParcelas;
+      if(jaTem[k]) return;              // o lançamento real desse mês já existe
+      usouCronograma[k]=true;
+      itens.push({ descricao:p.descricao, categoria:p.categoria, valor:p.valorParcela,
+                   data:null, parcela:{num:num,total:p.nParcelas}, tipo:'Saída', projetada:true });
+    });
+    // RESERVA: compras parceladas que ainda não estão na aba Parcelamentos — deduz pelo
+    // cronograma das transações já cobradas.
     var anc=ancorasParceladas(card.nome);
     Object.keys(anc).forEach(function(k){
-      if(jaTem[k]) return;
+      if(jaTem[k] || usouCronograma[k]) return;
       var a=anc[k];
       var num=a.num+difMesesChave(a.mes,mesAlvo);
-      if(num<1 || num>a.total) return;
+      // isFinite é essencial: NaN não é pego por "num>total", e era isso que fazia parcelas
+      // já encerradas (ex.: 12 de 12) voltarem a aparecer como "parcela NaN".
+      if(!isFinite(num) || num<1 || num>a.total) return;
       if(num<=a.num) return; // no passado o dado real já existe; não inventamos
       itens.push({ descricao:a.descricao, categoria:a.categoria, valor:valorParcelaSeguinte(a),
                    data:null, parcela:{num:num,total:a.total}, tipo:'Saída', projetada:true });
@@ -2451,10 +2475,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   // Lançamentos EXATOS de uma fatura: pelo ID (faturas já fechadas) ou pelo mês previsto
   // "AAAA-MM" (fatura ainda aberta — é assim que separamos as parcelas futuras, que o Pluggy
   // devolve todas juntas na data da compra).
+  // Data inválida é um objeto "verdadeiro", então precisa checar getTime() — sem isso saía
+  // "NaN-NaN" e contaminava toda a conta de parcelas (aparecia "parcela NaN de 12").
   function mesChaveDeData(d){
-    if(!d) return '';
+    if(!d || typeof d.getTime!=='function' || isNaN(d.getTime())) return '';
     return d.getFullYear()+'-'+(d.getMonth()<9?'0':'')+(d.getMonth()+1);
   }
+  function mesChaveValida(k){ return /^\d{4}-\d{2}$/.test(String(k||'')); }
   function transacoesDaFatura(nomeCartao, billId, mesPrevisto){
     if(!billId && !mesPrevisto) return [];
     return txDoCartao(nomeCartao).filter(function(t){
@@ -2545,7 +2572,18 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   // Cartão só aparece no app se tiver algo em aberto (fatura fechada não paga + fatura atual).
   // Cartões zerados (sem uso ou já quitados) somem da tela pra não poluir.
-  function cartaoTemValor(c){ return faturaAtual(c) > 0.005; }
+  // Cartão com MOVIMENTO recente nunca é escondido, mesmo que o cálculo dê zero. Sem isso,
+  // qualquer falha no cálculo fazia o cartão desaparecer da tela — o que é pior do que
+  // mostrar um valor zerado (foi o que aconteceu com o Itaú).
+  function temMovimentoRecente(c, dias){
+    var lim=new Date(); lim.setDate(lim.getDate()-(dias||60));
+    return txDoCartao(c.nome).some(function(t){ return t.data && t.data>=lim; });
+  }
+  function cartaoTemValor(c){
+    if(faturaAtual(c) > 0.005) return true;
+    if(faturasDoCartao(c.nome).some(function(f){ return !faturaPaga(f) && f.valor>0.005; })) return true;
+    return temMovimentoRecente(c, 60);
+  }
   function cartoesAtivosReais(){ return state.cartoes.filter(function(c){return c.ativo!=="Não" && cartaoTemValor(c);}); }
   // TODOS os cartões ativos, mesmo zerados. Usado onde o HISTÓRICO importa (Previsões):
   // um cartão sem fatura em aberto hoje pode ter faturas pagas em meses anteriores.
