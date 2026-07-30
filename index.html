@@ -1422,7 +1422,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return rows.map(function(c){
       return { id:strVal(c,0), cartao:strVal(c,1), venc:dateVal(c,2), valor:numVal(c,3),
                minimo:numVal(c,4), status:strVal(c,5), valorPago:numVal(c,6), dataPagamento:dateVal(c,7),
-               encargos:numVal(c,9) }; // coluna J — encargos informados pelo banco
+               encargos:numVal(c,9),      // coluna J — encargos informados pelo banco
+               fechamento:dateVal(c,10) }; // coluna K — data de fechamento da fatura
     }).filter(function(f){ return f.cartao && f.venc && f.valor > 0; })
       .sort(function(a,b){ return a.venc - b.venc; });
   }
@@ -2396,9 +2397,23 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     if(t.faturaPrev) return t.faturaPrev;
     if(t.faturaId){
       var fs=faturasDoCartao(nomeCartao);
-      for(var i=0;i<fs.length;i++){ if(fs[i].id===t.faturaId) return mesChaveDeData(fs[i].venc); }
+      for(var i=0;i<fs.length;i++){
+        if(fs[i].id!==t.faturaId) continue;
+        var mes=mesChaveDeData(fs[i].venc);
+        // O banco às vezes marca uma compra feita DEPOIS do fechamento com o ID da fatura que
+        // acabou de fechar. Nesses casos a cobrança cai na fatura SEGUINTE — foi isso que fez
+        // as compras do fim do mês (Itaú, e a Associação no Mercado Pago) desaparecerem.
+        if(fs[i].fechamento && t.data && t.data>fs[i].fechamento) return somaMesChave(mes,1);
+        return mes;
+      }
     }
     return '';
+  }
+  function somaMesChave(k,n){
+    if(!mesChaveValida(k)) return '';
+    var p=String(k).split('-');
+    var d=new Date(parseInt(p[0],10), parseInt(p[1],10)-1+(n||0), 1);
+    return mesChaveDeData(d);
   }
   // Âncora de cada compra parcelada: uma parcela com mês conhecido, pra projetar as demais.
   function ancorasParceladas(nomeCartao){
@@ -2430,10 +2445,12 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     txDoCartao(card.nome).forEach(function(t){
       if(ehPagamentoDeFatura(t)) return;
       var pertence=false;
-      if(billId && t.faturaId===billId) pertence=true;
-      else if(!t.faturaId && t.faturaPrev && t.faturaPrev===mesAlvo) pertence=true;
-      else if(!t.faturaId && !t.faturaPrev && !t.parcela && corte && t.data && t.data>corte &&
-              mesAlvo===mesPrimeiroAberto) pertence=true;
+      // 1) O mês de cobrança REAL do lançamento (já corrigido quando o banco atribui a
+      //    fatura errada para compras feitas depois do fechamento).
+      var mesTx=mesFaturaDaTx(card.nome,t);
+      if(mesChaveValida(mesTx)) pertence=(mesTx===mesAlvo);
+      // 2) Sem nenhuma referência de fatura: usa a janela do ciclo em formação.
+      else if(!t.parcela && corte && t.data && t.data>corte && mesAlvo===mesPrimeiroAberto) pertence=true;
       if(!pertence) return;
       itens.push({ descricao:t.descricao, categoria:t.categoria, valor:t.valor, data:t.data,
                    parcela:t.parcela, tipo:t.tipo, projetada:false, ref:t });
