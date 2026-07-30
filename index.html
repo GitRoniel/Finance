@@ -1615,7 +1615,14 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       if(!fech || isNaN(fech.getTime()) || fech>hoje) return;
       if(!melhor || fech>melhor) melhor=fech;
     });
-    return melhor;
+    if(melhor) return melhor;
+    // Reserva: o DIA de fechamento cadastrado na aba Cartões (último que já passou).
+    if(card.fechamento){
+      var d=new Date(hoje.getFullYear(),hoje.getMonth(),card.fechamento);
+      if(d>hoje) d.setMonth(d.getMonth()-1);
+      return d;
+    }
+    return null;
   }
   // Lançamentos da fatura EM FORMAÇÃO (é a mesma lista mostrada na tela do cartão).
   function itensFaturaAberta(card){
@@ -2932,12 +2939,21 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
     // Mês atual/passado: usa os lançamentos reais; as parcelas ainda não emitidas entram
     // marcadas como "prevista" (é o que o app do banco também mostra).
-    var dataPrev=mSel.vencimento||(mSel.janela&&mSel.janela.end)||new Date();
+    /* Parcela sem lançamento próprio é datada na ABERTURA DO CICLO (dia seguinte ao último
+       fechamento) — é quando o banco a inclui na fatura. Antes eu usava o vencimento, e
+       aparecia "10 de agosto" numa parcela que entrou na fatura em 5/6 de julho. */
+    var dataPrev=(function(){
+      var fech=corteUltimoFechamento(card);
+      if(fech){ var d=new Date(fech.getTime()); d.setDate(d.getDate()+1); return d; }
+      return (mSel.janela&&mSel.janela.start)||mSel.vencimento||new Date();
+    })();
+    // "prevista" só faz sentido para meses FUTUROS. Na fatura em formação a parcela já está
+    // sendo cobrada, então não marcamos como previsão.
+    var ehMesAberto=(mesPrev===mesPrimeiroAberto);
     var txs=itens.map(function(x){
       if(x.ref) return x.ref;
       return { descricao:x.descricao, categoria:x.categoria, valor:x.valor, data:dataPrev,
-               parcela:x.parcela, tipo:x.tipo||'Saída', projetada:true,
-               parcelamentoId:(x.parcela?('Parcela '+x.parcela.num+' de '+x.parcela.total+' · prevista'):'prevista') };
+               parcela:x.parcela, tipo:x.tipo||'Saída', projetada:!ehMesAberto };
     });
     if(!txs.length) txs=transacoesDoCartaoJanela(card.nome,mSel.janela);
     if(tt) tt.textContent=mSel.atual?'Transações':'Transações · fatura de '+MESES_COMPLETO[mSel.mes];
