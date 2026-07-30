@@ -1273,6 +1273,25 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 
   function strVal(row, i){ var v = cellVal(row, i); return v==null ? "" : String(v); }
 
+  /* Normaliza uma célula de MÊS para "AAAA-MM". Necessário porque o Google Sheets converte
+     "2026-08" numa DATA (01/08/2026) — e aí a célula chega como "Date(2026,7,1)". Era isso
+     que fazia as parcelas do mês serem descartadas em silêncio. */
+  function paraMesChave(v){
+    if(v==null) return '';
+    if(v instanceof Date) return isNaN(v.getTime())?'':mesChaveDeData(v);
+    var s=String(v).trim();
+    if(!s) return '';
+    if(/^\d{4}-\d{2}$/.test(s)) return s;                        // já no formato certo
+    var g=/^Date\((\d+)\s*,\s*(\d+)/.exec(s);                    // "Date(2026,7,1)" do gviz
+    if(g){ var mo=(+g[2])+1; return g[1]+'-'+(mo<10?'0':'')+mo; }
+    var iso=/^(\d{4})-(\d{2})/.exec(s);                          // "2026-08-01"
+    if(iso) return iso[1]+'-'+iso[2];
+    var br=/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);             // "01/08/2026"
+    if(br) return br[3]+'-'+(br[2].length<2?'0':'')+br[2];
+    return '';
+  }
+  function mesVal(row, i){ return paraMesChave(cellVal(row, i)); }
+
   function dateVal(row, i){ return parseGvizDate(cellVal(row, i)); }
 
   function clamp(n, min, max){ return Math.min(max, Math.max(min, n)); }
@@ -1347,7 +1366,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var data = dateVal(c,1);
       var parcela = decodeParcela(strVal(c,8));
       var faturaId = strVal(c,11);       // coluna L — fatura em que o BANCO cobrou (já fechada)
-      var faturaPrev = strVal(c,12);     // coluna M — "AAAA-MM" da fatura prevista (pendentes)
+      var faturaPrev = mesVal(c,12);     // coluna M — mês da fatura prevista (aceita texto ou data)
       // Sem "Fatura ID" (linhas antigas), caímos no antigo palpite: joga a parcela N para N-1
       // meses à frente da compra. Esse chute erra por um mês quando a compra é feita depois do
       // fechamento — era o que empurrava parcelas de agosto para julho. Com o Fatura ID
@@ -1376,7 +1395,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         valorTotal: total, nParcelas: nParcelas, valorParcela: vParc, inicio: inicio,
         pagas: numVal(c,8), restantes: numVal(c,9), status: strVal(c,10),
         proxNum: numVal(c,11),        // coluna L — nº da próxima parcela
-        proxMes: strVal(c,12)         // coluna M — "AAAA-MM" em que ela cai
+        proxMes: mesVal(c,12)         // coluna M — mês da próxima parcela (texto ou data)
       };
     }).filter(function(x){ return x.descricao; });
   }
