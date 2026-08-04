@@ -2202,6 +2202,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var v=t.tipo==='Entrada'?t.valor:-t.valor;
       diaMap[key].total+=v;
     });
+    dias.sort(function(a,b){ return diaMap[b].date-diaMap[a].date; }); // mais recente no topo
 
     tl.innerHTML=dias.map(function(key){
       var grupo=diaMap[key];
@@ -2448,9 +2449,33 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   function chaveCompraParc(t){
     return normDescParc(t.descricao)+'|'+((t.parcela&&t.parcela.total)||0);
   }
-  // Mês da fatura ("AAAA-MM") em que um lançamento REAL foi (ou será) cobrado.
-  function mesFaturaDaTx(nomeCartao, t){
-    if(t.faturaPrev) return t.faturaPrev;
+  // Fatura (mês de vencimento) cuja JANELA contém uma data — usada só para lançamentos
+  // antigos que vieram sem "Fatura ID": é a 1ª fatura cujo fechamento é posterior à compra.
+  function mesFaturaPorData(nomeCartao, data){
+    if(!data || isNaN(data.getTime())) return '';
+    var fs=faturasDoCartao(nomeCartao), melhor=null;
+    for(var i=0;i<fs.length;i++){
+      var fech=fs[i].fechamento;
+      if(!fech || isNaN(fech.getTime()) || data>fech) continue;
+      if(!melhor || fech<melhor.fechamento) melhor=fs[i];
+    }
+    return melhor?mesChaveDeData(melhor.venc):'';
+  }
+  /* Mês da fatura ("AAAA-MM") em que um lançamento REAL foi (ou será) cobrado.
+     ESTA É A "FÓRMULA" ÚNICA DE TODOS OS CARTÕES — a mesma que faz o Nubank bater com o app
+     do banco. A ordem das regras é o que importa:
+
+       1. Coluna L (Fatura ID) preenchida → o banco JÁ disse em qual fatura cobrou. Manda ela.
+          (com a correção: compra feita depois do fechamento cai na fatura SEGUINTE)
+       2. Coluna M (Fatura Prevista) só tira o lançamento da fatura aberta quando aponta para
+          um mês FUTURO — é o caso das parcelas que ainda vão entrar.
+       3. Coluna L VAZIA = o banco ainda não cobrou ⇒ o lançamento é da fatura EM ABERTO.
+          Era isto que faltava: o Itaú Gold devolve as compras do ciclo atual sem Fatura ID,
+          e elas ficavam sem mês nenhum — por isso a fatura dele aparecia zerada.
+          Exceção: se a compra é ANTERIOR ao último fechamento, ela obviamente já passou por
+          um ciclo fechado, então vai para a fatura cuja janela contém a data (senão, um
+          histórico inteiro sem ID cairia todo dentro da fatura aberta e a inflaria). */
+  function mesFaturaDaTx(nomeCartao, t, mesAberto, corte){
     if(t.faturaId){
       var fs=faturasDoCartao(nomeCartao);
       for(var i=0;i<fs.length;i++){
@@ -2462,8 +2487,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         if(fs[i].fechamento && t.data && t.data>fs[i].fechamento) return somaMesChave(mes,1);
         return mes;
       }
+      // ID desconhecido na aba Faturas: segue para as regras abaixo.
     }
-    return '';
+    if(mesChaveValida(t.faturaPrev) &&
+       (!mesChaveValida(mesAberto) || difMesesChave(mesAberto,t.faturaPrev)>0)) return t.faturaPrev;
+    if(mesChaveValida(mesAberto)){
+      if(!corte || !t.data || isNaN(t.data.getTime()) || t.data>corte) return mesAberto;
+      return mesFaturaPorData(nomeCartao,t.data) || mesChaveDeData(t.data);
+    }
+    return mesChaveValida(t.faturaPrev)?t.faturaPrev:'';
   }
   function somaMesChave(k,n){
     if(!mesChaveValida(k)) return '';
@@ -2472,11 +2504,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     return mesChaveDeData(d);
   }
   // Âncora de cada compra parcelada: uma parcela com mês conhecido, pra projetar as demais.
-  function ancorasParceladas(nomeCartao){
+  function ancorasParceladas(nomeCartao, mesAberto, corte){
     var mapa={};
     txDoCartao(nomeCartao).forEach(function(t){
       if(!t.parcela || !isFinite(t.parcela.num) || !isFinite(t.parcela.total) || t.parcela.total<2) return;
-      var mes=mesFaturaDaTx(nomeCartao,t);
+      var mes=mesFaturaDaTx(nomeCartao,t,mesAberto,corte);
       if(!mesChaveValida(mes)) return; // sem mês confiável não há como projetar o cronograma
       var k=chaveCompraParc(t);
       // Guarda a parcela de maior número conhecido (a mais recente do cronograma).
@@ -2498,12 +2530,15 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
      mesPrimeiroAberto = mês do ciclo em formação (pra alocar compras à vista sem previsão). */
   function itensDaFaturaMes(card, mesAlvo, billId, corte, mesPrimeiroAberto){
     var itens=[], jaTem={};
+    // Fechamento mais recente já ocorrido: é a fronteira entre "já foi cobrado" e "ainda está
+    // no ciclo em formação". É o que permite tratar lançamento sem Fatura ID como em aberto.
+    var corteAberto=corteUltimoFechamento(card);
     txDoCartao(card.nome).forEach(function(t){
       if(ehPagamentoDeFatura(t)) return;
       var pertence=false;
       // 1) O mês de cobrança REAL do lançamento (já corrigido quando o banco atribui a
       //    fatura errada para compras feitas depois do fechamento).
-      var mesTx=mesFaturaDaTx(card.nome,t);
+      var mesTx=mesFaturaDaTx(card.nome,t,mesPrimeiroAberto,corteAberto);
       if(mesChaveValida(mesTx)) pertence=(mesTx===mesAlvo);
       // 2) Sem nenhuma referência de fatura: usa a janela do ciclo em formação.
       else if(!t.parcela && corte && t.data && t.data>corte && mesAlvo===mesPrimeiroAberto) pertence=true;
@@ -2534,7 +2569,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     });
     // RESERVA: compras parceladas que ainda não estão na aba Parcelamentos — deduz pelo
     // cronograma das transações já cobradas.
-    var anc=ancorasParceladas(card.nome);
+    var anc=ancorasParceladas(card.nome, mesPrimeiroAberto, corteAberto);
     Object.keys(anc).forEach(function(k){
       if(jaTem[k] || usouCronograma[k]) return;
       var a=anc[k];
@@ -2547,7 +2582,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       itens.push({ descricao:a.descricao, categoria:a.categoria, valor:valorParcelaSeguinte(a),
                    data:null, parcela:{num:num,total:a.total}, tipo:'Saída', projetada:true });
     });
-    return itens.sort(function(x,y){ return y.valor-x.valor; });
+    // Ordem: MAIS RECENTE primeiro. Parcelas projetadas (sem data própria) entram como se
+    // fossem da abertura do ciclo, então ficam no fim junto do início do período.
+    return itens.sort(function(x,y){
+      var dx=x.data?x.data.getTime():-Infinity, dy=y.data?y.data.getTime():-Infinity;
+      if(dx!==dy) return dy-dx;
+      return y.valor-x.valor;
+    });
   }
   // Lançamentos EXATOS de uma fatura: pelo ID (faturas já fechadas) ou pelo mês previsto
   // "AAAA-MM" (fatura ainda aberta — é assim que separamos as parcelas futuras, que o Pluggy
@@ -3016,6 +3057,11 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       var v=t.tipo==='Entrada'?t.valor:-t.valor;
       diaMap[key].total+=v;
     });
+    // ORDEM CRONOLÓGICA INVERSA: dia mais novo no topo, mais antigo embaixo — e dentro de cada
+    // dia, o maior valor primeiro. Antes a ordem vinha da lista de entrada (que era por valor),
+    // então as datas apareciam embaralhadas.
+    dias.sort(function(a,b){ return diaMap[b].date-diaMap[a].date; });
+    dias.forEach(function(k){ diaMap[k].txs.sort(function(x,y){ return (y.valor||0)-(x.valor||0); }); });
     var txFlat=[]; // referência das transações renderizadas, pro clique de renomear achar o item
     tl.innerHTML=dias.map(function(key){
       var grupo=diaMap[key];
