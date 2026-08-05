@@ -17,9 +17,13 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167.png">
 <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<!-- Favicon da aba do navegador. O .ico vem primeiro porque carrega 16/32/48 num arquivo só
+     e é o que o navegador busca sozinho na raiz do site, mesmo sem estas tags. -->
+<link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -817,6 +821,47 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .cctx-val{font-size:14px;font-weight:600;font-family:var(--font-display);letter-spacing:-0.01em;}
 .cctx-val.in{color:var(--lime-deep);}
 .cctx-tipo{font-size:10px;color:var(--text-faint);font-weight:400;}
+
+/* ===== Lista CORRIDA — usada na aba Cartões =====
+   Em vez de um card por dia com cabeçalho em cima, a data vira uma coluna estreita dentro da
+   PRÓPRIA linha: data · ícone · nome/categoria · valor. Some o cabeçalho de dia (~28px por
+   data) e a fatura inteira passa a caber na tela. A coluna de data tem largura fixa pra os
+   nomes ficarem alinhados entre si. */
+.cc-flat{
+  border-radius:16px;overflow:hidden;
+  background:rgba(255,255,255,0.038);
+  border:1px solid rgba(255,255,255,0.06);
+  box-shadow:0 4px 14px rgba(0,0,0,0.14);
+  content-visibility:auto;contain-intrinsic-size:auto 320px;
+}
+[data-theme="light"] .cc-flat{
+  background:rgba(255,255,255,0.55);
+  border-color:rgba(0,0,0,0.05);
+  box-shadow:0 3px 10px rgba(40,60,50,0.07);
+}
+.cc-flat .cctx{display:flex;align-items:center;gap:9px;padding:7px 12px;transition:background .15s;}
+.cc-flat .cctx:not(:last-child){border-bottom:1px solid var(--hairline);}
+.cc-flat .cctx:active{background:rgba(255,255,255,0.035);}
+.cc-flat .cctx .cat-ic{width:32px;height:32px;border-radius:10px;flex:0 0 32px;}
+.cc-flat .cctx .cat-ic svg{width:15px;height:15px;}
+.cc-flat .cctx-desc{font-size:13px;}
+.cc-flat .cctx-meta{font-size:10.5px;}
+.cc-flat .cctx-val{font-size:13.5px;}
+.cctx-data{
+  flex:0 0 42px;width:42px;
+  font-size:12px;font-weight:600;line-height:1.1;color:var(--text-dim);
+  font-family:var(--font-display);letter-spacing:-0.01em;
+}
+.cctx-data i{display:block;font-style:normal;font-size:10px;font-weight:500;color:var(--text-faint);}
+/* Data igual à da linha de cima: esconde o texto mas mantém o espaço, senão a lista vira
+   uma coluna de datas repetidas. */
+.cctx-data.rep{visibility:hidden;}
+[data-compacto="on"] .cc-flat .cctx{padding:5px 10px!important;gap:8px!important;}
+[data-compacto="on"] .cc-flat .cctx .cat-ic{width:28px!important;height:28px!important;border-radius:9px!important;flex:0 0 28px!important;}
+[data-compacto="on"] .cc-flat .cctx .cat-ic svg{width:13px!important;height:13px!important;}
+[data-compacto="on"] .cctx-data{flex:0 0 38px!important;width:38px!important;font-size:11.5px!important;}
+[data-compacto="on"] .cc-flat .cctx-desc{font-size:12.5px!important;}
+[data-compacto="on"] .cc-flat .cctx-val{font-size:13px!important;}
 
 /* sub-abas (parcelas/assinaturas) */
 .parc-sticky-hdr{position:sticky;top:var(--top-bar-h,0px);z-index:20;background:var(--bg);margin:0 -16px;padding:6px 16px 8px;}
@@ -2995,10 +3040,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
       if(tc) tc.textContent=itens.length+(itens.length===1?' lançamento':' lançamentos');
       if(!itens.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Sem lançamentos previstos para este mês.</div></div>'; return; }
       var totPrev=itens.reduce(function(s,x){return s+x.valor;},0);
-      tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Previsto para esta fatura</span><span class="cc-day-total neg">−'+formatBRL(totPrev)+'</span></div><div class="cc-day-txs">'+
+      // Mesmo visual corrido da fatura real. Aqui não há data (a parcela ainda não foi
+      // lançada), então a coluna de data mostra a parcela — que é a informação útil.
+      tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Previsto para esta fatura</span><span class="cc-day-total neg">−'+formatBRL(totPrev)+'</span></div><div class="cc-flat">'+
         itens.map(function(x){
           var meta=x.parcela?('parcela '+x.parcela.num+' de '+x.parcela.total):(x.categoria||'');
-          return '<div class="cctx">'+categoriaIconeHtml(x.categoria||'',false)+
+          var col=x.parcela?(x.parcela.num+'<i>de '+x.parcela.total+'</i>'):'';
+          return '<div class="cctx"><div class="cctx-data">'+col+'</div>'+categoriaIconeHtml(x.categoria||'',false)+
             '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(x.parcela?nomeParcela(x.descricao,x.valor,x.parcela.total):(sentenceCase(x.descricao)||'—'))+
             (x.projetada?'<span class="tx-parcela">prevista</span>':'')+'</div>'+
             '<div class="cctx-meta">'+escapeHtml(meta)+'</div></div>'+
@@ -3031,7 +3079,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     var reconHtml=reconciliacaoFaturaHtml(mSel, txs, card);
     if(!txs.length){ tl.innerHTML=reconHtml+'<div class="empty" style="padding:28px"><div class="et">Nenhuma transação neste ciclo.</div></div>'; wireFatPagaCartao(tl, card); return; }
 
-    renderTxAgrupadasEm(tl, txs, { reRender: function(){ renderDetalheCartao(card); } });
+    // corrida:true → lista compacta com a data na própria linha (visual do app do banco).
+    renderTxAgrupadasEm(tl, txs, { corrida:true, reRender: function(){ renderDetalheCartao(card); } });
     if(reconHtml) tl.insertAdjacentHTML('afterbegin', reconHtml);
     wireFatPagaCartao(tl, card);
   }
@@ -3073,31 +3122,51 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
     dias.sort(function(a,b){ return diaMap[b].date-diaMap[a].date; });
     dias.forEach(function(k){ diaMap[k].txs.sort(function(x,y){ return (y.valor||0)-(x.valor||0); }); });
     var txFlat=[]; // referência das transações renderizadas, pro clique de renomear achar o item
-    tl.innerHTML=dias.map(function(key){
-      var grupo=diaMap[key];
-      var totalPos=grupo.total>=0;
-      var totalFmt=(totalPos?'+':'')+formatBRL(Math.abs(grupo.total));
-      var txsHtml=grupo.txs.map(function(t){
-        var ent=t.tipo==="Entrada";
-        var idx=txFlat.push(t)-1;
-        // A parcela agora aparece na linha de baixo (junto da categoria), não ao lado do nome.
-        var parc=(!t.parcela && t.projetada)?'<span class="tx-parcela">prevista</span>':'';
-        var apel=temApelido(t)?'<span class="cctx-apel" title="Nome personalizado">✎</span>':'';
-        return '<div class="cctx cctx-edit" data-txidx="'+idx+'" title="Toque para renomear esta compra">'+iconeFn(t,ent)+
-          '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeTx(t))+parc+apel+'</div>'+
-          '<div class="cctx-meta">'+metaFn(t)+'</div></div>'+
-          '<div class="cctx-right">'+
-            '<div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div>'+
-          '</div></div>';
+    // Uma linha de transação. dataHtml só é usado na lista corrida (aba Cartões).
+    function linhaTx(t, dataHtml){
+      var ent=t.tipo==="Entrada";
+      var idx=txFlat.push(t)-1;
+      // A parcela aparece na linha de baixo (junto da categoria), não ao lado do nome.
+      var parc=(!t.parcela && t.projetada)?'<span class="tx-parcela">prevista</span>':'';
+      var apel=temApelido(t)?'<span class="cctx-apel" title="Nome personalizado">✎</span>':'';
+      return '<div class="cctx cctx-edit" data-txidx="'+idx+'" title="Toque para renomear esta compra">'+
+        (dataHtml||'')+iconeFn(t,ent)+
+        '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeTx(t))+parc+apel+'</div>'+
+        '<div class="cctx-meta">'+metaFn(t)+'</div></div>'+
+        '<div class="cctx-right">'+
+          '<div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(t.valor)+'</div>'+
+        '</div></div>';
+    }
+
+    if(opts.corrida){
+      /* LISTA CORRIDA (aba Cartões): um único cartão, sem cabeçalho de dia. A data vira a
+         primeira coluna da linha — data, nome e valor na mesma altura. Repetições da mesma
+         data ficam invisíveis (mas ocupando o espaço), pra não virar uma coluna repetida. */
+      var MES_ABREV=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      var anoAtual=new Date().getFullYear();
+      tl.innerHTML='<div class="cc-flat">'+dias.map(function(key){
+        var g=diaMap[key], d=g.date;
+        var rotulo=d.getDate()+' '+MES_ABREV[d.getMonth()];
+        var ano=(d.getFullYear()!==anoAtual)?'<i>'+d.getFullYear()+'</i>':'';
+        return g.txs.map(function(t,i){
+          return linhaTx(t,'<div class="cctx-data'+(i>0?' rep':'')+'">'+rotulo+ano+'</div>');
+        }).join('');
+      }).join('')+'</div>';
+    } else {
+      tl.innerHTML=dias.map(function(key){
+        var grupo=diaMap[key];
+        var totalPos=grupo.total>=0;
+        var totalFmt=(totalPos?'+':'')+formatBRL(Math.abs(grupo.total));
+        var txsHtml=grupo.txs.map(function(t){ return linhaTx(t); }).join("");
+        return '<div class="cc-day-group">'+
+          '<div class="cc-day-hdr">'+
+            '<span class="cc-day-label">'+grupo.label+'</span>'+
+            '<span class="cc-day-total'+(totalPos?' pos':' neg')+'">'+totalFmt+'</span>'+
+          '</div>'+
+          '<div class="cc-day-txs">'+txsHtml+'</div>'+
+        '</div>';
       }).join("");
-      return '<div class="cc-day-group">'+
-        '<div class="cc-day-hdr">'+
-          '<span class="cc-day-label">'+grupo.label+'</span>'+
-          '<span class="cc-day-total'+(totalPos?' pos':' neg')+'">'+totalFmt+'</span>'+
-        '</div>'+
-        '<div class="cc-day-txs">'+txsHtml+'</div>'+
-      '</div>';
-    }).join("");
+    }
     tl.querySelectorAll('.cctx-edit').forEach(function(el){
       el.addEventListener('click', function(){
         var t=txFlat[Number(el.getAttribute('data-txidx'))];
