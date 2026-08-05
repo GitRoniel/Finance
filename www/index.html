@@ -206,7 +206,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 [data-compacto="on"] .cc-day-txs .cctx{padding:6px 11px!important;}
 [data-compacto="on"] .cc-day-txs .cctx .cat-ic{width:30px!important;height:30px!important;flex:0 0 30px!important;}
 [data-compacto="on"] .cctx{padding:6px 0!important;}
-[data-compacto="on"] .fatura-reconc{padding:9px 11px!important;margin-bottom:8px!important;}
+[data-compacto="on"] div.fatura-reconc{padding:6px 9px!important;margin-bottom:8px!important;}
 [data-compacto="on"] .fatura-reconc .rec-oficial{font-size:16px!important;}
 /* previsões */
 [data-compacto="on"] .prev-duo{padding:8px 12px!important;margin-bottom:6px!important;}
@@ -531,17 +531,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .fatura-nota{font-size:11.5px;color:var(--text-faint);margin-top:10px;padding:9px 11px;border-radius:10px;background:rgba(120,120,140,0.08);display:flex;align-items:flex-start;gap:6px;line-height:1.35;}
 .fatura-nota.warn{color:var(--orange);background:rgba(240,121,31,0.1);}
 /* Reconciliação da fatura (aba Cartões): explica por que a soma dos lançamentos difere do valor oficial. */
-.fatura-reconc{border-radius:14px;background:rgba(120,120,140,0.08);border:1px solid var(--hairline);padding:12px 13px;margin:2px 0 12px;}
-.fatura-reconc .rec-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--hairline);}
+div.fatura-reconc{border-radius:14px;background:rgba(120,120,140,0.08);border:1px solid var(--hairline);padding:7px 10px!important;margin:2px 0 12px;}
+.fatura-reconc .rec-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid var(--hairline);}
 .fatura-reconc .rec-tit{font-size:12px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;}
 .fatura-reconc .rec-oficial{font-size:19px;font-weight:700;font-family:var(--font-display);letter-spacing:-0.02em;}
-.fatura-reconc .rec-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--text-dim);padding:3px 0;}
+.fatura-reconc .rec-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--text-dim);padding:1px 0;}
 .fatura-reconc .rec-neg{color:var(--red);font-weight:600;}
 .fatura-reconc .rec-pos{color:var(--lime-deep);font-weight:600;}
-.fatura-reconc .rec-foot{margin-top:8px;}
-.fatura-reconc .rec-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;}
-.fatura-reconc .rec-badge.ok{color:var(--lime-deep);background:rgba(63,224,163,0.13);}
-.fatura-reconc .rec-badge.diff{color:var(--orange);background:rgba(240,121,31,0.12);}
 .fatura-reconc .rec-paga{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px solid var(--hairline);font-size:12.5px;color:var(--text-dim);font-weight:600;}
 .cc-disp{font-size:12.5px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
 .cc-glow{position:absolute;right:-30px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.20),transparent 70%);pointer-events:none;}
@@ -2961,30 +2957,15 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       var v=Number(t.valor)||0;
       if(t.tipo==='Entrada') somaEntrada+=v; else somaSaida+=v;
     });
-    var liquido=somaSaida-somaEntrada;
-    // Encargos REAIS informados pelo banco (aba Faturas, coluna "Encargos" — vem do Pluggy).
-    var billRec=card?billDoMes(card,mSel):null;
-    var encargos=billRec?(Number(billRec.encargos)||0):0;
-    // O que sobra DEPOIS de descontar compras, estornos e os encargos reais. Se sobrar algo,
-    // é diferença que não sabemos explicar (lançamento faltando, ciclo trocado, etc.) — e a
-    // gente diz isso com todas as letras em vez de chamar de "encargo".
-    var resto=Math.round((oficial-liquido-encargos)*100)/100;
-    var bate=Math.abs(resto)<0.01;
+    /* O card mostra só o total oficial do banco e o que foi lançado. A linha de
+       "diferença não identificada", o selo de conferência e a linha de encargos saíram
+       a pedido — a apuração de divergência agora é feita fora do app, pelo
+       conferirFatura() do Apps Script, que aponta o lançamento exato que falta. */
     var linhas='';
     linhas+='<div class="rec-row"><span>Compras lançadas</span><span class="rec-neg">−'+formatBRL(somaSaida)+'</span></div>';
     if(somaEntrada>0.005) linhas+='<div class="rec-row"><span>Estornos e créditos</span><span class="rec-pos">+'+formatBRL(somaEntrada)+'</span></div>';
-    if(Math.abs(encargos)>0.005){
-      linhas+='<div class="rec-row"><span>Encargos do banco (IOF, juros, anuidade)</span><span class="'+(encargos>0?'rec-neg':'rec-pos')+'">'+(encargos>0?'−':'+')+formatBRL(Math.abs(encargos))+'</span></div>';
-    }
-    if(!bate){
-      var rotulo=resto>0?'Diferença não identificada':'Crédito não identificado';
-      linhas+='<div class="rec-row"><span title="Pode ser um lançamento que ainda não sincronizou ou uma compra atribuída a outro ciclo">'+rotulo+'</span><span class="'+(resto>0?'rec-neg':'rec-pos')+'">'+(resto>0?'−':'+')+formatBRL(Math.abs(resto))+'</span></div>';
-    }
-    var selo=bate
-      ? '<span class="rec-badge ok">✓ Bate com a fatura</span>'
-      : '<span class="rec-badge diff">Diferença de '+formatBRL(Math.abs(resto))+'</span>';
     // Toggle "marcar como paga" — só para fatura REAL (tem billId na aba Faturas).
-    var bill=billRec;
+    var bill=card?billDoMes(card,mSel):null;
     var pagaHtml='';
     if(bill&&bill.id){
       var paga=faturaPaga(bill);
@@ -2994,7 +2975,6 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     return '<div class="fatura-reconc">'+
       '<div class="rec-top"><span class="rec-tit">Fatura oficial</span><span class="rec-oficial">'+formatBRL(oficial)+'</span></div>'+
       linhas+
-      '<div class="rec-foot">'+selo+'</div>'+
       pagaHtml+
     '</div>';
   }
