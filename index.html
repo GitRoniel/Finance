@@ -853,9 +853,6 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
   font-family:var(--font-display);letter-spacing:-0.01em;
 }
 .cctx-data i{display:block;font-style:normal;font-size:10px;font-weight:500;color:var(--text-faint);}
-/* Data igual à da linha de cima: esconde o texto mas mantém o espaço, senão a lista vira
-   uma coluna de datas repetidas. */
-.cctx-data.rep{visibility:hidden;}
 [data-compacto="on"] .cc-flat .cctx{padding:5px 10px!important;gap:8px!important;}
 [data-compacto="on"] .cc-flat .cctx .cat-ic{width:28px!important;height:28px!important;border-radius:9px!important;flex:0 0 28px!important;}
 [data-compacto="on"] .cc-flat .cctx .cat-ic svg{width:13px!important;height:13px!important;}
@@ -1004,6 +1001,24 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .fat-item .cat-ic .txt{font-size:11px;font-weight:700;font-family:var(--font-display);}
 .fat-paga-chip{font-size:11px;font-weight:600;color:var(--lime-deep);background:rgba(63,224,163,0.13);padding:5px 11px;border-radius:20px;flex:0 0 auto;white-space:nowrap;}
 .rec-del{color:var(--text-faint);cursor:pointer;font-size:17px;padding:2px 3px;flex:0 0 auto;}
+
+/* ===== Reordenar recorrentes: segurar e arrastar =====
+   O item preso ao dedo sobe de plano (sombra + escala) e os vizinhos abrem espaço
+   deslizando. Só os vizinhos ganham transição — o item arrastado acompanha o dedo em
+   tempo real, então nele a transição atrapalharia. */
+.rec-item{will-change:transform;}
+.rec-item.rec-slide{transition:transform .22s cubic-bezier(.2,.8,.25,1);}
+.rec-item.rec-drag{
+  position:relative;z-index:40;
+  border-color:var(--glass-highlight);
+  box-shadow:0 14px 30px rgba(0,0,0,0.38);
+  transition:box-shadow .18s ease-out,border-color .18s ease-out;
+}
+[data-theme="light"] .rec-item.rec-drag{box-shadow:0 12px 26px rgba(40,60,50,0.18);}
+/* Durante o arraste nada fica selecionável. A rolagem é bloqueada no touchmove (via JS) —
+   usar overflow:hidden aqui faria a página dar um salto no iOS. */
+body.rec-arrastando .rec-item{cursor:grabbing;}
+body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
 /* Tag do mês */
 .rec-mes-tag{font-size:12px;color:var(--text-faint);font-weight:500;margin-left:6px;}
 /* Filtro Todos/Entrada/Saída (abaixo do título "Recorrentes") */
@@ -3148,8 +3163,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         var g=diaMap[key], d=g.date;
         var rotulo=d.getDate()+' '+MES_ABREV[d.getMonth()];
         var ano=(d.getFullYear()!==anoAtual)?'<i>'+d.getFullYear()+'</i>':'';
-        return g.txs.map(function(t,i){
-          return linhaTx(t,'<div class="cctx-data'+(i>0?' rep':'')+'">'+rotulo+ano+'</div>');
+        return g.txs.map(function(t){
+          return linhaTx(t,'<div class="cctx-data">'+rotulo+ano+'</div>');
         }).join('');
       }).join('')+'</div>';
     } else {
@@ -4369,13 +4384,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
                    : 'Nada cadastrado para este mês. Toque em “+ Cadastrar”.';
       return '<div class="empty" style="padding:16px 0 4px"><div class="et">'+msgVazio+'</div></div>';
     }
-    return recsAtivos.map(function(x){
+    return ordenarRecs(recsAtivos).map(function(x){
       var r=x.r, i=x.i;
       var feito = !!marcados[recMarcKey(r,i)];
       var lblFeito = r.tipo==='in' ? 'recebido' : 'pago';
       var lblPend  = r.tipo==='in' ? 'a receber' : 'a pagar';
       var clsFeito = feito ? ' rec-feito'+(r.tipo==='out'?' rec-feito-out':'') : '';
-      return '<div class="rec-item'+clsFeito+'" id="rec-item-'+i+'">'+
+      return '<div class="rec-item'+clsFeito+'" id="rec-item-'+i+'" data-ordkey="'+escapeHtml(recMarcKey(r,i))+'" title="Segure e arraste para reordenar">'+
         '<div class="rec-dot '+r.tipo+'"></div>'+
         '<div class="rec-main" data-edit="'+i+'">'+
           '<div class="rec-name">'+escapeHtml(r.nome)+(r.lembrete?' <span class="rec-bell" title="Lembrete todo dia '+(r.lembreteDia||'')+'">🔔</span>':'')+'</div>'+
@@ -4499,6 +4514,142 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
         irPara(4);
       });
     });
+    wireRecArraste();
+  }
+
+  /* ==========================================================================
+     REORDENAR RECORRENTES — segurar e arrastar
+     A ordem é guardada à parte, por IDENTIDADE do item (a mesma chave das marcações
+     Pago/Recebido), NÃO por posição no array: o sync com a planilha reescreve o array
+     inteiro, então uma ordem baseada em índice se perderia a cada sincronização.
+     ========================================================================== */
+  var ORDEM_KEY = 'financeiro-recorrentes-ordem';
+  function lerOrdemRec(){ try{ return JSON.parse(localStorage.getItem(ORDEM_KEY))||[]; }catch(e){ return []; } }
+  function salvarOrdemRec(a){ try{ localStorage.setItem(ORDEM_KEY, JSON.stringify(a)); }catch(e){} }
+
+  // Aplica a ordem escolhida à lista que vai ser exibida. Item ainda sem posição definida
+  // (cadastrado depois da última arrastada) vai pro fim, mantendo a ordem original entre eles.
+  function ordenarRecs(lista){
+    var ord = lerOrdemRec();
+    if(!ord.length) return lista;
+    var pos={}; ord.forEach(function(k,i){ pos[k]=i; });
+    return lista.map(function(x,i){ return {x:x, i:i}; }).sort(function(a,b){
+      var pa=pos[recMarcKey(a.x.r,a.x.i)], pb=pos[recMarcKey(b.x.r,b.x.i)];
+      if(pa==null && pb==null) return a.i-b.i;
+      if(pa==null) return 1;
+      if(pb==null) return -1;
+      return pa-pb;
+    }).map(function(o){ return o.x; });
+  }
+
+  /* Grava a nova ordem SEM bagunçar os itens que não estão na tela (filtrados por mês ou
+     por Entrada/Saída): só as posições que os itens visíveis já ocupavam são reescritas. */
+  function salvarOrdemDosVisiveis(chavesNovas){
+    var todas = lerRecorrentes().map(function(r,i){ return recMarcKey(r,i); });
+    var completa = lerOrdemRec().filter(function(k){ return todas.indexOf(k)!==-1; });
+    todas.forEach(function(k){ if(completa.indexOf(k)===-1) completa.push(k); });
+    var slots=[];
+    completa.forEach(function(k,i){ if(chavesNovas.indexOf(k)!==-1) slots.push(i); });
+    slots.forEach(function(p,n){ completa[p]=chavesNovas[n]; });
+    salvarOrdemRec(completa);
+  }
+
+  var recArraste = { ativo:false };
+  function wireRecArraste(){
+    var cont = document.getElementById('recLista');
+    if(!cont) return;
+    var itens = Array.prototype.slice.call(cont.querySelectorAll('.rec-item[data-ordkey]'));
+    if(itens.length < 2) return;
+
+    var alvo=null, idx=0, idxNovo=0, y0=0, passo=0, timer=null, houveDrag=false;
+
+    function limpar(){
+      if(timer){ clearTimeout(timer); timer=null; }
+      recArraste.ativo=false; alvo=null;
+    }
+    function posicionarVizinhos(){
+      itens.forEach(function(el,i){
+        if(el===alvo) return;
+        var d=0;
+        if(idxNovo>idx && i>idx && i<=idxNovo) d=-passo;
+        else if(idxNovo<idx && i>=idxNovo && i<idx) d=passo;
+        el.style.transform = d ? 'translateY('+d+'px)' : '';
+      });
+    }
+    function ativar(){
+      timer=null;
+      idx=itens.indexOf(alvo); if(idx<0) return;
+      idxNovo=idx; recArraste.ativo=true; houveDrag=true;
+      if(window.__cancelarPress) window.__cancelarPress(alvo); // desliga o efeito de pressão
+      var cs=getComputedStyle(alvo);
+      passo=alvo.offsetHeight+(parseFloat(cs.marginBottom)||0);
+      // Trava a altura pra lista não "pular" enquanto os vizinhos deslizam.
+      cont.style.minHeight=cont.offsetHeight+'px';
+      itens.forEach(function(el){ el.classList.add('rec-slide'); });
+      alvo.classList.add('rec-drag');
+      alvo.style.transform='translateY(0) scale(1.03)';   // animação de "pegar" o item
+      document.body.classList.add('rec-arrastando');
+      if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(e){} }
+      // Depois do "pegar", o item passa a seguir o dedo sem transição (senão fica arrastado).
+      setTimeout(function(){ if(alvo) alvo.classList.remove('rec-slide'); },190);
+    }
+    function mover(ev){
+      var dy=ev.clientY-y0;
+      if(!recArraste.ativo){
+        // Ainda na contagem do toque longo: se o dedo andou, é rolagem — cancela.
+        if(timer && Math.abs(dy)>9){ clearTimeout(timer); timer=null; alvo=null; }
+        return;
+      }
+      alvo.style.transform='translateY('+dy+'px) scale(1.03)';
+      var n=Math.min(itens.length-1, Math.max(0, idx+Math.round(dy/passo)));
+      if(n!==idxNovo){ idxNovo=n; posicionarVizinhos(); if(navigator.vibrate){ try{ navigator.vibrate(6); }catch(e){} } }
+    }
+    function soltar(){
+      if(!recArraste.ativo){ limpar(); return; }
+      var el=alvo, de=idx, para=idxNovo;
+      // Encaixa o item na posição final antes de reconstruir a lista.
+      el.classList.add('rec-slide');
+      el.style.transform='translateY('+((para-de)*passo)+'px) scale(1)';
+      var chaves=itens.map(function(n){ return n.getAttribute('data-ordkey'); });
+      chaves.splice(para, 0, chaves.splice(de,1)[0]);
+      document.body.classList.remove('rec-arrastando');
+      limpar();
+      setTimeout(function(){
+        salvarOrdemDosVisiveis(chaves);
+        cont.style.minHeight='';
+        cont.innerHTML=gerarRecListaHtml(prevMesOffset);
+        wireRecLista();
+      }, 210);
+    }
+
+    itens.forEach(function(el){
+      el.addEventListener('pointerdown', function(ev){
+        if(ev.pointerType==='mouse' && ev.button!==0) return;
+        if(ev.target.closest('.rec-toggle,.rec-del')) return;
+        if(recArraste.ativo) return;
+        alvo=el; y0=ev.clientY; houveDrag=false;
+        if(el.setPointerCapture){ try{ el.setPointerCapture(ev.pointerId); }catch(e){} }
+        timer=setTimeout(ativar, 320);   // toque longo
+      });
+      el.addEventListener('pointermove', function(ev){ if(alvo) mover(ev); });
+      el.addEventListener('pointerup', function(){ if(alvo) soltar(); });
+      el.addEventListener('pointercancel', function(){
+        if(recArraste.ativo) soltar(); else limpar();
+      });
+      // Depois de arrastar, o toque não pode virar "abrir para editar".
+      el.addEventListener('click', function(ev){
+        if(houveDrag){ ev.stopPropagation(); ev.preventDefault(); houveDrag=false; }
+      }, true);
+    });
+
+    // No celular o dedo rolaria a página junto com o arraste. Só dá pra impedir num
+    // listener de touchmove não-passivo — o pointermove não consegue.
+    if(!cont._semRolagem){
+      cont._semRolagem=true;
+      cont.addEventListener('touchmove', function(ev){
+        if(recArraste.ativo) ev.preventDefault();
+      }, {passive:false});
+    }
   }
 
   function wirePrevisoes(){
@@ -5712,6 +5863,13 @@ function pressUp(){
   window.gsap.to(pressedCard, { scale: 1, duration: 0.3, ease: 'power2.out', clearProps: 'transform' });
   pressedCard = null;
 }
+/* O arraste dos recorrentes escreve direto no style.transform. Se o efeito de pressão
+   continuasse ativo, o clearProps do GSAP apagaria a posição do item no meio do gesto. */
+window.__cancelarPress = function(el){
+  if(hasGSAP() && el){ try{ window.gsap.killTweensOf(el); }catch(e){} }
+  if(el) el.style.transform='';
+  pressedCard = null;
+};
 document.addEventListener('pointerdown', pressDown, { passive:true });
 document.addEventListener('pointerup', pressUp, { passive:true });
 document.addEventListener('pointercancel', pressUp, { passive:true });
