@@ -2514,6 +2514,12 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
   function chaveCompraParc(t){
     return normDescParc(t.descricao)+'|'+((t.parcela&&t.parcela.total)||0);
   }
+  // Dia de uma data como número comparável (AAAAMMDD) — compara datas ignorando a hora,
+  // que é o que importa quando o fechamento vem com horário e a compra não.
+  function diaNum(d){
+    if(!d || typeof d.getTime!=='function' || isNaN(d.getTime())) return 0;
+    return d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate();
+  }
   // Fatura (mês de vencimento) cuja JANELA contém uma data — usada só para lançamentos
   // antigos que vieram sem "Fatura ID": é a 1ª fatura cujo fechamento é posterior à compra.
   function mesFaturaPorData(nomeCartao, data){
@@ -2521,7 +2527,8 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     var fs=faturasDoCartao(nomeCartao), melhor=null;
     for(var i=0;i<fs.length;i++){
       var fech=fs[i].fechamento;
-      if(!fech || isNaN(fech.getTime()) || data>fech) continue;
+      // ">=" porque a compra feita NO dia do fechamento já pertence ao ciclo seguinte.
+      if(!fech || isNaN(fech.getTime()) || diaNum(data)>=diaNum(fech)) continue;
       if(!melhor || fech<melhor.fechamento) melhor=fs[i];
     }
     return melhor?mesChaveDeData(melhor.venc):'';
@@ -2549,7 +2556,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
         // O banco às vezes marca uma compra feita DEPOIS do fechamento com o ID da fatura que
         // acabou de fechar. Nesses casos a cobrança cai na fatura SEGUINTE — foi isso que fez
         // as compras do fim do mês (Itaú, e a Associação no Mercado Pago) desaparecerem.
-        if(fs[i].fechamento && t.data && t.data>fs[i].fechamento) return somaMesChave(mes,1);
+        if(fs[i].fechamento && t.data && diaNum(t.data)>diaNum(fs[i].fechamento)) return somaMesChave(mes,1);
         return mes;
       }
       // ID desconhecido na aba Faturas: segue para as regras abaixo.
@@ -2557,7 +2564,11 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     if(mesChaveValida(t.faturaPrev) &&
        (!mesChaveValida(mesAberto) || difMesesChave(mesAberto,t.faturaPrev)>0)) return t.faturaPrev;
     if(mesChaveValida(mesAberto)){
-      if(!corte || !t.data || isNaN(t.data.getTime()) || t.data>corte) return mesAberto;
+      /* Comparação por DIA, e incluindo o próprio dia do fechamento no ciclo NOVO.
+         Uma compra feita NO dia do fechamento já entra na fatura seguinte — e o próprio
+         banco confirma isso ao não dar Fatura ID a ela. Com ">" simples, as compras do
+         dia 05/07 do Itaú caíam na fatura de julho (que fechou nesse mesmo dia). */
+      if(!corte || !t.data || isNaN(t.data.getTime()) || diaNum(t.data)>=diaNum(corte)) return mesAberto;
       return mesFaturaPorData(nomeCartao,t.data) || mesChaveDeData(t.data);
     }
     return mesChaveValida(t.faturaPrev)?t.faturaPrev:'';
@@ -2608,9 +2619,21 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       // 2) Sem nenhuma referência de fatura: usa a janela do ciclo em formação.
       else if(!t.parcela && corte && t.data && t.data>corte && mesAlvo===mesPrimeiroAberto) pertence=true;
       if(!pertence) return;
-      itens.push({ descricao:t.descricao, categoria:t.categoria, valor:t.valor, data:t.data,
-                   parcela:t.parcela, tipo:t.tipo, projetada:false, ref:t });
-      if(t.parcela) jaTem[chaveCompraParc(t)]=true;
+      /* TRAVA: uma fatura cobra NO MÁXIMO UMA parcela de cada compra parcelada.
+         O Pluggy devolve todas as parcelas futuras de uma vez, na data da compra. Quando
+         elas vêm sem Fatura ID e sem previsão, todas caem no mesmo mês e a fatura estoura
+         (era o caso do Mercado Pago). Aqui fica a de MENOR número — as anteriores já foram
+         cobradas e têm Fatura ID próprio, então a menor que sobra é a deste mês. */
+      if(t.parcela && isFinite(t.parcela.num)){
+        var kc=chaveCompraParc(t);
+        var ja=jaTem[kc];
+        if(ja && ja.num<=t.parcela.num) return;              // já temos uma parcela menor
+        if(ja){ itens.splice(itens.indexOf(ja.item),1); }     // esta é menor: troca
+      }
+      var item={ descricao:t.descricao, categoria:t.categoria, valor:t.valor, data:t.data,
+                 parcela:t.parcela, tipo:t.tipo, projetada:false, ref:t };
+      itens.push(item);
+      if(t.parcela) jaTem[chaveCompraParc(t)]={num:t.parcela.num, item:item};
       // Trava extra: marca também só pela descrição. Se o "Parcelamento ID" da planilha vier
       // ilegível (a parcela não decodifica), isso evita somar de novo como projeção.
       jaTem['d|'+normDescParc(t.descricao)]=true;
@@ -2628,6 +2651,10 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       if(!isFinite(num) || num<p.proxNum || num>p.nParcelas) return;
       var k=normDescParc(p.descricao)+'|'+p.nParcelas;
       if(jaTem[k] || jaTem['d|'+normDescParc(p.descricao)]) return; // o real desse mês já existe
+      /* A MESMA compra não pode entrar duas vezes na fatura. Se a aba Parcelamentos tiver
+         linhas duplicadas da mesma compra (acontecia antes da correção da chave de dedup no
+         Apps Script), cada duplicata gerava uma parcela projetada e a fatura inflava. */
+      if(usouCronograma[k]) return;
       usouCronograma[k]=true;
       itens.push({ descricao:p.descricao, categoria:p.categoria, valor:p.valorParcela,
                    data:null, parcela:{num:num,total:p.nParcelas}, tipo:'Saída', projetada:true });
