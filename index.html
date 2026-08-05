@@ -1716,9 +1716,20 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
      nenhum lançamento carregado). */
   var _cacheCorrente={}; // memo por cartão — a soma é chamada em vários lugares por render
   function limparCacheFatura(){ _cacheCorrente={}; }
+  /* Soma de uma lista de lançamentos de fatura. ESTORNO/CRÉDITO ENTRA NEGATIVO — era esse
+     o bug: a soma antiga usava só x.valor, então um estorno de 107,70 era SOMADO em vez de
+     abatido, e a fatura ficava 2× o estorno acima do certo (1.868,26 − 107,70 = 1.760,56,
+     mas aparecia 1.975,96). */
+  function somaItensFatura(itens){
+    var s=(itens||[]).reduce(function(acc,x){
+      var v=Number(x.valor)||0;
+      return acc + (x.tipo==='Entrada' ? -v : v);
+    },0);
+    return Math.round(s*100)/100;
+  }
   function faturaCorrenteCard(card){
     if(_cacheCorrente[card.nome]!=null) return _cacheCorrente[card.nome];
-    var soma=itensFaturaAberta(card).reduce(function(s,x){ return s+(Number(x.valor)||0); },0);
+    var soma=somaItensFatura(itensFaturaAberta(card));
     soma=Math.round(soma*100)/100;
     if(soma>0.005){ _cacheCorrente[card.nome]=soma; return soma; }
     var info = buscarFaturaEmAberto(card.nome);
@@ -2010,8 +2021,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
   function faturaProjetadaCartao(card, f){
     var mesAlvo=mesAlvoDoOffset(card,f);
     var mesPrimeiroAberto=mesChaveDeData(vencCicloAtualData(card));
-    return itensDaFaturaMes(card, mesAlvo, '', null, mesPrimeiroAberto)
-      .reduce(function(s,x){ return s+x.valor; },0);
+    return somaItensFatura(itensDaFaturaMes(card, mesAlvo, '', null, mesPrimeiroAberto));
   }
   // Soma das faturas projetadas de TODOS os cartões ativos daqui a "f" meses.
   function limiteTotal(){ return state.cartoes.filter(function(c){return c.ativo!=="Não";}).reduce(function(s,c){return s+(c.limite||0);},0); }
@@ -3056,7 +3066,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       if(tt) tt.textContent='Previsão · '+MESES_COMPLETO[mSel.mes];
       if(tc) tc.textContent=itens.length+(itens.length===1?' lançamento':' lançamentos');
       if(!itens.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Sem lançamentos previstos para este mês.</div></div>'; return; }
-      var totPrev=itens.reduce(function(s,x){return s+x.valor;},0);
+      var totPrev=somaItensFatura(itens);
       // Mesmo visual corrido da fatura real. Aqui não há data (a parcela ainda não foi
       // lançada), então a coluna de data mostra a parcela — que é a informação útil.
       tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Previsto para esta fatura</span><span class="cc-day-total neg">−'+formatBRL(totPrev)+'</span></div><div class="cc-flat">'+
