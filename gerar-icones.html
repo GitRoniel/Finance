@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gerador de ícones · Financeiro</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:28px 20px 60px;background:#0b0b0e;color:#f2f2f5;
+       font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:780px;margin:0 auto}
+  h1{font-size:21px;margin:0 0 4px;font-weight:650;letter-spacing:-.2px}
+  p.sub{margin:0 0 26px;color:#9a9aa6;font-size:13.5px}
+  .panel{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);
+         border-radius:16px;padding:20px;margin-bottom:18px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:#8e8e9a;margin:0 0 14px;font-weight:600}
+  .previews{display:flex;gap:22px;align-items:flex-end;flex-wrap:wrap}
+  .pv{text-align:center}
+  .pv canvas{display:block;border-radius:22.5%;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .pv span{display:block;margin-top:8px;font-size:11.5px;color:#8e8e9a}
+  .home{background:linear-gradient(160deg,#3a3550,#1b1a26);padding:18px 22px 14px;border-radius:18px}
+  .home .lbl{color:#fff;font-size:11px;margin-top:7px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  label.ctl{font-size:12.5px;color:#9a9aa6;display:flex;flex-direction:column;gap:5px}
+  input[type=range]{width:150px;accent-color:#a78bfa}
+  input[type=color]{width:44px;height:30px;padding:0;border:1px solid rgba(255,255,255,.16);
+                    border-radius:8px;background:none}
+  button{appearance:none;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);
+         color:#f2f2f5;border-radius:10px;padding:9px 15px;font-size:13.5px;font-weight:550;cursor:pointer}
+  button:hover{background:rgba(255,255,255,.12)}
+  button.primary{background:#7c5cf0;border-color:#7c5cf0}
+  button.primary:hover{background:#8d70f5}
+  .btns{display:flex;gap:9px;flex-wrap:wrap}
+  ol{margin:0;padding-left:20px;color:#c3c3cc;font-size:13.5px}
+  ol li{margin-bottom:7px}
+  code{background:rgba(255,255,255,.09);padding:1.5px 6px;border-radius:5px;font-size:12.5px}
+  textarea{width:100%;height:70px;margin-top:10px;background:#0e0e12;color:#8e8e9a;
+           border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:10px;font-size:11px;
+           font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Ícone do app</h1>
+  <p class="sub">Ajuste se quiser, baixe os PNG e coloque na mesma pasta do <code>index.html</code>.</p>
+
+  <div class="panel">
+    <h2>Prévia</h2>
+    <div class="previews">
+      <div class="pv"><canvas id="p180" width="180" height="180"></canvas><span>180 px</span></div>
+      <div class="pv"><canvas id="p120" width="120" height="120"></canvas><span>120 px</span></div>
+      <div class="pv home">
+        <canvas id="p60" width="60" height="60" style="border-radius:22.5%"></canvas>
+        <div class="lbl">Financeiro</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Ajustes</h2>
+    <div class="row">
+      <label class="ctl">Tamanho do símbolo <input type="range" id="cEscala" min="80" max="125" value="100"></label>
+      <label class="ctl">Suavidade das junções <input type="range" id="cK" min="30" max="80" value="50"></label>
+      <label class="ctl">Espessura do pescoço <input type="range" id="cNeck" min="25" max="80" value="45"></label>
+      <label class="ctl">Roxo <input type="color" id="cRoxo" value="#a78bfa"></label>
+      <label class="ctl">Fundo <input type="color" id="cFundo" value="#101014"></label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Baixar</h2>
+    <div class="btns">
+      <button class="primary" data-size="180" data-nome="apple-touch-icon.png">apple-touch-icon.png (180)</button>
+      <button data-size="167" data-nome="apple-touch-icon-167.png">167 · iPad Pro</button>
+      <button data-size="152" data-nome="apple-touch-icon-152.png">152 · iPad</button>
+      <button data-size="192" data-nome="icon-192.png">192 · Android</button>
+      <button data-size="512" data-nome="icon-512.png">512 · splash/loja</button>
+      <button data-size="32"  data-nome="favicon-32.png">32 · favicon</button>
+    </div>
+    <textarea id="dataUri" readonly placeholder="Clique aqui para gerar o data URI de 180px (alternativa sem arquivo separado)"></textarea>
+  </div>
+
+  <div class="panel">
+    <h2>Como usar no iPhone</h2>
+    <ol>
+      <li>Baixe pelo menos o <code>apple-touch-icon.png</code> e salve na mesma pasta do <code>index.html</code> (e em <code>www/</code>).</li>
+      <li>O <code>index.html</code> já vem com as tags <code>&lt;link rel="apple-touch-icon"&gt;</code> apontando para esses nomes.</li>
+      <li>No iPhone, abra a página no <b>Safari</b> → botão Compartilhar → <b>Adicionar à Tela de Início</b>.</li>
+      <li>A página precisa estar em <code>http://</code> ou <code>https://</code> — o Safari não adiciona arquivo local.</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   O símbolo é desenhado como METABALLS: um campo escalar onde cada primitiva
+   (cápsula ou círculo) contribui com (raio/distância)^k. A superfície é onde o
+   campo vale 1. É isso que produz as junções "derretidas" e o recorte côncavo
+   do logo — sem precisar calcular arcos tangentes na mão.
+   Coordenadas em 0..1 (fração do lado do ícone), então serve pra qualquer tamanho.
+   ========================================================================= */
+var MESTRE = 1024;           // resolução do render base; os PNG saem daqui
+var CX = 0.500, CY = 0.503;  // centro óptico do símbolo
+
+// Primitivas: {a:[x,y], b:[x,y], r} — se a==b vira círculo.
+function primitivas(){
+  var A=[0.494,0.330], B=[0.694,0.670], C=[0.286,0.688];
+  return [
+    {a:A, b:B, r:0.152},                       // traço grande (topo → base direita)
+    {a:C, b:C, r:0.140},                       // lóbulo inferior esquerdo
+    {a:C, b:B, r:0.045*neckMul}                // pescoço que liga os dois embaixo
+  ];
+}
+var neckMul = 1, kExp = 5, escala = 1;
+
+function distSeg(px,py,ax,ay,bx,by){
+  var dx=bx-ax, dy=by-ay, l2=dx*dx+dy*dy;
+  if(l2<1e-12) return Math.hypot(px-ax,py-ay);
+  var t=((px-ax)*dx+(py-ay)*dy)/l2;
+  t = t<0?0:(t>1?1:t);
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
+}
+
+function hex(h){
+  h=h.replace('#','');
+  return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)];
+}
+
+var cacheMestre=null;
+function renderMestre(){
+  var N=MESTRE, cv=document.createElement('canvas'); cv.width=cv.height=N;
+  var ctx=cv.getContext('2d'), img=ctx.createImageData(N,N), d=img.data;
+
+  var prims=primitivas();
+  var roxo=hex(document.getElementById('cRoxo').value);
+  var fundo=hex(document.getElementById('cFundo').value);
+  // Variação do roxo: mais claro no topo-esquerda, mais saturado embaixo-direita.
+  var roxoA=[Math.min(255,roxo[0]+18), Math.min(255,roxo[1]+18), Math.min(255,roxo[2]+10)];
+  var roxoB=[Math.max(0,roxo[0]-28), Math.max(0,roxo[1]-36), Math.max(0,roxo[2]-14)];
+  var k=kExp, invK=1/k;
+  // Transição de ~1px na borda: perto da superfície o campo^(1/k) varia 1/raio por unidade.
+  var edgeK=0.15*N;
+
+  for(var y=0;y<N;y++){
+    var v=(y+0.5)/N;
+    for(var x=0;x<N;x++){
+      var u=(x+0.5)/N;
+      // Escala em torno do centro óptico (símbolo maior/menor sem sair do lugar).
+      var su=CX+(u-CX)/escala, sv=CY+(v-CY)/escala;
+      var f=0;
+      for(var i=0;i<prims.length;i++){
+        var p=prims[i];
+        var dist=distSeg(su,sv,p.a[0],p.a[1],p.b[0],p.b[1]);
+        if(dist<1e-6){ f=1e9; break; }
+        f+=Math.pow(p.r/dist,k);
+      }
+      var g=Math.pow(f,invK);
+      var alpha=0.5+(g-1)*edgeK;
+      alpha = alpha<0?0:(alpha>1?1:alpha);
+
+      // Fundo: quase preto com um brilho roxo bem sutil vindo do topo.
+      var dg=Math.hypot(u-0.5,v+0.10), glow=Math.max(0,1-dg/0.95); glow*=glow*0.085;
+      var br=fundo[0]+(124-fundo[0])*glow, bg=fundo[1]+(77-fundo[1])*glow, bb=fundo[2]+(255-fundo[2])*glow;
+
+      var t=(su-0.20)*0.5+(sv-0.15)*0.5; t=t<0?0:(t>1?1:t);
+      var fr=roxoA[0]+(roxoB[0]-roxoA[0])*t, fg=roxoA[1]+(roxoB[1]-roxoA[1])*t, fb=roxoA[2]+(roxoB[2]-roxoA[2])*t;
+
+      var o=(y*N+x)*4;
+      d[o]  =br+(fr-br)*alpha;
+      d[o+1]=bg+(fg-bg)*alpha;
+      d[o+2]=bb+(fb-bb)*alpha;
+      d[o+3]=255;
+    }
+  }
+  ctx.putImageData(img,0,0);
+  cacheMestre=cv;
+  return cv;
+}
+
+function paraTamanho(px){
+  var cv=document.createElement('canvas'); cv.width=cv.height=px;
+  var c=cv.getContext('2d');
+  c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high';
+  // Reduz em etapas (metade por vez) — evita o serrilhado do downscale direto.
+  var src=cacheMestre, atual=src.width;
+  while(atual/2>px){
+    var tmp=document.createElement('canvas'); tmp.width=tmp.height=atual/2;
+    var tc=tmp.getContext('2d'); tc.imageSmoothingQuality='high';
+    tc.drawImage(src,0,0,atual/2,atual/2);
+    src=tmp; atual=atual/2;
+  }
+  c.drawImage(src,0,0,px,px);
+  return cv;
+}
+
+function atualizar(){
+  escala  = document.getElementById('cEscala').value/100;
+  kExp    = document.getElementById('cK').value/10;
+  neckMul = document.getElementById('cNeck').value/45;
+  renderMestre();
+  [180,120,60].forEach(function(px){
+    var alvo=document.getElementById('p'+px);
+    alvo.getContext('2d').drawImage(paraTamanho(px),0,0);
+  });
+}
+
+document.querySelectorAll('input').forEach(function(el){
+  el.addEventListener('change',atualizar);
+});
+
+document.querySelectorAll('button[data-size]').forEach(function(b){
+  b.addEventListener('click',function(){
+    paraTamanho(+b.dataset.size).toBlob(function(blob){
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(blob); a.download=b.dataset.nome;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); },2000);
+    },'image/png');
+  });
+});
+
+document.getElementById('dataUri').addEventListener('click',function(){
+  this.value=paraTamanho(180).toDataURL('image/png');
+  this.select();
+});
+
+atualizar();
+</script>
+</body>
+</html>
