@@ -896,12 +896,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .afreq{font-size:10.5px;color:var(--text-faint);margin-top:0;}
 .aval{font-size:13.5px;font-weight:700;font-family:var(--font-display);text-align:right;letter-spacing:-0.02em;flex:0 0 auto;}
 .aval .sub{font-size:10px;color:var(--text-faint);font-weight:500;margin-top:0;}
-.acard-edit{cursor:pointer;touch-action:pan-y;}
-/* Arrastar para reordenar assinaturas */
-#assinLista.arrastando-on{touch-action:none;}
-.acard.arrastando{transform:scale(1.03);box-shadow:0 14px 30px rgba(0,0,0,0.4);opacity:.96;position:relative;z-index:5;
-  border-color:color-mix(in srgb,var(--lime) 40%,var(--glass-border));}
-.acard{transition:transform .14s ease, box-shadow .14s ease;}
+.acard-edit{cursor:pointer;}
 .adel{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   color:var(--text-faint);font-size:16px;line-height:1;cursor:pointer;margin-left:2px;}
 .adel[data-confirm="1"]{color:var(--lime-deep);background:color-mix(in srgb,var(--lime) 16%,transparent);}
@@ -1002,23 +997,23 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--glow)
 .fat-paga-chip{font-size:11px;font-weight:600;color:var(--lime-deep);background:rgba(63,224,163,0.13);padding:5px 11px;border-radius:20px;flex:0 0 auto;white-space:nowrap;}
 .rec-del{color:var(--text-faint);cursor:pointer;font-size:17px;padding:2px 3px;flex:0 0 auto;}
 
-/* ===== Reordenar recorrentes: segurar e arrastar =====
+/* ===== Reordenar por arraste (recorrentes, parcelamentos e assinaturas) =====
    O item preso ao dedo sobe de plano (sombra + escala) e os vizinhos abrem espaço
    deslizando. Só os vizinhos ganham transição — o item arrastado acompanha o dedo em
    tempo real, então nele a transição atrapalharia. */
-.rec-item{will-change:transform;}
-.rec-item.rec-slide{transition:transform .22s cubic-bezier(.2,.8,.25,1);}
-.rec-item.rec-drag{
+.rec-item,.pcard,.acard{will-change:transform;}
+.reord-slide{transition:transform .22s cubic-bezier(.2,.8,.25,1);}
+.reord-drag{
   position:relative;z-index:40;
-  border-color:var(--glass-highlight);
-  box-shadow:0 14px 30px rgba(0,0,0,0.38);
+  border-color:var(--glass-highlight)!important;
+  box-shadow:0 14px 30px rgba(0,0,0,0.38)!important;
   transition:box-shadow .18s ease-out,border-color .18s ease-out;
 }
-[data-theme="light"] .rec-item.rec-drag{box-shadow:0 12px 26px rgba(40,60,50,0.18);}
+[data-theme="light"] .reord-drag{box-shadow:0 12px 26px rgba(40,60,50,0.18)!important;}
 /* Durante o arraste nada fica selecionável. A rolagem é bloqueada no touchmove (via JS) —
    usar overflow:hidden aqui faria a página dar um salto no iOS. */
-body.rec-arrastando .rec-item{cursor:grabbing;}
-body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
+body.reord-on .rec-item,body.reord-on .pcard,body.reord-on .acard{cursor:grabbing;}
+body.reord-on *{user-select:none;-webkit-user-select:none;}
 /* Tag do mês */
 .rec-mes-tag{font-size:12px;color:var(--text-faint);font-weight:500;margin-left:6px;}
 /* Filtro Todos/Entrada/Saída (abaixo do título "Recorrentes") */
@@ -3270,20 +3265,40 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
       '<div class="subpane'+(ativo==='parc'?' active':'')+'" id="paneParc">'+renderListaParcelamentos()+'</div>'+
       '<div class="subpane'+(ativo==='assin'?' active':'')+'" id="paneAssin">'+renderListaAssinaturas()+'</div>';
   }
+  /* Ordem personalizada dos parcelamentos (arrastar p/ reposicionar). A chave é a MESMA
+     usada pelos apelidos (descrição + nº de parcelas + total arredondado) — ela sobrevive
+     ao sync, que reescreve a lista inteira a cada sincronização. */
+  var ORDEM_PARC_KEY='financeiro-ordem-parc';
+  function lerOrdemParc(){ try{ return JSON.parse(localStorage.getItem(ORDEM_PARC_KEY))||[]; }catch(e){ return []; } }
+  function salvarOrdemParc(a){ try{ localStorage.setItem(ORDEM_PARC_KEY, JSON.stringify(a)); }catch(e){} }
+  function parcChave(p){ return parcAliasKey(p.descricao,p.valorParcela,p.nParcelas); }
+  // Parcelamentos ativos JÁ na ordem escolhida — é esta lista que a tela mostra e que o
+  // clique usa pra achar o item pelo índice.
+  function parcelamentosVisiveis(){
+    var ativos=parcelamentosAtivos().slice();
+    var ordem=lerOrdemParc();
+    if(!ordem.length) return ativos;
+    return ativos.map(function(p,i){ return {p:p,i:i}; }).sort(function(a,b){
+      var ia=ordem.indexOf(parcChave(a.p)); if(ia===-1) ia=1000+a.i;
+      var ib=ordem.indexOf(parcChave(b.p)); if(ib===-1) ib=1000+b.i;
+      return ia-ib;
+    }).map(function(o){ return o.p; });
+  }
   function renderListaParcelamentos(){
-    var ativos=parcelamentosAtivos();
+    var ativos=parcelamentosVisiveis();
     if(!ativos.length) return '<div class="empty"><div class="ei">📦</div><div class="et">Nenhum parcelamento ativo.</div></div>';
-    return ativos.map(function(p,i){
+    return '<div id="parcLista">'+ativos.map(function(p,i){
       var pagas=clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
       var pct=clamp((pagas/p.nParcelas)*100,0,100);
       var apel=apelidoPorChave(parcAliasKey(p.descricao,p.valorParcela,p.nParcelas))?'<span class="pcard-apel" title="Nome personalizado">✎</span>':'';
-      return '<div class="glass pcard pcard-edit" data-parc="'+i+'" title="Toque para renomear esta compra"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+apel+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
+      return '<div class="glass pcard pcard-edit" data-parc="'+i+'" data-pid="'+escapeHtml(parcChave(p))+'" title="Toque para renomear · segure para reposicionar"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+apel+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
         '<div class="pprog"><div class="pprog-fill" style="width:'+pct+'%"></div></div>'+
         '<div class="pcard-meta"><span>'+pagas+' de '+p.nParcelas+' parcelas</span><span>'+(p.nParcelas-pagas)+' restantes</span></div></div>';
-    }).join("");
+    }).join("")+'</div>';
   }
   // Índices (em state.assinaturas) das assinaturas ativas exibidas — pro clique achar o item certo.
   var _assinVisiveis=[];
+  function assinChave(a, idx){ return String((a&&a.id)||('i'+idx)); }
   function renderListaAssinaturas(){
     var head='<div class="section-head" style="margin:14px 4px 9px"><h2 style="font-size:16px">Assinaturas</h2>'+
       '<span class="assin-actions"><span class="link assin-sync" id="assinSyncBtn" title="Detectar assinaturas automaticamente nas transações">↻ Sincronizar</span>'+
@@ -3292,9 +3307,11 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
     // Ativas, na ORDEM personalizada (salva ao arrastar). Quem não está na ordem vai pro fim.
     var ordem=lerOrdemAssin();
     var ativas=state.assinaturas.map(function(a,idx){return {a:a,idx:idx};}).filter(function(x){return x.a.ativa!=="Não";});
+    // A chave tem que ser EXATAMENTE a mesma escrita no data-aid abaixo, senão assinatura
+    // sem ID na planilha nunca casa com a ordem salva e volta pro fim da lista.
     ativas.sort(function(x,y){
-      var ix=ordem.indexOf(String(x.a.id)); if(ix===-1) ix=1000+x.idx;
-      var iy=ordem.indexOf(String(y.a.id)); if(iy===-1) iy=1000+y.idx;
+      var ix=ordem.indexOf(assinChave(x.a,x.idx)); if(ix===-1) ix=1000+x.idx;
+      var iy=ordem.indexOf(assinChave(y.a,y.idx)); if(iy===-1) iy=1000+y.idx;
       return ix-iy;
     });
     var rows='';
@@ -3303,7 +3320,7 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
       var pos=_assinVisiveis.push(idx)-1;
       // Ícone conforme a CATEGORIA (ex.: Seguro -> escudo). Nome MANTÉM a escrita original da planilha.
       var sub=(a.frequencia||"Mensal")+(a.categoria?' · '+a.categoria:'')+(a.diaCobranca?' · dia '+a.diaCobranca:'');
-      rows+='<div class="glass acard acard-edit" data-assin="'+pos+'" data-aid="'+escapeHtml(String(a.id||('i'+idx)))+'" title="Toque para editar · segure para reposicionar">'+
+      rows+='<div class="glass acard acard-edit" data-assin="'+pos+'" data-aid="'+escapeHtml(assinChave(a,idx))+'" title="Toque para editar · segure para reposicionar">'+
         categoriaIconeHtml(a.categoria,false)+
         '<div class="amain"><div class="aname">'+escapeHtml(a.nome)+'</div><div class="afreq">'+escapeHtml(sub)+'</div></div>'+
         '<div class="aval">'+formatBRL(a.valor)+'<div class="sub">'+escapeHtml(a.frequencia||"Mensal")+'</div></div>'+
@@ -3324,15 +3341,36 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
         if(window.requestAnimationFrame){requestAnimationFrame(medirStickies);}
       });
     });
+    wireListaParcelamentos();
+    wireAssinaturas();
+  }
+
+  // Eventos da lista de PARCELAMENTOS. Separado porque a lista é redesenhada sozinha
+  // depois de um arraste — e aí precisa ser religada sem refazer o wire da tela inteira
+  // (que duplicaria os listeners das sub-abas).
+  function wireListaParcelamentos(){
     // Clicar num parcelamento abre o MESMO modal de renomear dos Cartões (chave interligada).
     document.querySelectorAll('.pcard-edit').forEach(function(el){
       el.addEventListener('click',function(){
-        var p=parcelamentosAtivos()[Number(el.getAttribute('data-parc'))];
+        var p=parcelamentosVisiveis()[Number(el.getAttribute('data-parc'))];
         if(!p) return;
         abrirRenomearTx({descricao:p.descricao, valor:p.valorParcela, parcela:{num:1,total:p.nParcelas}}, function(){ irPara(2); });
       });
     });
-    // Assinaturas: cadastrar / editar (clicar no card) / excluir (×) / sincronizar (detecção automática)
+    arrasteReordenavel({
+      container: 'parcLista',
+      item: '.pcard-edit[data-pid]',
+      chave: 'data-pid',
+      aoSoltar: function(chaves){
+        salvarOrdemParc(chaves);
+        var pane=document.getElementById('paneParc');
+        if(pane){ pane.innerHTML=renderListaParcelamentos(); wireListaParcelamentos(); }
+      }
+    });
+  }
+
+  // Eventos da aba de ASSINATURAS (cadastrar, editar, excluir, sincronizar e arrastar).
+  function wireAssinaturas(){
     var assinAdd=document.getElementById('assinAddBtn');
     if(assinAdd) assinAdd.addEventListener('click', function(){ subtabAlvo='assin'; abrirFormAssinatura(); });
     var assinSync=document.getElementById('assinSyncBtn');
@@ -3453,44 +3491,24 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
   function lerOrdemAssin(){ try{ return JSON.parse(localStorage.getItem(ORDEM_ASSIN_KEY))||[]; }catch(e){ return []; } }
   function salvarOrdemAssin(arr){ try{ localStorage.setItem(ORDEM_ASSIN_KEY, JSON.stringify(arr)); }catch(e){} }
 
-  // Arrastar para reordenar: segura ~380ms numa assinatura e arrasta pra cima/baixo.
+  /* Arrastar para reordenar assinaturas — agora usa o MESMO motor dos recorrentes
+     (toque longo, item que "levanta", vizinhos deslizando). A versão anterior movia o
+     nó no DOM durante o gesto, sem animação nenhuma. */
   function wireArrastarAssinaturas(){
-    var cont=document.getElementById('assinLista'); if(!cont) return;
-    cont.querySelectorAll('.acard-edit').forEach(function(el){
-      el.addEventListener('pointerdown', function(ev){
-        if(ev.target.closest && ev.target.closest('[data-adel]')) return; // não arrasta pelo botão ×
-        var y0=ev.clientY, pid=ev.pointerId, ativo=false, moveu=false, timer;
-        timer=setTimeout(function(){
-          ativo=true; el.classList.add('arrastando'); cont.classList.add('arrastando-on');
-          try{ el.setPointerCapture(pid); }catch(e){}
-          if(navigator.vibrate){ try{ navigator.vibrate(18); }catch(e){} }
-        }, 380);
-        function onMove(e){
-          if(!ativo){ if(Math.abs(e.clientY-y0)>10){ clearTimeout(timer); fim(); } return; }
-          e.preventDefault(); moveu=true;
-          var irmaos=[].slice.call(cont.querySelectorAll('.acard-edit')).filter(function(x){return x!==el;});
-          var alvo=null;
-          for(var i=0;i<irmaos.length;i++){ var r=irmaos[i].getBoundingClientRect(); if(e.clientY < r.top + r.height/2){ alvo=irmaos[i]; break; } }
-          if(alvo) cont.insertBefore(el, alvo); else cont.appendChild(el);
+    arrasteReordenavel({
+      container: 'assinLista',
+      item: '.acard-edit[data-aid]',
+      chave: 'data-aid',
+      ignorar: '[data-adel]',
+      aoSoltar: function(chaves, mudou){
+        salvarOrdemAssin(chaves);
+        if(mudou){
+          _assinArrastou=true; setTimeout(function(){ _assinArrastou=false; },350);
+          toast('Ordem atualizada');
         }
-        function onUp(){
-          clearTimeout(timer);
-          if(ativo){
-            el.classList.remove('arrastando'); cont.classList.remove('arrastando-on');
-            if(moveu){
-              var nova=[].slice.call(cont.querySelectorAll('.acard-edit')).map(function(x){return x.getAttribute('data-aid');});
-              salvarOrdemAssin(nova);
-              _assinArrastou=true; setTimeout(function(){ _assinArrastou=false; }, 350);
-              toast('Ordem atualizada');
-            }
-          }
-          fim();
-        }
-        function fim(){ document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); document.removeEventListener('pointercancel',onUp); }
-        document.addEventListener('pointermove',onMove,{passive:false});
-        document.addEventListener('pointerup',onUp);
-        document.addEventListener('pointercancel',onUp);
-      });
+        var pane=document.getElementById('paneAssin');
+        if(pane){ pane.innerHTML=renderListaAssinaturas(); wireAssinaturas(); }
+      }
     });
   }
   function gravarAssinaturaSheet(a,cb){ if(!GAS_EXEC_URL||GAS_EXEC_URL===GAS_EXEC_URL_PLACEHOLDER){cb&&cb(false);return;} fetch(GAS_EXEC_URL+'?action=addAssinatura&'+_asParams(a),{method:'GET'}).then(function(r){cb&&cb(r.ok);}).catch(function(){cb&&cb(false);}); }
@@ -4554,18 +4572,43 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
     salvarOrdemRec(completa);
   }
 
-  var recArraste = { ativo:false };
   function wireRecArraste(){
-    var cont = document.getElementById('recLista');
+    arrasteReordenavel({
+      container: 'recLista',
+      item: '.rec-item[data-ordkey]',
+      chave: 'data-ordkey',
+      ignorar: '.rec-toggle,.rec-del',
+      aoSoltar: function(chaves){
+        salvarOrdemDosVisiveis(chaves);
+        var cont=document.getElementById('recLista');
+        if(cont){ cont.innerHTML=gerarRecListaHtml(prevMesOffset); wireRecLista(); }
+      }
+    });
+  }
+
+  /* ==========================================================================
+     MOTOR DE REORDENAÇÃO POR ARRASTE — usado pelos recorrentes (Previsões),
+     pelos parcelamentos e pelas assinaturas.
+       cfg.container → id do elemento que envolve a lista
+       cfg.item      → seletor dos itens arrastáveis (precisam ter a chave)
+       cfg.chave     → atributo que identifica o item de forma estável
+       cfg.ignorar   → seletor dos filhos que NÃO iniciam arraste (toggles, "×"…)
+       cfg.aoSoltar  → recebe a nova ordem de chaves; grava e redesenha a lista
+     Todas as listas têm itens de altura uniforme, por isso o deslocamento dos vizinhos
+     usa um "passo" único (altura do item + margem) em vez de medir um por um.
+     ========================================================================== */
+  var reordArraste = { ativo:false };
+  function arrasteReordenavel(cfg){
+    var cont = document.getElementById(cfg.container);
     if(!cont) return;
-    var itens = Array.prototype.slice.call(cont.querySelectorAll('.rec-item[data-ordkey]'));
+    var itens = Array.prototype.slice.call(cont.querySelectorAll(cfg.item));
     if(itens.length < 2) return;
 
     var alvo=null, idx=0, idxNovo=0, y0=0, passo=0, timer=null, houveDrag=false;
 
     function limpar(){
       if(timer){ clearTimeout(timer); timer=null; }
-      recArraste.ativo=false; alvo=null;
+      reordArraste.ativo=false; alvo=null;
     }
     function posicionarVizinhos(){
       itens.forEach(function(el,i){
@@ -4579,23 +4622,23 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
     function ativar(){
       timer=null;
       idx=itens.indexOf(alvo); if(idx<0) return;
-      idxNovo=idx; recArraste.ativo=true; houveDrag=true;
+      idxNovo=idx; reordArraste.ativo=true; houveDrag=true;
       if(window.__cancelarPress) window.__cancelarPress(alvo); // desliga o efeito de pressão
       var cs=getComputedStyle(alvo);
       passo=alvo.offsetHeight+(parseFloat(cs.marginBottom)||0);
       // Trava a altura pra lista não "pular" enquanto os vizinhos deslizam.
       cont.style.minHeight=cont.offsetHeight+'px';
-      itens.forEach(function(el){ el.classList.add('rec-slide'); });
-      alvo.classList.add('rec-drag');
+      itens.forEach(function(el){ el.classList.add('reord-slide'); });
+      alvo.classList.add('reord-drag');
       alvo.style.transform='translateY(0) scale(1.03)';   // animação de "pegar" o item
-      document.body.classList.add('rec-arrastando');
+      document.body.classList.add('reord-on');
       if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(e){} }
       // Depois do "pegar", o item passa a seguir o dedo sem transição (senão fica arrastado).
-      setTimeout(function(){ if(alvo) alvo.classList.remove('rec-slide'); },190);
+      setTimeout(function(){ if(alvo) alvo.classList.remove('reord-slide'); },190);
     }
     function mover(ev){
       var dy=ev.clientY-y0;
-      if(!recArraste.ativo){
+      if(!reordArraste.ativo){
         // Ainda na contagem do toque longo: se o dedo andou, é rolagem — cancela.
         if(timer && Math.abs(dy)>9){ clearTimeout(timer); timer=null; alvo=null; }
         return;
@@ -4605,28 +4648,26 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
       if(n!==idxNovo){ idxNovo=n; posicionarVizinhos(); if(navigator.vibrate){ try{ navigator.vibrate(6); }catch(e){} } }
     }
     function soltar(){
-      if(!recArraste.ativo){ limpar(); return; }
+      if(!reordArraste.ativo){ limpar(); return; }
       var el=alvo, de=idx, para=idxNovo;
       // Encaixa o item na posição final antes de reconstruir a lista.
-      el.classList.add('rec-slide');
+      el.classList.add('reord-slide');
       el.style.transform='translateY('+((para-de)*passo)+'px) scale(1)';
-      var chaves=itens.map(function(n){ return n.getAttribute('data-ordkey'); });
+      var chaves=itens.map(function(n){ return n.getAttribute(cfg.chave); });
       chaves.splice(para, 0, chaves.splice(de,1)[0]);
-      document.body.classList.remove('rec-arrastando');
+      document.body.classList.remove('reord-on');
       limpar();
       setTimeout(function(){
-        salvarOrdemDosVisiveis(chaves);
         cont.style.minHeight='';
-        cont.innerHTML=gerarRecListaHtml(prevMesOffset);
-        wireRecLista();
+        cfg.aoSoltar(chaves, de!==para);
       }, 210);
     }
 
     itens.forEach(function(el){
       el.addEventListener('pointerdown', function(ev){
         if(ev.pointerType==='mouse' && ev.button!==0) return;
-        if(ev.target.closest('.rec-toggle,.rec-del')) return;
-        if(recArraste.ativo) return;
+        if(cfg.ignorar && ev.target.closest && ev.target.closest(cfg.ignorar)) return;
+        if(reordArraste.ativo) return;
         alvo=el; y0=ev.clientY; houveDrag=false;
         if(el.setPointerCapture){ try{ el.setPointerCapture(ev.pointerId); }catch(e){} }
         timer=setTimeout(ativar, 320);   // toque longo
@@ -4634,7 +4675,7 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
       el.addEventListener('pointermove', function(ev){ if(alvo) mover(ev); });
       el.addEventListener('pointerup', function(){ if(alvo) soltar(); });
       el.addEventListener('pointercancel', function(){
-        if(recArraste.ativo) soltar(); else limpar();
+        if(reordArraste.ativo) soltar(); else limpar();
       });
       // Depois de arrastar, o toque não pode virar "abrir para editar".
       el.addEventListener('click', function(ev){
@@ -4647,7 +4688,7 @@ body.rec-arrastando *{user-select:none;-webkit-user-select:none;}
     if(!cont._semRolagem){
       cont._semRolagem=true;
       cont.addEventListener('touchmove', function(ev){
-        if(recArraste.ativo) ev.preventDefault();
+        if(reordArraste.ativo) ev.preventDefault();
       }, {passive:false});
     }
   }
