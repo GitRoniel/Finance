@@ -8,19 +8,24 @@
   *{box-sizing:border-box}
   body{margin:0;padding:28px 20px 60px;background:#0b0b0e;color:#f2f2f5;
        font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:780px;margin:0 auto}
+  .wrap{max-width:800px;margin:0 auto}
   h1{font-size:21px;margin:0 0 4px;font-weight:650;letter-spacing:-.2px}
   p.sub{margin:0 0 26px;color:#9a9aa6;font-size:13.5px}
   .panel{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);
          border-radius:16px;padding:20px;margin-bottom:18px}
   h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:#8e8e9a;margin:0 0 14px;font-weight:600}
-  .previews{display:flex;gap:22px;align-items:flex-end;flex-wrap:wrap}
+  .previews{display:flex;gap:24px;align-items:flex-end;flex-wrap:wrap}
   .pv{text-align:center}
   .pv canvas{display:block;border-radius:22.5%;box-shadow:0 8px 24px rgba(0,0,0,.5)}
   .pv span{display:block;margin-top:8px;font-size:11.5px;color:#8e8e9a}
   .home{background:linear-gradient(160deg,#3a3550,#1b1a26);padding:18px 22px 14px;border-radius:18px}
   .home .lbl{color:#fff;font-size:11px;margin-top:7px;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  /* Simula a aba do navegador, pra conferir se o favicon lê bem em 16px */
+  .tab{display:flex;align-items:center;gap:8px;background:#26262c;border-radius:9px 9px 0 0;
+       padding:9px 16px 9px 12px;max-width:210px}
+  .tab canvas{border-radius:3px;flex:0 0 auto}
+  .tab b{font-size:12px;font-weight:500;color:#d6d6dd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
   label.ctl{font-size:12.5px;color:#9a9aa6;display:flex;flex-direction:column;gap:5px}
   input[type=range]{width:150px;accent-color:#a78bfa}
   input[type=color]{width:44px;height:30px;padding:0;border:1px solid rgba(255,255,255,.16);
@@ -30,30 +35,36 @@
   button:hover{background:rgba(255,255,255,.12)}
   button.primary{background:#7c5cf0;border-color:#7c5cf0}
   button.primary:hover{background:#8d70f5}
-  .btns{display:flex;gap:9px;flex-wrap:wrap}
+  .btns{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px}
+  .btns + .btns{margin-top:10px}
+  .hint{font-size:12px;color:#77778a;margin:10px 0 0}
   ol{margin:0;padding-left:20px;color:#c3c3cc;font-size:13.5px}
   ol li{margin-bottom:7px}
   code{background:rgba(255,255,255,.09);padding:1.5px 6px;border-radius:5px;font-size:12.5px}
-  textarea{width:100%;height:70px;margin-top:10px;background:#0e0e12;color:#8e8e9a;
-           border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:10px;font-size:11px;
-           font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+  pre{background:#0e0e12;border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:12px;
+      overflow:auto;font-size:11.5px;color:#a9a9b8;margin:12px 0 0}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Ícone do app</h1>
-  <p class="sub">Ajuste se quiser, baixe os PNG e coloque na mesma pasta do <code>index.html</code>.</p>
+  <h1>Ícones do app</h1>
+  <p class="sub">Ajuste, baixe e coloque os PNG na mesma pasta do <code>index.html</code> (e em <code>www/</code>).</p>
 
   <div class="panel">
     <h2>Prévia</h2>
     <div class="previews">
-      <div class="pv"><canvas id="p180" width="180" height="180"></canvas><span>180 px</span></div>
-      <div class="pv"><canvas id="p120" width="120" height="120"></canvas><span>120 px</span></div>
+      <div class="pv"><canvas id="p180" width="180" height="180"></canvas><span>180 · iOS</span></div>
       <div class="pv home">
         <canvas id="p60" width="60" height="60" style="border-radius:22.5%"></canvas>
         <div class="lbl">Financeiro</div>
       </div>
+      <div class="pv">
+        <div class="tab"><canvas id="p16" width="16" height="16"></canvas><b>Financeiro</b></div>
+        <span>16 · aba do navegador</span>
+      </div>
+      <div class="pv"><canvas id="p32" width="32" height="32"></canvas><span>32 · favicon</span></div>
     </div>
+    <p class="hint">O favicon usa o símbolo um pouco maior e sem o brilho de fundo — em 16 px o detalhe some.</p>
   </div>
 
   <div class="panel">
@@ -68,25 +79,42 @@
   </div>
 
   <div class="panel">
-    <h2>Baixar</h2>
+    <h2>Baixar · tela de início (iOS/Android)</h2>
     <div class="btns">
-      <button class="primary" data-size="180" data-nome="apple-touch-icon.png">apple-touch-icon.png (180)</button>
+      <button class="primary" data-size="180" data-nome="apple-touch-icon.png">apple-touch-icon.png</button>
       <button data-size="167" data-nome="apple-touch-icon-167.png">167 · iPad Pro</button>
       <button data-size="152" data-nome="apple-touch-icon-152.png">152 · iPad</button>
       <button data-size="192" data-nome="icon-192.png">192 · Android</button>
-      <button data-size="512" data-nome="icon-512.png">512 · splash/loja</button>
-      <button data-size="32"  data-nome="favicon-32.png">32 · favicon</button>
+      <button data-size="512" data-nome="icon-512.png">512 · splash</button>
     </div>
-    <textarea id="dataUri" readonly placeholder="Clique aqui para gerar o data URI de 180px (alternativa sem arquivo separado)"></textarea>
+    <h2 style="margin-top:22px">Baixar · favicon (navegador)</h2>
+    <div class="btns">
+      <button class="primary" id="btnIco">favicon.ico (16+32+48)</button>
+      <button data-size="32" data-nome="favicon-32.png" data-fav="1">favicon-32.png</button>
+      <button data-size="16" data-nome="favicon-16.png" data-fav="1">favicon-16.png</button>
+      <button data-size="48" data-nome="favicon-48.png" data-fav="1">favicon-48.png</button>
+    </div>
+    <p class="hint">O <code>favicon.ico</code> na raiz do site é o que o navegador procura sozinho, mesmo sem tag.</p>
   </div>
 
   <div class="panel">
-    <h2>Como usar no iPhone</h2>
+    <h2>Tags para o &lt;head&gt; do index.html</h2>
+    <pre id="tags">&lt;link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167.png"&gt;
+&lt;link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152.png"&gt;
+&lt;link rel="icon" href="favicon.ico" sizes="any"&gt;
+&lt;link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"&gt;
+&lt;link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png"&gt;
+&lt;link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"&gt;</pre>
+    <p class="hint">Coloque logo abaixo do <code>&lt;title&gt;</code>.</p>
+  </div>
+
+  <div class="panel">
+    <h2>No iPhone</h2>
     <ol>
-      <li>Baixe pelo menos o <code>apple-touch-icon.png</code> e salve na mesma pasta do <code>index.html</code> (e em <code>www/</code>).</li>
-      <li>O <code>index.html</code> já vem com as tags <code>&lt;link rel="apple-touch-icon"&gt;</code> apontando para esses nomes.</li>
-      <li>No iPhone, abra a página no <b>Safari</b> → botão Compartilhar → <b>Adicionar à Tela de Início</b>.</li>
-      <li>A página precisa estar em <code>http://</code> ou <code>https://</code> — o Safari não adiciona arquivo local.</li>
+      <li>Abra a página no <b>Safari</b> → Compartilhar → <b>Adicionar à Tela de Início</b>.</li>
+      <li>Precisa estar em <code>http://</code> ou <code>https://</code> — arquivo local o Safari não adiciona.</li>
+      <li>O iOS guarda o ícone em cache: se trocar depois, remova o atalho e adicione de novo.</li>
     </ol>
   </div>
 </div>
@@ -94,24 +122,23 @@
 <script>
 /* ============================================================================
    O símbolo é desenhado como METABALLS: um campo escalar onde cada primitiva
-   (cápsula ou círculo) contribui com (raio/distância)^k. A superfície é onde o
-   campo vale 1. É isso que produz as junções "derretidas" e o recorte côncavo
-   do logo — sem precisar calcular arcos tangentes na mão.
-   Coordenadas em 0..1 (fração do lado do ícone), então serve pra qualquer tamanho.
+   (cápsula ou círculo) contribui com (raio/distância)^k, e a superfície é onde
+   o campo vale 1. É isso que produz as junções "derretidas" e o recorte côncavo
+   do logo — sem precisar calcular arcos tangentes na mão. Como é matemático,
+   sai nítido em qualquer tamanho. Coordenadas em 0..1 (fração do lado).
    ========================================================================= */
-var MESTRE = 1024;           // resolução do render base; os PNG saem daqui
-var CX = 0.500, CY = 0.503;  // centro óptico do símbolo
+var MESTRE = 1024;
+var CX = 0.500, CY = 0.503;   // centro óptico do símbolo
+var neckMul = 1, kExp = 5, escala = 1;
 
-// Primitivas: {a:[x,y], b:[x,y], r} — se a==b vira círculo.
 function primitivas(){
   var A=[0.494,0.330], B=[0.694,0.670], C=[0.286,0.688];
   return [
-    {a:A, b:B, r:0.152},                       // traço grande (topo → base direita)
-    {a:C, b:C, r:0.140},                       // lóbulo inferior esquerdo
-    {a:C, b:B, r:0.045*neckMul}                // pescoço que liga os dois embaixo
+    {a:A, b:B, r:0.152},          // traço grande: topo → base direita
+    {a:C, b:C, r:0.140},          // lóbulo inferior esquerdo
+    {a:C, b:B, r:0.045*neckMul}   // pescoço que liga os dois embaixo
   ];
 }
-var neckMul = 1, kExp = 5, escala = 1;
 
 function distSeg(px,py,ax,ay,bx,by){
   var dx=bx-ax, dy=by-ay, l2=dx*dx+dy*dy;
@@ -120,33 +147,33 @@ function distSeg(px,py,ax,ay,bx,by){
   t = t<0?0:(t>1?1:t);
   return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
 }
-
 function hex(h){
   h=h.replace('#','');
-  return [parseInt(h.substr(0,2),16), parseInt(h.substr(2,2),16), parseInt(h.substr(4,2),16)];
+  return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];
 }
 
-var cacheMestre=null;
-function renderMestre(){
+/* modo 'app'     → símbolo em ~70% do quadrado, brilho roxo sutil no fundo
+   modo 'favicon' → símbolo maior e fundo chapado: em 16px o resto vira sujeira */
+function renderMestre(modo){
   var N=MESTRE, cv=document.createElement('canvas'); cv.width=cv.height=N;
   var ctx=cv.getContext('2d'), img=ctx.createImageData(N,N), d=img.data;
 
   var prims=primitivas();
   var roxo=hex(document.getElementById('cRoxo').value);
   var fundo=hex(document.getElementById('cFundo').value);
-  // Variação do roxo: mais claro no topo-esquerda, mais saturado embaixo-direita.
-  var roxoA=[Math.min(255,roxo[0]+18), Math.min(255,roxo[1]+18), Math.min(255,roxo[2]+10)];
-  var roxoB=[Math.max(0,roxo[0]-28), Math.max(0,roxo[1]-36), Math.max(0,roxo[2]-14)];
+  var roxoA=[Math.min(255,roxo[0]+18),Math.min(255,roxo[1]+18),Math.min(255,roxo[2]+10)];
+  var roxoB=[Math.max(0,roxo[0]-28),Math.max(0,roxo[1]-36),Math.max(0,roxo[2]-14)];
+  var ehFav=(modo==='favicon');
+  var esc=escala*(ehFav?1.22:1);
   var k=kExp, invK=1/k;
-  // Transição de ~1px na borda: perto da superfície o campo^(1/k) varia 1/raio por unidade.
+  // Borda de ~1px: perto da superfície, campo^(1/k) varia 1/raio por unidade de distância.
   var edgeK=0.15*N;
 
   for(var y=0;y<N;y++){
     var v=(y+0.5)/N;
     for(var x=0;x<N;x++){
       var u=(x+0.5)/N;
-      // Escala em torno do centro óptico (símbolo maior/menor sem sair do lugar).
-      var su=CX+(u-CX)/escala, sv=CY+(v-CY)/escala;
+      var su=CX+(u-CX)/esc, sv=CY+(v-CY)/esc;
       var f=0;
       for(var i=0;i<prims.length;i++){
         var p=prims[i];
@@ -154,35 +181,33 @@ function renderMestre(){
         if(dist<1e-6){ f=1e9; break; }
         f+=Math.pow(p.r/dist,k);
       }
-      var g=Math.pow(f,invK);
-      var alpha=0.5+(g-1)*edgeK;
+      var alpha=0.5+(Math.pow(f,invK)-1)*edgeK;
       alpha = alpha<0?0:(alpha>1?1:alpha);
 
-      // Fundo: quase preto com um brilho roxo bem sutil vindo do topo.
-      var dg=Math.hypot(u-0.5,v+0.10), glow=Math.max(0,1-dg/0.95); glow*=glow*0.085;
-      var br=fundo[0]+(124-fundo[0])*glow, bg=fundo[1]+(77-fundo[1])*glow, bb=fundo[2]+(255-fundo[2])*glow;
-
+      var br=fundo[0], bg=fundo[1], bb=fundo[2];
+      if(!ehFav){
+        var dg=Math.hypot(u-0.5,v+0.10), glow=Math.max(0,1-dg/0.95); glow*=glow*0.085;
+        br=fundo[0]+(124-fundo[0])*glow; bg=fundo[1]+(77-fundo[1])*glow; bb=fundo[2]+(255-fundo[2])*glow;
+      }
       var t=(su-0.20)*0.5+(sv-0.15)*0.5; t=t<0?0:(t>1?1:t);
       var fr=roxoA[0]+(roxoB[0]-roxoA[0])*t, fg=roxoA[1]+(roxoB[1]-roxoA[1])*t, fb=roxoA[2]+(roxoB[2]-roxoA[2])*t;
 
       var o=(y*N+x)*4;
-      d[o]  =br+(fr-br)*alpha;
-      d[o+1]=bg+(fg-bg)*alpha;
-      d[o+2]=bb+(fb-bb)*alpha;
-      d[o+3]=255;
+      d[o]=br+(fr-br)*alpha; d[o+1]=bg+(fg-bg)*alpha; d[o+2]=bb+(fb-bb)*alpha; d[o+3]=255;
     }
   }
   ctx.putImageData(img,0,0);
-  cacheMestre=cv;
   return cv;
 }
 
-function paraTamanho(px){
+var mestreApp=null, mestreFav=null;
+
+function paraTamanho(px, ehFav){
+  var src = ehFav ? mestreFav : mestreApp;
   var cv=document.createElement('canvas'); cv.width=cv.height=px;
-  var c=cv.getContext('2d');
-  c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high';
-  // Reduz em etapas (metade por vez) — evita o serrilhado do downscale direto.
-  var src=cacheMestre, atual=src.width;
+  var c=cv.getContext('2d'); c.imageSmoothingEnabled=true; c.imageSmoothingQuality='high';
+  // Reduz pela metade a cada passo — downscale direto de 1024 serrilha.
+  var atual=src.width;
   while(atual/2>px){
     var tmp=document.createElement('canvas'); tmp.width=tmp.height=atual/2;
     var tc=tmp.getContext('2d'); tc.imageSmoothingQuality='high';
@@ -197,31 +222,59 @@ function atualizar(){
   escala  = document.getElementById('cEscala').value/100;
   kExp    = document.getElementById('cK').value/10;
   neckMul = document.getElementById('cNeck').value/45;
-  renderMestre();
-  [180,120,60].forEach(function(px){
-    var alvo=document.getElementById('p'+px);
-    alvo.getContext('2d').drawImage(paraTamanho(px),0,0);
+  mestreApp = renderMestre('app');
+  mestreFav = renderMestre('favicon');
+  [[180,false],[60,false],[32,true],[16,true]].forEach(function(par){
+    var alvo=document.getElementById('p'+par[0]);
+    alvo.getContext('2d').clearRect(0,0,par[0],par[0]);
+    alvo.getContext('2d').drawImage(paraTamanho(par[0],par[1]),0,0);
   });
 }
 
-document.querySelectorAll('input').forEach(function(el){
-  el.addEventListener('change',atualizar);
-});
+function baixar(blob, nome){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },2000);
+}
+
+document.querySelectorAll('input').forEach(function(el){ el.addEventListener('change',atualizar); });
 
 document.querySelectorAll('button[data-size]').forEach(function(b){
   b.addEventListener('click',function(){
-    paraTamanho(+b.dataset.size).toBlob(function(blob){
-      var a=document.createElement('a');
-      a.href=URL.createObjectURL(blob); a.download=b.dataset.nome;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function(){ URL.revokeObjectURL(a.href); },2000);
+    paraTamanho(+b.dataset.size, b.dataset.fav==='1').toBlob(function(blob){
+      baixar(blob, b.dataset.nome);
     },'image/png');
   });
 });
 
-document.getElementById('dataUri').addEventListener('click',function(){
-  this.value=paraTamanho(180).toDataURL('image/png');
-  this.select();
+/* .ICO com PNG embutido (suportado por todo navegador atual): cabeçalho de 6 bytes,
+   uma entrada de 16 bytes por tamanho e os PNG em seguida. */
+document.getElementById('btnIco').addEventListener('click',function(){
+  var tamanhos=[16,32,48];
+  Promise.all(tamanhos.map(function(px){
+    return new Promise(function(ok){
+      paraTamanho(px,true).toBlob(function(b){ b.arrayBuffer().then(function(buf){ ok(new Uint8Array(buf)); }); },'image/png');
+    });
+  })).then(function(pngs){
+    var n=pngs.length, cab=6+16*n;
+    var total=cab+pngs.reduce(function(s,p){return s+p.length;},0);
+    var out=new Uint8Array(total), dv=new DataView(out.buffer);
+    dv.setUint16(0,0,true); dv.setUint16(2,1,true); dv.setUint16(4,n,true);
+    var off=cab;
+    pngs.forEach(function(p,i){
+      var e=6+16*i;
+      out[e]=tamanhos[i]>=256?0:tamanhos[i];
+      out[e+1]=tamanhos[i]>=256?0:tamanhos[i];
+      out[e+2]=0; out[e+3]=0;
+      dv.setUint16(e+4,1,true);   // planos
+      dv.setUint16(e+6,32,true);  // bits por pixel
+      dv.setUint32(e+8,p.length,true);
+      dv.setUint32(e+12,off,true);
+      out.set(p,off); off+=p.length;
+    });
+    baixar(new Blob([out],{type:'image/x-icon'}),'favicon.ico');
+  });
 });
 
 atualizar();
