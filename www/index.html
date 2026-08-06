@@ -538,6 +538,19 @@ div.fatura-reconc{border-radius:14px;background:rgba(120,120,140,0.08);border:1p
 .fatura-reconc .rec-row{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--text-dim);padding:1px 0;}
 .fatura-reconc .rec-neg{color:var(--red);font-weight:600;}
 .fatura-reconc .rec-pos{color:var(--lime-deep);font-weight:600;}
+.fatura-reconc .rec-dif{border-top:1px dashed var(--hairline);margin-top:3px;padding-top:4px;}
+.fatura-reconc .rec-dif>span:first-child{color:var(--orange);font-weight:600;cursor:help;}
+
+/* Transação movida de fatura na mão + modal de escolha do mês */
+.cctx-mov{font-size:10px;color:var(--orange);margin-left:5px;font-weight:700;}
+.mf-ops{display:flex;flex-direction:column;gap:6px;margin:4px 0 2px;}
+.mf-op{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:11px 13px;border-radius:12px;background:var(--track-bg);border:1px solid transparent;
+  font-size:14px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s;}
+.mf-op:active{background:var(--glass-bg);}
+.mf-op.sel{border-color:var(--lime);color:var(--lime-deep);}
+.mf-tag{font-size:10.5px;font-weight:500;color:var(--text-faint);}
+.rn-acao{margin-top:10px;text-align:center;}
 .fatura-reconc .rec-paga{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px solid var(--hairline);font-size:12.5px;color:var(--text-dim);font-weight:600;}
 .cc-disp{font-size:12.5px;font-weight:600;font-family:var(--font-display);margin-top:1px;}
 .cc-glow{position:absolute;right:-30px;bottom:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,0.20),transparent 70%);pointer-events:none;}
@@ -1437,6 +1450,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
         data = new Date(data.getFullYear(), data.getMonth() + (parcela.num - 1), data.getDate());
       }
       return {
+        id: strVal(c,10),   // coluna K — ID da transação no Pluggy (âncora dos ajustes manuais)
         data: data, descricao: strVal(c,2), categoria: strVal(c,3),
         conta: strVal(c,4), cartao: strVal(c,5), tipo: strVal(c,6) || "Saída",
         valor: numVal(c,7), parcela: parcela, parcelaRaw: strVal(c,8),
@@ -2601,7 +2615,32 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
           Exceção: se a compra é ANTERIOR ao último fechamento, ela obviamente já passou por
           um ciclo fechado, então vai para a fatura cuja janela contém a data (senão, um
           histórico inteiro sem ID cairia todo dentro da fatura aberta e a inflaria). */
+  /* ===== Ajuste MANUAL de fatura (toque longo na transação) =====
+     Guarda o mês de DESTINO (absoluto), não um deslocamento. Se guardássemos "+1 mês", um
+     dia em que o banco corrigisse a alocação sozinho o ajuste continuaria somando por cima
+     e o erro voltaria dobrado. Com o destino absoluto, sincronizar quantas vezes for não
+     muda o resultado.
+     Fica na aba "Apelidos" da planilha, que já é um armazenamento chave→valor sincronizado
+     entre aparelhos: chave "FAT|<id da transação>", valor "AAAA-MM". Por isso não precisou
+     de nenhuma alteração no Apps Script. */
+  function chaveAjusteFatura(t){ return (t && t.id) ? ('FAT|'+t.id) : ''; }
+  function ajusteFaturaDe(t){
+    var k=chaveAjusteFatura(t); if(!k) return '';
+    var v=lerApelidos()[k];
+    return mesChaveValida(v) ? String(v) : '';
+  }
+  function gravarAjusteFatura(t, mes){
+    var k=chaveAjusteFatura(t); if(!k) return;
+    var mapa=lerApelidos();
+    if(mes) mapa[k]=mes; else delete mapa[k];
+    salvarApelidos(mapa);              // vale na hora, sem esperar a planilha
+    gravarApelidoSheet(k, mes||'');    // e propaga para os outros aparelhos
+    limparCacheFatura();
+  }
   function mesFaturaDaTx(nomeCartao, t, mesAberto, corte){
+    // Ajuste manual manda em tudo — é você dizendo em que fatura a compra realmente caiu.
+    var forcado=ajusteFaturaDe(t);
+    if(forcado) return forcado;
     if(t.faturaId){
       var fs=faturasDoCartao(nomeCartao);
       for(var i=0;i<fs.length;i++){
@@ -3025,13 +3064,22 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       var v=Number(t.valor)||0;
       if(t.tipo==='Entrada') somaEntrada+=v; else somaSaida+=v;
     });
-    /* O card mostra só o total oficial do banco e o que foi lançado. A linha de
-       "diferença não identificada", o selo de conferência e a linha de encargos saíram
-       a pedido — a apuração de divergência agora é feita fora do app, pelo
-       conferirFatura() do Apps Script, que aponta o lançamento exato que falta. */
     var linhas='';
     linhas+='<div class="rec-row"><span>Compras lançadas</span><span class="rec-neg">−'+formatBRL(somaSaida)+'</span></div>';
     if(somaEntrada>0.005) linhas+='<div class="rec-row"><span>Estornos e créditos</span><span class="rec-pos">+'+formatBRL(somaEntrada)+'</span></div>';
+    /* DIFERENÇA — só em fatura já FECHADA (mSel.fatReal). Ali o "oficial" é o número que o
+       banco publicou na API, então comparar com a soma dos lançamentos é uma conferência de
+       verdade. Na fatura em formação não faz sentido: o oficial É a soma dos lançamentos,
+       a diferença seria sempre zero. */
+    if(mSel.fatReal){
+      var resto=Math.round((oficial-(somaSaida-somaEntrada))*100)/100;
+      if(Math.abs(resto)>0.01){
+        var falta=resto>0;
+        linhas+='<div class="rec-row rec-dif"><span title="Diferença entre o valor que o banco publicou e a soma do que está lançado aqui. Pode ser encargo (IOF, juros, anuidade), lançamento que não sincronizou ou compra atribuída a outro ciclo.">'+
+          (falta?'Falta lançar':'Lançado a mais')+'</span><span class="'+(falta?'rec-neg':'rec-pos')+'">'+
+          (falta?'−':'+')+formatBRL(Math.abs(resto))+'</span></div>';
+      }
+    }
     // Toggle "marcar como paga" — só para fatura REAL (tem billId na aba Faturas).
     var bill=card?billDoMes(card,mSel):null;
     var pagaHtml='';
@@ -3168,6 +3216,83 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     renderTxAgrupadasEm(tl, txs, { corrida:true, reRender: function(){ renderDetalheCartao(card); } });
     if(reconHtml) tl.insertAdjacentHTML('afterbegin', reconHtml);
     wireFatPagaCartao(tl, card);
+    wireMoverFatura(tl, card, mesPrev);
+  }
+
+  /* Toque LONGO numa transação → mover para outra fatura.
+     Serve para as compras feitas perto do fechamento, que o banco às vezes atribui ao ciclo
+     errado. Só vale para lançamento REAL (parcela projetada não tem ID para ancorar) e a
+     escolha é o mês de destino, não um "+1"/"-1". */
+  function wireMoverFatura(tl, card, mesAtualDaTela){
+    if(!tl) return;
+    tl.querySelectorAll('.cctx-edit').forEach(function(el){
+      var timer=null, moveu=false, y0=0;
+      function cancelar(){ if(timer){ clearTimeout(timer); timer=null; } }
+      el.addEventListener('pointerdown', function(ev){
+        if(ev.pointerType==='mouse' && ev.button!==0) return;
+        moveu=false; y0=ev.clientY;
+        timer=setTimeout(function(){
+          timer=null; moveu=true;
+          if(navigator.vibrate){ try{ navigator.vibrate(12); }catch(e){} }
+          if(window.__cancelarPress) window.__cancelarPress(el);
+          var t=el.__tx;
+          if(t) abrirMoverFatura(t, card, mesAtualDaTela, function(){ renderDetalheCartao(card); });
+        }, 480);
+      });
+      el.addEventListener('pointermove', function(ev){ if(Math.abs(ev.clientY-y0)>9) cancelar(); });
+      el.addEventListener('pointerup', cancelar);
+      el.addEventListener('pointercancel', cancelar);
+      // Depois do toque longo, o dedo levantando não pode abrir o "renomear".
+      el.addEventListener('click', function(ev){
+        if(moveu){ ev.stopPropagation(); ev.preventDefault(); moveu=false; }
+      }, true);
+    });
+  }
+
+  // Modal com os meses vizinhos. O mês onde a transação está hoje aparece marcado.
+  function abrirMoverFatura(t, card, mesAtual, onSalvo){
+    if(!t || !t.id){ toast('Esta linha é uma previsão — não dá para mover.'); return; }
+    var base=mesChaveValida(mesAtual)?mesAtual:mesChaveDeData(t.data);
+    if(!mesChaveValida(base)){ toast('Não consegui identificar o mês desta transação.'); return; }
+    var atual=ajusteFaturaDe(t)||base;
+    var opcoes=[somaMesChave(base,-1), base, somaMesChave(base,1), somaMesChave(base,2)]
+      .filter(function(m,i,arr){ return mesChaveValida(m) && arr.indexOf(m)===i; });
+
+    var ov=document.createElement('div');
+    ov.className='modal-ov';
+    ov.innerHTML='<div class="modal">'+
+      '<div class="modal-head"><div class="modal-title">Mover para outra fatura</div><div class="modal-x" id="mfClose">✕</div></div>'+
+      '<div class="rn-orig">'+escapeHtml(nomeTx(t))+' · '+formatBRL(t.valor)+
+        (t.data?(' · '+t.data.toLocaleDateString('pt-BR')):'')+'</div>'+
+      '<div class="mf-ops">'+opcoes.map(function(m){
+        var p=m.split('-');
+        var rot=MESES_COMPLETO[Number(p[1])-1]+' de '+p[0];
+        return '<div class="mf-op'+(m===atual?' sel':'')+'" data-mes="'+m+'">'+rot+
+               (m===base?'<span class="mf-tag">onde está</span>':'')+'</div>';
+      }).join('')+'</div>'+
+      (ajusteFaturaDe(t)?'<div class="rn-acao"><span class="link" id="mfReset">Desfazer ajuste manual</span></div>':'')+
+      '<div class="rn-hint">O banco às vezes joga uma compra feita perto do fechamento para o ciclo errado. Este ajuste fica salvo e vale nos outros aparelhos.</div>'+
+    '</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+    function fechar(){ ov.classList.remove('show'); setTimeout(function(){ ov.remove(); },220); }
+    ov.addEventListener('click',function(e){ if(e.target===ov) fechar(); });
+    ov.querySelector('#mfClose').addEventListener('click',fechar);
+    var reset=ov.querySelector('#mfReset');
+    if(reset) reset.addEventListener('click',function(){
+      gravarAjusteFatura(t,''); fechar(); toast('Ajuste removido'); if(onSalvo) onSalvo();
+    });
+    ov.querySelectorAll('.mf-op').forEach(function(op){
+      op.addEventListener('click',function(){
+        var m=op.getAttribute('data-mes');
+        // Escolher o mês de origem = remover o ajuste, não gravar um "ajuste" idêntico.
+        gravarAjusteFatura(t, m===base?'':m);
+        fechar();
+        var p=m.split('-');
+        toast(m===base?'Ajuste removido':('Movida para '+MESES_COMPLETO[Number(p[1])-1]));
+        if(onSalvo) onSalvo();
+      });
+    });
   }
 
   // Renderiza uma lista de transações agrupadas por dia (visual dos Cartões/Conta), com clique
@@ -3214,7 +3339,9 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       // A parcela aparece na linha de baixo (junto da categoria), não ao lado do nome.
       var parc=(!t.parcela && t.projetada)?'<span class="tx-parcela">prevista</span>':'';
       var apel=temApelido(t)?'<span class="cctx-apel" title="Nome personalizado">✎</span>':'';
-      return '<div class="cctx cctx-edit" data-txidx="'+idx+'" title="Toque para renomear esta compra">'+
+      // Marca as que você moveu de fatura na mão, pra dar pra ver e desfazer depois.
+      if(ajusteFaturaDe(t)) apel+='<span class="cctx-mov" title="Movida manualmente para esta fatura">⇄</span>';
+      return '<div class="cctx cctx-edit" data-txidx="'+idx+'" title="Toque para renomear · segure para mover de fatura">'+
         (dataHtml||'')+iconeFn(t,ent)+
         '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(nomeTx(t))+parc+apel+'</div>'+
         '<div class="cctx-meta">'+metaFn(t)+'</div></div>'+
@@ -3253,8 +3380,10 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       }).join("");
     }
     tl.querySelectorAll('.cctx-edit').forEach(function(el){
+      // Guarda a transação no próprio elemento — o toque longo (mover de fatura) precisa dela.
+      el.__tx=txFlat[Number(el.getAttribute('data-txidx'))];
       el.addEventListener('click', function(){
-        var t=txFlat[Number(el.getAttribute('data-txidx'))];
+        var t=el.__tx;
         if(t) abrirRenomearTx(t, function(){ if(typeof opts.reRender==='function') opts.reRender(); });
       });
     });
@@ -3769,8 +3898,19 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
   // assinatura estável da compra. Assim, mesmo quando os dados são recarregados da
   // planilha a cada 5 min, o nome personalizado continua aparecendo.
   var ALIAS_KEY = 'financeiro-apelidos-tx';
-  function lerApelidos(){ try{ return JSON.parse(localStorage.getItem(ALIAS_KEY))||{}; }catch(e){ return {}; } }
-  function salvarApelidos(obj){ try{ localStorage.setItem(ALIAS_KEY, JSON.stringify(obj)); }catch(e){} }
+  /* Memo do mapa de apelidos. Ele é lido uma vez por LINHA de transação (nome, ícone de
+     apelido e agora o ajuste de fatura); sem cache, cada linha fazia um JSON.parse do mapa
+     inteiro — some numa lista de 40+ lançamentos. */
+  var _apelidosCache=null;
+  function lerApelidos(){
+    if(_apelidosCache) return _apelidosCache;
+    try{ _apelidosCache=JSON.parse(localStorage.getItem(ALIAS_KEY))||{}; }catch(e){ _apelidosCache={}; }
+    return _apelidosCache;
+  }
+  function salvarApelidos(obj){
+    _apelidosCache=obj||{};
+    try{ localStorage.setItem(ALIAS_KEY, JSON.stringify(obj)); }catch(e){}
+  }
   // Chave de uma compra PARCELADA. É a MESMA fórmula tanto para a transação no Cartão
   // quanto para a linha em Parcelamentos (descrição + valor da parcela + nº de parcelas),
   // então renomear num lugar reflete no outro — as abas ficam realmente interligadas.
