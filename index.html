@@ -2664,10 +2664,16 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     });
     if(mudou) salvarAjustesPend(pend);
   }
-  function mesFaturaDaTx(nomeCartao, t, mesAberto, corte){
-    // Ajuste manual manda em tudo — é você dizendo em que fatura a compra realmente caiu.
-    var forcado=ajusteFaturaDe(t);
-    if(forcado) return forcado;
+  /* semAjuste=true devolve o mês que as REGRAS dariam, ignorando o ajuste manual. É o que
+     o menu "mover para outra fatura" usa para saber qual é o mês de origem — sem isso não
+     havia como voltar atrás: escolher o mês em que a transação está hoje apagaria o ajuste
+     e ela sumiria da tela em que você estava. */
+  function mesFaturaDaTx(nomeCartao, t, mesAberto, corte, semAjuste){
+    if(!semAjuste){
+      // Ajuste manual manda em tudo — é você dizendo em que fatura a compra realmente caiu.
+      var forcado=ajusteFaturaDe(t);
+      if(forcado) return forcado;
+    }
     if(t.faturaId){
       var fs=faturasDoCartao(nomeCartao);
       for(var i=0;i<fs.length;i++){
@@ -3200,18 +3206,39 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       if(tc) tc.textContent=itens.length+(itens.length===1?' lançamento':' lançamentos');
       if(!itens.length){ tl.innerHTML='<div class="empty" style="padding:28px"><div class="et">Sem lançamentos previstos para este mês.</div></div>'; return; }
       var totPrev=somaItensFatura(itens);
-      // Mesmo visual corrido da fatura real. Aqui não há data (a parcela ainda não foi
-      // lançada), então a coluna de data mostra a parcela — que é a informação útil.
+      /* Mesmo visual corrido da fatura real. Duas coisas importam aqui:
+         • Um lançamento REAL movido para um mês futuro (toque longo) tem data e categoria —
+           precisa mostrá-las. Antes esta tela era só de parcelas projetadas e jogava data e
+           categoria fora, então a transação movida chegava "pelada".
+         • Ele também precisa continuar clicável e com toque longo, senão não haveria como
+           trazê-la de volta. Por isso a linha real recebe a classe cctx-edit e o índice. */
+      var MES_ABREV=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      var flat=[];
       tl.innerHTML='<div class="cc-day-group"><div class="cc-day-hdr"><span class="cc-day-label">Previsto para esta fatura</span><span class="cc-day-total neg">−'+formatBRL(totPrev)+'</span></div><div class="cc-flat">'+
         itens.map(function(x){
-          var meta=x.parcela?('parcela '+x.parcela.num+' de '+x.parcela.total):(x.categoria||'');
-          var col=x.parcela?(x.parcela.num+'<i>de '+x.parcela.total+'</i>'):'';
-          return '<div class="cctx"><div class="cctx-data">'+col+'</div>'+categoriaIconeHtml(x.categoria||'',false)+
-            '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(x.parcela?nomeParcela(x.descricao,x.valor,x.parcela.total):(sentenceCase(x.descricao)||'—'))+
-            (x.projetada?'<span class="tx-parcela">prevista</span>':'')+'</div>'+
-            '<div class="cctx-meta">'+escapeHtml(meta)+'</div></div>'+
-            '<div class="cctx-right"><div class="cctx-val">'+formatBRL(x.valor)+'</div></div></div>';
+          var real=x.ref||null;
+          var ent=(x.tipo==='Entrada');
+          // Data quando existe; senão a parcela, que é a informação útil numa projeção.
+          var col = x.data ? (x.data.getDate()+' '+MES_ABREV[x.data.getMonth()])
+                  : (x.parcela ? (x.parcela.num+'<i>de '+x.parcela.total+'</i>') : '');
+          var meta = escapeHtml(sentenceCase(x.categoria)||'Sem categoria');
+          if(x.parcela) meta+=' · <span class="cctx-parc">parcela '+x.parcela.num+' de '+x.parcela.total+'</span>';
+          var mov = (real&&ajusteFaturaDe(real)) ? '<span class="cctx-mov" title="Movida manualmente para esta fatura">⇄</span>' : '';
+          var idx = real ? (flat.push(real)-1) : -1;
+          return '<div class="cctx'+(real?' cctx-edit':'')+'"'+(real?(' data-txidx="'+idx+'" title="Toque para renomear · segure para mover de fatura"'):'')+'>'+
+            '<div class="cctx-data">'+col+'</div>'+categoriaIconeHtml(x.categoria||'',ent)+
+            '<div class="cctx-main"><div class="cctx-desc">'+escapeHtml(real?nomeTx(real):(x.parcela?nomeParcela(x.descricao,x.valor,x.parcela.total):(sentenceCase(x.descricao)||'—')))+
+            (x.projetada?'<span class="tx-parcela">prevista</span>':'')+mov+'</div>'+
+            '<div class="cctx-meta">'+meta+'</div></div>'+
+            '<div class="cctx-right"><div class="cctx-val'+(ent?' in':'')+'">'+(ent?'+':'')+formatBRL(x.valor)+'</div></div></div>';
         }).join('')+'</div></div>';
+      tl.querySelectorAll('.cctx-edit').forEach(function(el){
+        el.__tx=flat[Number(el.getAttribute('data-txidx'))];
+        el.addEventListener('click',function(){
+          if(el.__tx) abrirRenomearTx(el.__tx, function(){ renderDetalheCartao(card); });
+        });
+      });
+      wireMoverFatura(tl, card, mesPrev);
       return;
     }
 
@@ -3276,14 +3303,21 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     });
   }
 
-  // Modal com os meses vizinhos. O mês onde a transação está hoje aparece marcado.
+  /* Modal de escolha do mês.
+     "base" = o mês que as REGRAS dariam (sem ajuste). Escolher a base = desfazer o ajuste;
+     escolher outro = gravar. Ancorar na base, e não no mês da tela, é o que permite voltar
+     atrás depois de já ter movido a transação. */
   function abrirMoverFatura(t, card, mesAtual, onSalvo){
     if(!t || !t.id){ toast('Esta linha é uma previsão — não dá para mover.'); return; }
-    var base=mesChaveValida(mesAtual)?mesAtual:mesChaveDeData(t.data);
+    var base=mesFaturaDaTx(card.nome, t, mesChaveDeData(vencCicloAtualData(card)),
+                           corteUltimoFechamento(card), true);
+    if(!mesChaveValida(base)) base=mesChaveValida(mesAtual)?mesAtual:mesChaveDeData(t.data);
     if(!mesChaveValida(base)){ toast('Não consegui identificar o mês desta transação.'); return; }
     var atual=ajusteFaturaDe(t)||base;
-    var opcoes=[somaMesChave(base,-1), base, somaMesChave(base,1), somaMesChave(base,2)]
-      .filter(function(m,i,arr){ return mesChaveValida(m) && arr.indexOf(m)===i; });
+    var opcoes=[somaMesChave(base,-2), somaMesChave(base,-1), base,
+                somaMesChave(base,1), somaMesChave(base,2), atual]
+      .filter(function(m,i,arr){ return mesChaveValida(m) && arr.indexOf(m)===i; })
+      .sort();
 
     var ov=document.createElement('div');
     ov.className='modal-ov';
@@ -3294,8 +3328,10 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
       '<div class="mf-ops">'+opcoes.map(function(m){
         var p=m.split('-');
         var rot=MESES_COMPLETO[Number(p[1])-1]+' de '+p[0];
+        var tag = (m===atual && m!==base) ? 'está aqui agora'
+                : (m===base ? (m===atual?'original':'voltar ao original') : '');
         return '<div class="mf-op'+(m===atual?' sel':'')+'" data-mes="'+m+'">'+rot+
-               (m===base?'<span class="mf-tag">onde está</span>':'')+'</div>';
+               (tag?'<span class="mf-tag">'+tag+'</span>':'')+'</div>';
       }).join('')+'</div>'+
       (ajusteFaturaDe(t)?'<div class="rn-acao"><span class="link" id="mfReset">Desfazer ajuste manual</span></div>':'')+
       '<div class="rn-hint">O banco às vezes joga uma compra feita perto do fechamento para o ciclo errado. Este ajuste fica salvo e vale nos outros aparelhos.</div>'+
