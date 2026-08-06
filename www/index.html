@@ -1989,12 +1989,46 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     return state.assinaturas.filter(function(a){return a.ativa!=="Não";})
       .reduce(function(s,a){return s+(a.frequencia==="Anual"?a.valor/12:a.valor);},0);
   }
+  /* Parcelamentos ainda em curso.
+     O Apps Script já grava na planilha o que o BANCO confirmou — Parcelas Pagas, Restantes e
+     Status — deduzidos do billId de cada parcela. O app ignorava tudo isso e re-estimava as
+     pagas pela data de início ("já passaram 4 meses, logo 4 parcelas foram pagas"), o que dá
+     sempre adiantado e matava compras ainda ativas: AMAZON BR e MERCADOLIVRE (4 parcelas,
+     3 pagas) sumiam da aba com uma parcela ainda em aberto, e o Nescafé nem chegava a
+     aparecer. A estimativa por data virou apenas RESERVA, para linhas antigas sem status. */
   function parcelamentosAtivos(){
     return state.parcelamentos.filter(function(p){
-      if(!p.inicio)return false;
+      var st=String(p.status||'').toLowerCase();
+      if(st.indexOf('conclu')!==-1) return false;
+      if(st.indexOf('ativo')!==-1)  return true;
+      if(!p.inicio) return false;
       var pagas=clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
       return pagas<p.nParcelas;
     });
+  }
+  // Parcelas já cobradas: número REAL da planilha quando existe; senão, estimativa por data.
+  function parcelasPagasDe(p){
+    if(p && p.status && isFinite(p.pagas) && p.pagas>=0) return Math.min(p.pagas, p.nParcelas);
+    if(!p || !p.inicio) return 0;
+    return clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
+  }
+  /* Parcelas que ainda vão cair DEPOIS da fatura em aberto deste cartão. A parcela do mês
+     aberto não entra aqui — ela já está dentro da fatura em aberto, e contar duas vezes
+     derrubaria o limite disponível a mais. */
+  function parcelasFuturasCard(card){
+    var mesAberto=mesChaveDeData(vencCicloAtualData(card));
+    return (state.parcelamentos||[]).reduce(function(s,p){
+      if(normalizarNomeCartao(p.cartao)!==normalizarNomeCartao(card.nome)) return s;
+      if(String(p.status||'').toLowerCase().indexOf('conclu')!==-1) return s;
+      if(!isFinite(p.nParcelas)||p.nParcelas<1||!isFinite(p.proxNum)||p.proxNum<1) return s;
+      var primeiraFutura=p.proxNum;
+      if(mesChaveValida(p.proxMes)&&mesChaveValida(mesAberto)){
+        var d=difMesesChave(p.proxMes,mesAberto);   // meses de proxMes até o mês aberto
+        if(isFinite(d)&&d>=0) primeiraFutura=p.proxNum+d+1;
+      }
+      var n=p.nParcelas-primeiraFutura+1;
+      return s + (n>0 ? n*(Number(p.valorParcela)||0) : 0);
+    },0);
   }
   function totalParcelasMes(){
     return parcelamentosAtivos().reduce(function(s,p){return s+p.valorParcela;},0);
@@ -2025,7 +2059,15 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
   }
   // Soma das faturas projetadas de TODOS os cartões ativos daqui a "f" meses.
   function limiteTotal(){ return state.cartoes.filter(function(c){return c.ativo!=="Não";}).reduce(function(s,c){return s+(c.limite||0);},0); }
-  function limiteDisponivel(){ return limiteTotal()-totalFaturasAbertas(); }
+  /* Limite comprometido pelas parcelas que ainda vão cair nos meses seguintes. O banco
+     bloqueia o saldo INTEIRO de uma compra parcelada no ato, não parcela por parcela —
+     era isso que faltava: o app fazia só "limite − fatura em aberto" e mostrava disponível
+     a mais do que existe de verdade. */
+  function parcelasFuturasTodos(){
+    return state.cartoes.filter(function(c){return c.ativo!=="Não";})
+      .reduce(function(s,c){ return s+parcelasFuturasCard(c); },0);
+  }
+  function limiteDisponivel(){ return limiteTotal()-totalFaturasAbertas()-parcelasFuturasTodos(); }
 
   /* ===== TELA 1: VISÃO GERAL ===== */
   function renderVisaoGeral(){
@@ -2795,10 +2837,14 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     var lim=new Date(); lim.setDate(lim.getDate()-(dias||60));
     return txDoCartao(c.nome).some(function(t){ return t.data && t.data>=lim; });
   }
+  /* Só entra no carrossel quem TEM fatura em aberto. Antes um cartão zerado continuava
+     aparecendo se tivesse movimento nos últimos 60 dias — era uma rede de segurança para o
+     caso de o cálculo falhar e o cartão sumir. Saiu a pedido: cartão zerado não aparece.
+     Contrapartida: se algum dia a fatura calcular zero por erro, o cartão some da lista
+     (os totais de cima continuam somando todos os cartões, então dá pra perceber). */
   function cartaoTemValor(c){
     if(faturaAtual(c) > 0.005) return true;
-    if(faturasDoCartao(c.nome).some(function(f){ return !faturaPaga(f) && f.valor>0.005; })) return true;
-    return temMovimentoRecente(c, 60);
+    return faturasDoCartao(c.nome).some(function(f){ return !faturaPaga(f) && f.valor>0.005; });
   }
   function cartoesAtivosReais(){ return state.cartoes.filter(function(c){return c.ativo!=="Não" && cartaoTemValor(c);}); }
   // TODOS os cartões ativos, mesmo zerados. Usado onde o HISTÓRICO importa (Previsões):
@@ -2907,7 +2953,8 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     var todos=cartoesAtivosTodos();
     var totalFat=todos.reduce(function(s,c){return s+faturaAtual(c);},0);
     var totalLim=todos.reduce(function(s,c){return s+(c.limite||0);},0);
-    var totalDisp=totalLim-totalFat;
+    // Disponível real = limite − fatura em aberto − parcelas que ainda vão cair.
+    var totalDisp=totalLim-totalFat-todos.reduce(function(s,c){return s+parcelasFuturasCard(c);},0);
     var totalFech=todos.reduce(function(s,c){var fx=faturaFechadaCard(c);return s+(fx?fx.valor:0);},0);
     var totalAtu=ativos.reduce(function(s,c){return s+faturaCorrenteCard(c);},0);
     var resumo='<div class="glass cards-resumo">'+
@@ -2930,7 +2977,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
             '<div class="cc-bot-side"><div class="cc-label">Disponível</div><div class="cc-disp">'+formatBRL(totalDisp)+'</div></div>'+
           '</div></div>';
       }
-      var info=bancoDe(card.nome),fat=faturaAtual(card),disp=card.limite-fat;
+      var info=bancoDe(card.nome),fat=faturaAtual(card),disp=card.limite-fat-parcelasFuturasCard(card);
       var venc=card.vencimento?('Venc. dia '+card.vencimento):'';
       var nota=notaFaturaCard(card);
       var notaHtml=nota?('<div class="cc-fat-note'+(nota.warn?' warn':'')+'" title="'+escapeHtml(nota.texto)+'">'+(nota.warn?'⚠':'ⓘ')+' '+escapeHtml(nota.texto)+'</div>'):'';
@@ -3305,7 +3352,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     var ativos=parcelamentosVisiveis();
     if(!ativos.length) return '<div class="empty"><div class="ei">📦</div><div class="et">Nenhum parcelamento ativo.</div></div>';
     return '<div id="parcLista">'+ativos.map(function(p,i){
-      var pagas=clamp(monthsBetween(p.inicio,new Date())+1,0,p.nParcelas);
+      var pagas=parcelasPagasDe(p);   // número real do banco, não estimativa por data
       var pct=clamp((pagas/p.nParcelas)*100,0,100);
       var apel=apelidoPorChave(parcAliasKey(p.descricao,p.valorParcela,p.nParcelas))?'<span class="pcard-apel" title="Nome personalizado">✎</span>':'';
       return '<div class="glass pcard pcard-edit" data-parc="'+i+'" data-pid="'+escapeHtml(parcChave(p))+'" title="Toque para renomear · segure para reposicionar"><div class="pcard-top"><div>'+badgeHtml(p.cartao,'fbadge')+'</div><div style="flex:1;min-width:0"><div class="pcard-name">'+escapeHtml(nomeParcela(p.descricao,p.valorParcela,p.nParcelas))+apel+'</div><div class="pcard-card">'+escapeHtml(p.cartao)+'</div></div><div class="pcard-val">'+formatBRL(p.valorParcela)+'<div class="sub">de '+formatBRL(p.valorTotal)+'</div></div></div>'+
@@ -4843,10 +4890,15 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     document.querySelectorAll('.frow[data-card]').forEach(function(row){
       row.addEventListener('click',function(){
         var cardNome=row.getAttribute('data-card');
-        var ativos=state.cartoes.filter(function(c){return c.ativo!=="Não";});
-        var idx=ativos.findIndex?ativos.findIndex(function(c){return c.nome===cardNome;}):
-          (function(){for(var k=0;k<ativos.length;k++){if(ativos[k].nome===cardNome)return k;}return -1;})();
-        if(idx>=0) cartaoAtivo=idx;
+        /* O índice tem que ser procurado na MESMA lista que o carrossel monta
+           (cartoesParaExibir), não em state.cartoes. As duas listas são diferentes: a do
+           carrossel tem o card "Todos os cartões" na frente e esconde os zerados. Procurar
+           na lista errada deslocava tudo em uma posição — clicar no Mercado Pago abria o
+           Nubank. */
+        var lista=cartoesParaExibir();
+        var idx=-1;
+        for(var k=0;k<lista.length;k++){ if(!lista[k].global && lista[k].nome===cardNome){ idx=k; break; } }
+        if(idx>=0){ cartaoAtivo=idx; mesSelecionado=null; }
         irPara(1);
       });
     });
@@ -5172,7 +5224,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
   if(banksAddBtn){
     banksAddBtn.addEventListener("click",function(ev){
       ev.stopPropagation();
-      if(banksPop) banksPop.classList.remove("show");
+      fecharTodosPopovers();   // tira também o scrim: só remover a classe deixava o blur na tela
       window.open(BANK_CONNECT_URL,"_blank");
     });
   }
@@ -5195,7 +5247,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
     refreshPageOpt.addEventListener("click",function(ev){
       ev.stopPropagation();
       if(syncEmAndamento) return;
-      if(banksPop) banksPop.classList.remove("show");
+      fecharTodosPopovers();   // tira também o scrim: só remover a classe deixava o blur na tela
       loadAll();
     });
   }
