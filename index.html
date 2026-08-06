@@ -1455,6 +1455,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
         conta: strVal(c,4), cartao: strVal(c,5), tipo: strVal(c,6) || "Saída",
         valor: numVal(c,7), parcela: parcela, parcelaRaw: strVal(c,8),
         faturaId: faturaId, faturaPrev: faturaPrev,
+        faturaAjustada: mesVal(c,14),   // coluna O — mês escolhido à mão (toque longo)
         totalCompra: numVal(c,13), // coluna N — valor total da compra parcelada
         parcelamentoId: parcela ? ('Parcela '+parcela.num+' de '+parcela.total) : '',
         obs: strVal(c,9),
@@ -2616,26 +2617,52 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
           um ciclo fechado, então vai para a fatura cuja janela contém a data (senão, um
           histórico inteiro sem ID cairia todo dentro da fatura aberta e a inflaria). */
   /* ===== Ajuste MANUAL de fatura (toque longo na transação) =====
-     Guarda o mês de DESTINO (absoluto), não um deslocamento. Se guardássemos "+1 mês", um
-     dia em que o banco corrigisse a alocação sozinho o ajuste continuaria somando por cima
-     e o erro voltaria dobrado. Com o destino absoluto, sincronizar quantas vezes for não
-     muda o resultado.
-     Fica na aba "Apelidos" da planilha, que já é um armazenamento chave→valor sincronizado
-     entre aparelhos: chave "FAT|<id da transação>", valor "AAAA-MM". Por isso não precisou
-     de nenhuma alteração no Apps Script. */
-  function chaveAjusteFatura(t){ return (t && t.id) ? ('FAT|'+t.id) : ''; }
+     Mora na COLUNA O ("Fatura Ajustada") da aba Transações Cartão, na própria linha do
+     lançamento. A coluna M (Fatura Prevista) não serviria: ela é do banco e o sync a
+     reescreve a cada execução, apagando o ajuste.
+
+     Guarda o mês de DESTINO (absoluto), não um deslocamento. Se guardasse "+1 mês", no dia
+     em que o banco corrigisse a alocação sozinho o ajuste continuaria somando por cima e o
+     erro voltaria dobrado. Com destino absoluto, sincronizar de novo não muda nada.
+
+     O mapa local é só um AMORTECEDOR: a planilha é lida via gviz, que tem cache de alguns
+     minutos, então sem ele o ajuste "sumiria" até o cache virar. Cada entrada é apagada
+     assim que a planilha confirma o mesmo valor. */
+  var AJUSTE_KEY='financeiro-ajuste-fatura-pendente';
+  function lerAjustesPend(){ try{ return JSON.parse(localStorage.getItem(AJUSTE_KEY))||{}; }catch(e){ return {}; } }
+  function salvarAjustesPend(o){ try{ localStorage.setItem(AJUSTE_KEY, JSON.stringify(o||{})); }catch(e){} }
   function ajusteFaturaDe(t){
-    var k=chaveAjusteFatura(t); if(!k) return '';
-    var v=lerApelidos()[k];
-    return mesChaveValida(v) ? String(v) : '';
+    if(!t || !t.id) return '';
+    var pend=lerAjustesPend()[t.id];
+    // "" pendente significa "removi o ajuste" e precisa vencer o valor ainda em cache.
+    if(pend!==undefined) return mesChaveValida(pend)?String(pend):'';
+    return mesChaveValida(t.faturaAjustada)?String(t.faturaAjustada):'';
   }
   function gravarAjusteFatura(t, mes){
-    var k=chaveAjusteFatura(t); if(!k) return;
-    var mapa=lerApelidos();
-    if(mes) mapa[k]=mes; else delete mapa[k];
-    salvarApelidos(mapa);              // vale na hora, sem esperar a planilha
-    gravarApelidoSheet(k, mes||'');    // e propaga para os outros aparelhos
+    if(!t || !t.id) return;
+    var pend=lerAjustesPend();
+    pend[t.id]=mes||'';
+    salvarAjustesPend(pend);
+    t.faturaAjustada=mes||'';        // reflete na hora no objeto já carregado
     limparCacheFatura();
+    if(GAS_EXEC_URL && GAS_EXEC_URL!==GAS_EXEC_URL_PLACEHOLDER){
+      fetch(GAS_EXEC_URL+'?action=setFaturaTx&id='+encodeURIComponent(t.id)+'&mes='+encodeURIComponent(mes||''),
+            {method:'GET'})
+        .catch(function(){ toast('Não consegui gravar na planilha — vale só neste aparelho por enquanto.'); });
+    }
+  }
+  // Depois de recarregar: o que a planilha já confirmou sai do amortecedor local.
+  function limparAjustesConfirmados(){
+    var pend=lerAjustesPend(), chaves=Object.keys(pend);
+    if(!chaves.length) return;
+    var mudou=false;
+    Object.keys(state.txPorCartao||{}).forEach(function(nome){
+      (state.txPorCartao[nome]||[]).forEach(function(t){
+        if(!t.id || pend[t.id]===undefined) return;
+        if(String(t.faturaAjustada||'')===String(pend[t.id])){ delete pend[t.id]; mudou=true; }
+      });
+    });
+    if(mudou) salvarAjustesPend(pend);
   }
   function mesFaturaDaTx(nomeCartao, t, mesAberto, corte){
     // Ajuste manual manda em tudo — é você dizendo em que fatura a compra realmente caiu.
@@ -5586,6 +5613,7 @@ body.reord-on *{user-select:none;-webkit-user-select:none;}
         aplicarApelidosDaPlanilha(r[9]);   // nomes personalizados vindos da aba "Apelidos" (multi-dispositivo)
         if(r[10] && r[10].length) processarPrevisoesSheet(r[10]); // recorrentes + marcações (Pago/Recebido) da aba Previsões
         migrarApelidosParcelamentos();     // garante que renomeações antigas de Parcelas apareçam nos Cartões
+        limparAjustesConfirmados();        // ajustes de fatura que a planilha já confirmou saem do buffer local
         limparCacheFatura();               // recalcula as somas de fatura com os dados novos
         // "Atualizado há X" reflete o ÚLTIMO SYNC REAL com o banco — não o último reload da página.
         // Usa o carimbo "Atualizado em" que o Apps Script grava na aba "Fatura Em Aberto" só quando
